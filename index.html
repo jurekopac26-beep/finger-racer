@@ -6678,6 +6678,7 @@ function mpGetColor(){
 }
 
 function mpReset(){
+  mpStopAnnouncingRoom();
   try{
     if(mp){
       if(mp.conn) mp.conn.close();
@@ -6706,28 +6707,73 @@ function mpUpdateHubIndicator(text,state){
   }
 }
 
-/* ---------- LOBBY DISCOVERY & DIRECT SLOTS ---------- */
-const MP_PUB_PREFIX="PD-PUB-";
-const MP_MAX_PUB_SLOTS=8;
-let _scannerPeer=null;
+/* ---------- LOBBY DISCOVERY (Local & Cloud Hybrid) ---------- */
+const LOBBY_CLOUD_TOPIC="fr-lobby-live-v1";
+let _announceTimer=null;
 
-function mpGetScannerPeer(){
-  if(_scannerPeer && !_scannerPeer.destroyed && !_scannerPeer.disconnected){
-    return _scannerPeer;
+function mpStartAnnouncingRoom(){
+  mpStopAnnouncingRoom();
+  const announce=()=>{
+    if(!mp || !mp.isHost || !mp.isPublic || mp.started || !mp.peerId) return;
+    const roomPayload={
+      id:mp.peerId,
+      title:mp.title,
+      host:mp.name,
+      color:mp.myColor,
+      track:mp.track,
+      laps:mp.laps,
+      ai:mp.nai,
+      players:mp.oppName?2:1,
+      max:2,
+      closed:false,
+      time:Date.now()
+    };
+
+    // 1. Lokani strežnik (če teče)
+    try{
+      fetch("/api/rooms",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(roomPayload)
+      }).catch(()=>{});
+    }catch(_){}
+
+    // 2. Globalni cloud topic
+    try{
+      fetch("https://ntfy.sh/"+LOBBY_CLOUD_TOPIC,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(roomPayload)
+      }).catch(()=>{});
+    }catch(_){}
+  };
+
+  announce();
+  _announceTimer=setInterval(announce,4000);
+}
+
+function mpStopAnnouncingRoom(){
+  if(_announceTimer){
+    clearInterval(_announceTimer);
+    _announceTimer=null;
   }
-  try{
-    _scannerPeer=new Peer({debug:0});
-    _scannerPeer.on("error",(e)=>{
-      if(e && e.type==="peer-unavailable") return;
-      if(e && (e.type==="disconnected"||e.type==="network")){
-        try{ _scannerPeer.destroy(); }catch(_){}
-        _scannerPeer=null;
-      }
-    });
-  }catch(e){
-    _scannerPeer=null;
+  if(mp && mp.isHost && mp.peerId){
+    const closePayload={id:mp.peerId,closed:true,time:Date.now()};
+    try{
+      fetch("/api/rooms",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(closePayload)
+      }).catch(()=>{});
+    }catch(_){}
+    try{
+      fetch("https://ntfy.sh/"+LOBBY_CLOUD_TOPIC,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(closePayload)
+      }).catch(()=>{});
+    }catch(_){}
   }
-  return _scannerPeer;
 }
 
 const mpLobby={
@@ -6750,104 +6796,102 @@ function mpInitHub(){
     if($("mpHome").classList.contains("on") && mpLobby.activeTab==="rooms"){
       mpScanPublicRooms();
     }
-  },5000);
+  },3500);
 }
 
-function mpScanPublicRooms(){
+async function mpScanPublicRooms(){
   if(mpLobby.isScanning) return;
   mpLobby.isScanning=true;
   mpUpdateHubIndicator("Iščem javne sobe…","warn");
 
-  const peer=mpGetScannerPeer();
-  if(!peer){
-    mpLobby.isScanning=false;
-    mpUpdateHubIndicator("Napaka omrežja","err");
-    return;
-  }
+  const discoveredMap=new Map();
 
-  const doScan=()=>{
-    const activeRooms=[];
-    let checked=0;
-    const totalSlots=MP_MAX_PUB_SLOTS;
-
-    const finishScan=()=>{
-      mpLobby.isScanning=false;
-      mpLobby.rooms=[...activeRooms];
-      mpUpdateHubIndicator(activeRooms.length?(activeRooms.length+" sob na voljo 🟢"):"Lobi pripravljen 🟢","ok");
-      mpRenderLobbyUI();
-    };
-
-    for(let i=1;i<=totalSlots;i++){
-      const slotId=MP_PUB_PREFIX+i;
-      if(mp && mp.isHost && mp.peerId===slotId){
-        activeRooms.push({
-          id:slotId,
-          title:mp.title,
-          host:mp.name,
-          color:mp.myColor,
-          track:mp.track,
-          laps:mp.laps,
-          ai:mp.nai,
-          players:mp.oppName?2:1,
-          max:2,
-          isPublic:true
-        });
-        checked++;
-        if(checked>=totalSlots) finishScan();
-        continue;
-      }
-
-      let conn;
-      let settled=false;
-      try{
-        conn=peer.connect(slotId,{reliable:false});
-      }catch(e){
-        checked++;
-        if(checked>=totalSlots) finishScan();
-        continue;
-      }
-
-      const finishSlot=()=>{
-        if(settled) return;
-        settled=true;
-        try{ conn.close(); }catch(_){}
-        checked++;
-        if(checked>=totalSlots) finishScan();
-      };
-
-      conn.on("data",(d)=>{
-        if(d && d.t==="room_info"){
-          activeRooms.push({
-            id:slotId,
-            title:d.title||("Soba "+i),
-            host:d.host||"Gostitelj",
-            color:d.color||"var(--green)",
-            track:d.track||0,
-            laps:d.laps||3,
-            ai:d.ai||0,
-            players:d.players||1,
-            max:2,
-            isPublic:true
-          });
-          mpLobby.rooms=[...activeRooms];
-          mpRenderLobbyUI();
-          finishSlot();
-        }
-      });
-
-      setTimeout(finishSlot, 1600);
-    }
-  };
-
-  if(peer.open){
-    doScan();
-  } else {
-    peer.once("open",doScan);
-    peer.once("error",()=>{
-      mpLobby.isScanning=false;
-      mpUpdateHubIndicator("Lobi pripravljen 🟢","ok");
+  // Če sem sam gostitelj javne sobe, jo ohrani na svojem seznamu
+  if(mp && mp.isHost && mp.isPublic && mp.peerId){
+    discoveredMap.set(mp.peerId,{
+      id:mp.peerId,
+      title:mp.title,
+      host:mp.name,
+      color:mp.myColor,
+      track:mp.track,
+      laps:mp.laps,
+      ai:mp.nai,
+      players:mp.oppName?2:1,
+      max:2,
+      isPublic:true
     });
   }
+
+  // 1. Poskusi lokalni strežnik (/api/rooms) - 0ms latency
+  try{
+    const localRes=await fetch("/api/rooms",{cache:"no-store"}).catch(()=>null);
+    if(localRes && localRes.ok){
+      const list=await localRes.json().catch(()=>[]);
+      if(Array.isArray(list)){
+        list.forEach(r=>{
+          if(r && r.id && !r.closed && (Date.now()-(r.time||0)<18000)){
+            discoveredMap.set(r.id,{
+              id:r.id,
+              title:r.title||"Javna dirka",
+              host:r.host||"Gostitelj",
+              color:r.color||"var(--green)",
+              track:r.track||0,
+              laps:r.laps||3,
+              ai:r.ai||0,
+              players:r.players||1,
+              max:r.max||2,
+              isPublic:true
+            });
+          }
+        });
+      }
+    }
+  }catch(_){}
+
+  // 2. Poskusi globalni cloud pub/sub (ntfy.sh) - deluje kjerkoli (Netlify, LTE/5G, drugo omrežje)
+  try{
+    const cloudRes=await fetch("https://ntfy.sh/"+LOBBY_CLOUD_TOPIC+"/json?poll=1",{cache:"no-store"}).catch(()=>null);
+    if(cloudRes && cloudRes.ok){
+      const text=await cloudRes.text();
+      const lines=text.trim().split("\n");
+      const closedIds=new Set();
+      for(let i=lines.length-1;i>=0;i--){
+        try{
+          const item=JSON.parse(lines[i]);
+          if(item.event==="message" && item.message){
+            const r=JSON.parse(item.message);
+            if(r && r.id){
+              if(r.closed){
+                closedIds.add(r.id);
+                discoveredMap.delete(r.id);
+              } else if(!closedIds.has(r.id) && !discoveredMap.has(r.id)){
+                const age=item.time ? Math.abs(Date.now()/1000 - item.time) : 0;
+                if(age<40){
+                  discoveredMap.set(r.id,{
+                    id:r.id,
+                    title:r.title||"Javna dirka",
+                    host:r.host||"Gostitelj",
+                    color:r.color||"var(--green)",
+                    track:r.track||0,
+                    laps:r.laps||3,
+                    ai:r.ai||0,
+                    players:r.players||1,
+                    max:r.max||2,
+                    isPublic:true
+                  });
+                }
+              }
+            }
+          }
+        }catch(_) {}
+      }
+    }
+  }catch(_){}
+
+  mpLobby.isScanning=false;
+  mpLobby.rooms=Array.from(discoveredMap.values());
+  mpUpdateHubIndicator(mpLobby.rooms.length?(mpLobby.rooms.length+" sob na voljo 🟢"):"Lobi pripravljen 🟢","ok");
+  mpRenderLobbyUI();
 }
 
 /* ---------- LOBBY UI RENDERING ---------- */
@@ -7033,6 +7077,9 @@ function mpCreateRoom(){
   closeCreateRoomModal();
 
   mpReset();
+  const roomCode=mpCode();
+  const peerId=isPublic ? ("PD-PUB-"+roomCode) : ("PD-"+roomCode);
+
   mp={
     isHost:true,
     isPublic,
@@ -7043,8 +7090,8 @@ function mpCreateRoom(){
     oppTitle:"Dirkač",
     conn:null,
     peer:null,
-    peerId:null,
-    code:mpCode(),
+    peerId,
+    code:roomCode,
     title:roomTitle,
     track:mpLobby.createCfg.track,
     laps:mpLobby.createCfg.laps,
@@ -7060,80 +7107,36 @@ function mpCreateRoom(){
 
   setScreen("mpLobby");
   mpUpdateRoomView();
+  mpStatus(isPublic ? "Povezujem javno sobo…" : "Ustvarjam zasebno sobo…");
 
-  if(isPublic){
-    mpStatus("Ustvarjam javno sobo…");
-    mpClaimPublicSlot(1, roomTitle);
-  } else {
-    mpStatus("Ustvarjam zasebno sobo…");
-    const peer=new Peer("PD-"+mp.code,{debug:0});
-    mp.peer=peer;
-    peer.on("open",()=>{
-      mpStatus("Zasebna soba pripravljena! Deli kodo s prijateljem.");
-      mpUpdateRoomView();
-      mpRenderHostSettings();
-    });
-    peer.on("connection",(conn)=>{
-      mpHandleHostIncomingConn(conn);
-    });
-    peer.on("error",(e)=>{
-      if(e && e.type==="unavailable-id"){
-        mp.code=mpCode();
-        mpCreateRoom();
-      } else {
-        mpStatus("Napaka: "+(e.type||e.message||e));
-      }
-    });
-  }
-}
-
-function mpClaimPublicSlot(slotIndex, roomTitle){
-  if(!mp || !mp.isHost) return;
-  if(slotIndex>MP_MAX_PUB_SLOTS){
-    showBanner("Vsi javni sloti so trenutno zasedeni. Ustvarjam zasebno sobo…",2800,true);
-    mp.isPublic=false;
-    mpUpdateRoomView();
-    const peer=new Peer("PD-"+mp.code,{debug:0});
-    mp.peer=peer;
-    peer.on("open",()=>{
-      mpStatus("Zasebna soba pripravljena! Deli kodo: "+mp.code);
-      mpUpdateRoomView();
-      mpRenderHostSettings();
-    });
-    peer.on("connection",(conn)=>{
-      mpHandleHostIncomingConn(conn);
-    });
-    return;
-  }
-
-  const slotId=MP_PUB_PREFIX+slotIndex;
   let peer;
   try{
-    peer=new Peer(slotId,{debug:0});
+    peer=new Peer(peerId,{debug:0});
   }catch(e){
-    mpClaimPublicSlot(slotIndex+1, roomTitle);
+    mpStatus("Napaka pri povezavi: "+(e.message||e));
     return;
   }
+  mp.peer=peer;
 
-  let opened=false;
   peer.on("open",()=>{
-    opened=true;
     if(!mp) { try{ peer.destroy(); }catch(_){} return; }
-    mp.peer=peer;
-    mp.peerId=slotId;
-    mpStatus("Javna soba je odprta! Čakam nasprotnika iz lobija…");
+    if(isPublic){
+      mpStatus("Javna soba je odprta! Čakam igralca iz lobija…");
+      mpStartAnnouncingRoom();
+    } else {
+      mpStatus("Zasebna soba pripravljena! Deli kodo s prijateljem.");
+    }
     mpUpdateRoomView();
     mpRenderHostSettings();
+  });
 
-    peer.on("connection",(conn)=>{
-      mpHandleHostIncomingConn(conn);
-    });
+  peer.on("connection",(conn)=>{
+    mpHandleHostIncomingConn(conn);
   });
 
   peer.on("error",(e)=>{
-    try{ peer.destroy(); }catch(_){}
-    if(!opened && e && (e.type==="unavailable-id" || (e.message && e.message.includes("taken")))){
-      mpClaimPublicSlot(slotIndex+1, roomTitle);
+    if(e && e.type==="unavailable-id"){
+      mpCreateRoom();
     } else {
       mpStatus("Napaka: "+(e.type||e.message||e));
     }
