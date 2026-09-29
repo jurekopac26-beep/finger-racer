@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Prstna dirka</title>
+<script src="paho-mqtt.js"></script>
+<script>
+if(typeof Paho === "undefined"){
+  document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"><\/script>');
+}
+</script>
 <style>
 :root{
   --asphalt:#14171a; --paper:#f4efe3; --red:#d6402b; --deep:#0d1408;
@@ -6648,271 +6654,313 @@ function drawLivery(c,x,y,ang,kind,u){
   c.restore();
 }
 
-/* ================= MULTIPLAYER (WebRTC / PeerJS + Live Lobby) ================= */
-let mp=null;
-const MP_TRACKS=[0,1,2,3,4,5,6];
-const MP_LAPS=[1,2,3,5,8];
-const MP_AI=[0,1,2,3];
+/* ================= MULTIPLAYER (Global WebSocket Relay / WSS) ================= */
+let mp = null;
+const MP_TRACKS = [0, 1, 2, 3, 4, 5, 6];
+const MP_LAPS = [1, 2, 3, 5, 8];
+const MP_AI = [0, 1, 2, 3];
+
+const MP_CLIENT_ID = "FR-" + Math.random().toString(36).substring(2, 9).toUpperCase();
+const MP_BROKERS = [
+  { host: "broker.hivemq.com", port: 8884, path: "/mqtt" },
+  { host: "broker.emqx.io", port: 8084, path: "/mqtt" }
+];
+
+let mpRelay = {
+  client: null,
+  connected: false,
+  connecting: false,
+  brokerIdx: 0,
+  presenceTimer: null,
+  activePlayers: new Map(), // id -> { id, name, color, rank, status, time }
+  activeRooms: new Map(),   // id -> { id, code, title, host, color, track, laps, ai, players, max, isPublic, time }
+  currentRoomTopic: null,
+  subTopics: new Set()
+};
 
 function mpCode(){
-  let s=""; const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  for(let i=0;i<5;i++) s+=A[(Math.random()*A.length)|0];
+  let s = ""; const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  for(let i=0; i<5; i++) s += A[(Math.random()*A.length)|0];
   return s;
 }
-const mpMakeCode=mpCode;
+const mpMakeCode = mpCode;
 
 function mpUnadvertiseRoom(code){}
 
-function mpSendPresence(){
-  mpRenderLobbyUI();
-}
-
 function mpGetName(){
-  const inp=$("mpName");
-  const nm=(inp&&inp.value?inp.value:(save.playerName||"Igralec")).trim().slice(0,16);
-  return nm||"Igralec";
+  const inp = $("mpName");
+  const nm = (inp && inp.value ? inp.value : (save.playerName || "Dirkač")).trim().slice(0, 16);
+  return nm || "Dirkač";
 }
 
 function mpGetColor(){
-  return (save&&save.discColor)?save.discColor:"#3dff8e";
-}
-
-function mpReset(){
-  mpStopAnnouncingRoom();
-  try{
-    if(mp){
-      if(mp.conn) mp.conn.close();
-      if(mp.peer) mp.peer.destroy();
-    }
-  }catch(e){}
-  mp=null;
-}
-
-function mpSend(o){
-  try{
-    if(mp&&mp.conn&&mp.conn.open) mp.conn.send(o);
-  }catch(e){}
+  return (save && save.discColor) ? save.discColor : "#3dff8e";
 }
 
 function mpStatus(t){
-  const e=$("mpStatus");
-  if(e) e.textContent=t;
+  const e = $("mpStatus");
+  if(e) e.textContent = t;
 }
 
-function mpUpdateHubIndicator(text,state){
-  const dot=$("mpDot"), txt=$("mpHubTxt");
-  if(txt) txt.textContent=text;
+function mpUpdateHubIndicator(text, state){
+  const dot = $("mpDot"), txt = $("mpHubTxt");
+  if(txt) txt.textContent = text;
   if(dot){
-    dot.className="mpDot"+(state==="ok"?" ok":state==="err"?" err":"");
+    dot.className = "mpDot" + (state === "ok" ? " ok" : state === "err" ? " err" : "");
   }
 }
 
-/* ---------- LOBBY DISCOVERY (Local & Cloud Hybrid) ---------- */
-const LOBBY_CLOUD_TOPIC="fr-lobby-live-v1";
-let _announceTimer=null;
-
-function mpStartAnnouncingRoom(){
-  mpStopAnnouncingRoom();
-  const announce=()=>{
-    if(!mp || !mp.isHost || !mp.isPublic || mp.started || !mp.peerId) return;
-    const roomPayload={
-      id:mp.peerId,
-      title:mp.title,
-      host:mp.name,
-      color:mp.myColor,
-      track:mp.track,
-      laps:mp.laps,
-      ai:mp.nai,
-      players:mp.oppName?2:1,
-      max:2,
-      closed:false,
-      time:Date.now()
-    };
-
-    // 1. Lokani strežnik (če teče)
-    try{
-      fetch("/api/rooms",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(roomPayload)
-      }).catch(()=>{});
-    }catch(_){}
-
-    // 2. Globalni cloud topic
-    try{
-      fetch("https://ntfy.sh/"+LOBBY_CLOUD_TOPIC,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(roomPayload)
-      }).catch(()=>{});
-    }catch(_){}
-  };
-
-  announce();
-  _announceTimer=setInterval(announce,4000);
-}
-
-function mpStopAnnouncingRoom(){
-  if(_announceTimer){
-    clearInterval(_announceTimer);
-    _announceTimer=null;
-  }
-  if(mp && mp.isHost && mp.peerId){
-    const closePayload={id:mp.peerId,closed:true,time:Date.now()};
-    try{
-      fetch("/api/rooms",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(closePayload)
-      }).catch(()=>{});
-    }catch(_){}
-    try{
-      fetch("https://ntfy.sh/"+LOBBY_CLOUD_TOPIC,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(closePayload)
-      }).catch(()=>{});
-    }catch(_){}
-  }
-}
-
-const mpLobby={
-  activeTab:"rooms",
-  rooms:[],      // [{ id, title, host, color, track, laps, ai, players: 1, max: 2, isPublic }]
-  players:[],    // [{ name, color, rank, status }]
-  isScanning:false,
-  scanTimer:null,
-  createCfg:{ isPublic:true, track:0, laps:3, nai:0 }
-};
-
-function mpInitHub(){
-  if(typeof Peer==="undefined"){
-    mpUpdateHubIndicator("Spletna povezava ni na voljo","err");
+/* ---------- RELAY CONNECTION & PUB/SUB ---------- */
+function mpConnectRelay(callback){
+  if(mpRelay.connected && mpRelay.client){
+    if(callback) callback(true);
     return;
   }
-  mpScanPublicRooms();
-  if(mpLobby.scanTimer) clearInterval(mpLobby.scanTimer);
-  mpLobby.scanTimer=setInterval(()=>{
-    if($("mpHome").classList.contains("on") && mpLobby.activeTab==="rooms"){
-      mpScanPublicRooms();
-    }
-  },3500);
-}
+  if(mpRelay.connecting) return;
 
-async function mpScanPublicRooms(){
-  if(mpLobby.isScanning) return;
-  mpLobby.isScanning=true;
-  mpUpdateHubIndicator("Iščem javne sobe…","warn");
-
-  const discoveredMap=new Map();
-
-  // Če sem sam gostitelj javne sobe, jo ohrani na svojem seznamu
-  if(mp && mp.isHost && mp.isPublic && mp.peerId){
-    discoveredMap.set(mp.peerId,{
-      id:mp.peerId,
-      title:mp.title,
-      host:mp.name,
-      color:mp.myColor,
-      track:mp.track,
-      laps:mp.laps,
-      ai:mp.nai,
-      players:mp.oppName?2:1,
-      max:2,
-      isPublic:true
-    });
+  if(typeof Paho === "undefined" || !Paho.MQTT || !Paho.MQTT.Client){
+    mpUpdateHubIndicator("Povezujem knjižnico…", "warn");
+    setTimeout(() => mpConnectRelay(callback), 300);
+    return;
   }
 
-  // 1. Poskusi lokalni strežnik (/api/rooms) - 0ms latency
+  mpRelay.connecting = true;
+  mpUpdateHubIndicator("Povezujem v lobi…", "warn");
+
+  const broker = MP_BROKERS[mpRelay.brokerIdx % MP_BROKERS.length];
+  const clientId = MP_CLIENT_ID + "_" + ((Math.random()*10000)|0);
+  let client;
   try{
-    const localRes=await fetch("/api/rooms",{cache:"no-store"}).catch(()=>null);
-    if(localRes && localRes.ok){
-      const list=await localRes.json().catch(()=>[]);
-      if(Array.isArray(list)){
-        list.forEach(r=>{
-          if(r && r.id && !r.closed && (Date.now()-(r.time||0)<18000)){
-            discoveredMap.set(r.id,{
-              id:r.id,
-              title:r.title||"Javna dirka",
-              host:r.host||"Gostitelj",
-              color:r.color||"var(--green)",
-              track:r.track||0,
-              laps:r.laps||3,
-              ai:r.ai||0,
-              players:r.players||1,
-              max:r.max||2,
-              isPublic:true
-            });
-          }
-        });
+    client = new Paho.MQTT.Client(broker.host, broker.port, broker.path, clientId);
+  }catch(e){
+    mpRelay.connecting = false;
+    mpRelay.brokerIdx++;
+    setTimeout(() => mpConnectRelay(callback), 1000);
+    return;
+  }
+
+  client.onConnectionLost = (resp) => {
+    mpRelay.connected = false;
+    mpRelay.connecting = false;
+    mpRelay.client = null;
+    mpUpdateHubIndicator("Povezava prekinjena", "err");
+    setTimeout(() => {
+      mpRelay.brokerIdx++;
+      if(($("mpHome") && $("mpHome").classList.contains("on")) || ($("mpLobby") && $("mpLobby").classList.contains("on"))){
+        mpConnectRelay();
+      }
+    }, 2500);
+  };
+
+  client.onMessageArrived = (msg) => {
+    try{
+      mpHandleMqttMessage(msg.destinationName, JSON.parse(msg.payloadString));
+    }catch(e){}
+  };
+
+  const willMsg = new Paho.MQTT.Message(JSON.stringify({ id: MP_CLIENT_ID, leave: true }));
+  willMsg.destinationName = "finger-racer/v2/lobby/presence";
+  willMsg.qos = 0;
+  willMsg.retained = false;
+
+  client.connect({
+    useSSL: true,
+    timeout: 6,
+    keepAliveInterval: 25,
+    willMessage: willMsg,
+    onSuccess: () => {
+      mpRelay.connected = true;
+      mpRelay.connecting = false;
+      mpRelay.client = client;
+      mpUpdateHubIndicator("Lobi povezan 🟢", "ok");
+
+      client.subscribe("finger-racer/v2/lobby/presence");
+      client.subscribe("finger-racer/v2/lobby/rooms");
+      mpRelay.subTopics.add("finger-racer/v2/lobby/presence");
+      mpRelay.subTopics.add("finger-racer/v2/lobby/rooms");
+
+      if(mpRelay.currentRoomTopic){
+        client.subscribe(mpRelay.currentRoomTopic);
+      }
+
+      mpStartPresenceHeartbeat();
+      if(callback) callback(true);
+    },
+    onFailure: (err) => {
+      mpRelay.connected = false;
+      mpRelay.connecting = false;
+      mpRelay.client = null;
+      mpRelay.brokerIdx++;
+      mpUpdateHubIndicator("Poskušam drug strežnik…", "warn");
+      setTimeout(() => mpConnectRelay(callback), 1500);
+    }
+  });
+}
+
+function mpPublishMqtt(topic, payloadObj, retained = false){
+  if(!mpRelay.connected || !mpRelay.client) return;
+  try{
+    const msg = new Paho.MQTT.Message(JSON.stringify(payloadObj));
+    msg.destinationName = topic;
+    msg.qos = 0;
+    msg.retained = !!retained;
+    mpRelay.client.send(msg);
+  }catch(e){}
+}
+
+function mpStartPresenceHeartbeat(){
+  if(mpRelay.presenceTimer) clearInterval(mpRelay.presenceTimer);
+  const send = () => {
+    if(!mpRelay.connected) return;
+    const isHosting = mp && mp.isHost;
+    const inGame = state === "racing" || state === "countdown";
+    const statusText = inGame ? "Dirka 🏎️" : (mp ? "V sobi 🏎️" : "V lobiju 🟢");
+
+    mpPublishMqtt("finger-racer/v2/lobby/presence", {
+      id: MP_CLIENT_ID,
+      name: mpGetName(),
+      color: mpGetColor(),
+      rank: playerTitle(),
+      status: statusText,
+      inRoom: !!mp,
+      time: Date.now()
+    });
+
+    if(mp && mp.isHost && mp.isPublic && !mp.started){
+      mpPublishMqtt("finger-racer/v2/lobby/rooms", {
+        id: mp.roomId,
+        code: mp.code,
+        title: mp.title,
+        host: mp.name,
+        color: mp.myColor,
+        track: mp.track,
+        laps: mp.laps,
+        ai: mp.nai,
+        players: mp.oppName ? 2 : 1,
+        max: 2,
+        isPublic: true,
+        time: Date.now(),
+        closed: false
+      });
+    }
+
+    const now = Date.now();
+    let changed = false;
+    for(const [id, p] of mpRelay.activePlayers){
+      if(now - (p.time || 0) > 7500){
+        mpRelay.activePlayers.delete(id);
+        changed = true;
       }
     }
-  }catch(_){}
-
-  // 2. Poskusi globalni cloud pub/sub (ntfy.sh) - deluje kjerkoli (Netlify, LTE/5G, drugo omrežje)
-  try{
-    const cloudRes=await fetch("https://ntfy.sh/"+LOBBY_CLOUD_TOPIC+"/json?poll=1",{cache:"no-store"}).catch(()=>null);
-    if(cloudRes && cloudRes.ok){
-      const text=await cloudRes.text();
-      const lines=text.trim().split("\n");
-      const closedIds=new Set();
-      for(let i=lines.length-1;i>=0;i--){
-        try{
-          const item=JSON.parse(lines[i]);
-          if(item.event==="message" && item.message){
-            const r=JSON.parse(item.message);
-            if(r && r.id){
-              if(r.closed){
-                closedIds.add(r.id);
-                discoveredMap.delete(r.id);
-              } else if(!closedIds.has(r.id) && !discoveredMap.has(r.id)){
-                const age=item.time ? Math.abs(Date.now()/1000 - item.time) : 0;
-                if(age<40){
-                  discoveredMap.set(r.id,{
-                    id:r.id,
-                    title:r.title||"Javna dirka",
-                    host:r.host||"Gostitelj",
-                    color:r.color||"var(--green)",
-                    track:r.track||0,
-                    laps:r.laps||3,
-                    ai:r.ai||0,
-                    players:r.players||1,
-                    max:r.max||2,
-                    isPublic:true
-                  });
-                }
-              }
-            }
-          }
-        }catch(_) {}
+    for(const [id, r] of mpRelay.activeRooms){
+      if(now - (r.time || 0) > 8500){
+        mpRelay.activeRooms.delete(id);
+        changed = true;
       }
     }
-  }catch(_){}
+    if(changed && $("mpHome") && $("mpHome").classList.contains("on")){
+      mpRenderLobbyUI();
+    }
+  };
 
-  mpLobby.isScanning=false;
-  mpLobby.rooms=Array.from(discoveredMap.values());
-  mpUpdateHubIndicator(mpLobby.rooms.length?(mpLobby.rooms.length+" sob na voljo 🟢"):"Lobi pripravljen 🟢","ok");
+  send();
+  mpRelay.presenceTimer = setInterval(send, 2500);
+}
+
+function mpHandleMqttMessage(topic, data){
+  if(!data) return;
+
+  // 1. Lobby Presence
+  if(topic === "finger-racer/v2/lobby/presence"){
+    if(data.id === MP_CLIENT_ID) return;
+    if(data.leave){
+      mpRelay.activePlayers.delete(data.id);
+    } else {
+      data.time = Date.now();
+      mpRelay.activePlayers.set(data.id, data);
+    }
+    if($("mpHome") && $("mpHome").classList.contains("on")){
+      mpRenderLobbyUI();
+    }
+    return;
+  }
+
+  // 2. Lobby Rooms
+  if(topic === "finger-racer/v2/lobby/rooms"){
+    if(mp && mp.isHost && data.id === mp.roomId) return;
+    if(data.closed){
+      mpRelay.activeRooms.delete(data.id);
+    } else {
+      data.time = Date.now();
+      mpRelay.activeRooms.set(data.id, data);
+    }
+    if($("mpHome") && $("mpHome").classList.contains("on")){
+      mpRenderLobbyUI();
+    }
+    return;
+  }
+
+  // 3. Room-specific message
+  if(mp && mp.roomId && topic.startsWith("finger-racer/v2/room/" + mp.roomId)){
+    if(data.sender === MP_CLIENT_ID) return;
+    mpOnData(data);
+  }
+}
+
+const mpLobby = {
+  activeTab: "rooms",
+  rooms: [],
+  players: [],
+  createCfg: { isPublic: true, track: 0, laps: 3, nai: 0 }
+};
+
+function mpSendPresence(){
+  if(mpRelay.connected){
+    mpPublishMqtt("finger-racer/v2/lobby/presence", {
+      id: MP_CLIENT_ID,
+      name: mpGetName(),
+      color: mpGetColor(),
+      rank: playerTitle(),
+      status: "V lobiju 🟢",
+      inRoom: !!mp,
+      time: Date.now()
+    });
+  }
   mpRenderLobbyUI();
 }
 
-/* ---------- LOBBY UI RENDERING ---------- */
 function mpRenderLobbyUI(){
-  const rc=$("mpRoomCount"), pc=$("mpPlayerCount");
-  if(rc) rc.textContent=mpLobby.rooms.length;
-  if(pc) pc.textContent=Math.max(1,mpLobby.rooms.length+1);
+  const myPlayer = {
+    id: MP_CLIENT_ID,
+    name: mpGetName(),
+    color: mpGetColor(),
+    rank: playerTitle(),
+    status: "V lobiju 🟢",
+    isMe: true
+  };
+
+  const otherPlayers = Array.from(mpRelay.activePlayers.values()).filter(p => p.id !== MP_CLIENT_ID);
+  const allPlayers = [myPlayer, ...otherPlayers];
+  const roomsList = Array.from(mpRelay.activeRooms.values());
+  mpLobby.rooms = roomsList;
+
+  const rc = $("mpRoomCount"), pc = $("mpPlayerCount");
+  if(rc) rc.textContent = roomsList.length;
+  if(pc) pc.textContent = allPlayers.length;
 
   // 1. Zavihek Sob
-  const rList=$("mpRoomList");
+  const rList = $("mpRoomList");
   if(rList){
-    if(!mpLobby.rooms||mpLobby.rooms.length===0){
-      rList.innerHTML='<div class="mpEmpty">🏁 Trenutno ni odprtih javnih sob.<br><span style="font-size:12px;opacity:.75;margin-top:6px;display:block">Ustvari novo sobo ali uporabi "Koda sobe" za zasebno igro!</span></div>';
+    if(roomsList.length === 0){
+      rList.innerHTML = '<div class="mpEmpty">🏁 Trenutno ni odprtih javnih sob.<br><span style="font-size:12px;opacity:.75;margin-top:6px;display:block">Ustvari novo sobo s klikom na "+ NOVA SOBA"!</span></div>';
     } else {
-      rList.innerHTML="";
-      mpLobby.rooms.forEach(rm=>{
-        const item=document.createElement("div");
-        item.className="mpRoomItem";
-        const trName="Proga "+(rm.track+1);
-        const isFull=rm.players>=rm.max;
-        item.innerHTML=`
+      rList.innerHTML = "";
+      roomsList.forEach(rm => {
+        const item = document.createElement("div");
+        item.className = "mpRoomItem";
+        const trName = "Proga " + (rm.track + 1);
+        const isFull = rm.players >= rm.max;
+        item.innerHTML = `
           <div class="mpRoomLeft">
             <div class="mpRoomIcon" style="border-color:${rm.color||'var(--green)'}">🏎️</div>
             <div class="mpRoomDetails">
@@ -6922,13 +6970,13 @@ function mpRenderLobbyUI(){
           </div>
           <div class="mpRoomRight">
             <span class="mpPillStatus ${isFull?'full':''}">${isFull?'Zasedeno':(rm.players+'/'+rm.max)}</span>
-            ${!isFull?`<button class="mpBtnJoin" data-slot="${rm.id}">Pridruži se</button>`:''}
+            ${!isFull?`<button class="mpBtnJoin" data-id="${rm.id}">Pridruži se</button>`:''}
           </div>
         `;
-        const joinBtn=item.querySelector(".mpBtnJoin");
+        const joinBtn = item.querySelector(".mpBtnJoin");
         if(joinBtn){
-          joinBtn.addEventListener("click",()=>{
-            Snd.click&&Snd.click();
+          joinBtn.addEventListener("click", () => {
+            Snd.click && Snd.click();
             mpJoinPublicSlot(rm.id, rm.title);
           });
         }
@@ -6938,33 +6986,30 @@ function mpRenderLobbyUI(){
   }
 
   // 2. Zavihek Igralcev
-  const pList=$("mpPlayerList");
+  const pList = $("mpPlayerList");
   if(pList){
-    const myP={name:mpGetName(),color:mpGetColor(),rank:playerTitle(),status:"V lobiju 🟢"};
-    const hostPlayers=mpLobby.rooms.map(r=>({name:r.host,color:r.color,rank:"Gostitelj",status:"Čaka v sobi 🏎️"}));
-    const allPlayers=[myP,...hostPlayers];
-    pList.innerHTML="";
-    allPlayers.forEach(p=>{
-      const item=document.createElement("div");
-      item.className="mpPlayerItem";
-      const isMe=p.name===mpGetName();
-      item.innerHTML=`
+    pList.innerHTML = "";
+    allPlayers.forEach(p => {
+      const item = document.createElement("div");
+      item.className = "mpPlayerItem";
+      const isMe = p.id === MP_CLIENT_ID;
+      item.innerHTML = `
         <div class="mpPlayerLeft">
           <div class="mpPlayerAvatar" style="background:${p.color||'#3dff8e'}"></div>
           <div>
             <div class="mpPlayerName">${p.name} ${isMe?'<span style="opacity:.6">(TI)</span>':''}</div>
-            <div class="mpPlayerRank">🎖️ ${p.rank} · <span style="color:var(--yellow)">${p.status}</span></div>
+            <div class="mpPlayerRank">🎖️ ${p.rank} · <span style="color:var(--yellow)">${p.status||'V lobiju 🟢'}</span></div>
           </div>
         </div>
         <div>
-          ${!isMe?`<button class="mpBtnAction" style="font-size:10.5px;padding:5px 8px" data-name="${p.name}">⚔️ Izzovi</button>`:''}
+          ${!isMe ? `<button class="mpBtnAction" style="font-size:10.5px;padding:5px 8px" data-name="${p.name}">⚔️ Izzovi</button>` : ''}
         </div>
       `;
-      const chBtn=item.querySelector("button");
+      const chBtn = item.querySelector("button");
       if(chBtn){
-        chBtn.addEventListener("click",()=>{
-          Snd.click&&Snd.click();
-          openCreateRoomModal("Izziv: "+p.name);
+        chBtn.addEventListener("click", () => {
+          Snd.click && Snd.click();
+          openCreateRoomModal("Izziv: " + p.name);
         });
       }
       pList.appendChild(item);
@@ -6974,95 +7019,87 @@ function mpRenderLobbyUI(){
 
 /* ---------- LOBBY NAVIGATION & ACTIONS ---------- */
 function openMP(){
-  if(typeof Peer==="undefined"){
-    showBanner("Multiplayer potrebuje spletno različico (Netlify / WebView).",3200,true);
-    return;
-  }
   mpReset();
-  const myName=save.playerName||"Dirkač";
-  const nameInput=$("mpName");
-  if(nameInput) nameInput.value=myName;
+  const myName = save.playerName || "Dirkač";
+  const nameInput = $("mpName");
+  if(nameInput) nameInput.value = myName;
 
-  const av=$("mpMyAvatar");
-  if(av) av.style.background=mpGetColor();
-  const rk=$("mpMyRank");
-  if(rk) rk.textContent="🎖️ "+playerTitle();
+  const av = $("mpMyAvatar");
+  if(av) av.style.background = mpGetColor();
+  const rk = $("mpMyRank");
+  if(rk) rk.textContent = "🎖️ " + playerTitle();
 
   setScreen("mpHome");
   mpSwitchTab("rooms");
-  mpInitHub();
+  mpConnectRelay();
 }
 
 function mpSwitchTab(tab){
-  mpLobby.activeTab=tab;
-  $("mpTabRooms").classList.toggle("sel",tab==="rooms");
-  $("mpTabPlayers").classList.toggle("sel",tab==="players");
-  $("mpTabCode").classList.toggle("sel",tab==="code");
-  $("mpViewRooms").style.display=(tab==="rooms")?"block":"none";
-  $("mpViewPlayers").style.display=(tab==="players")?"block":"none";
-  $("mpViewCode").style.display=(tab==="code")?"block":"none";
-  if(tab==="rooms"){
-    mpScanPublicRooms();
-  } else {
-    mpRenderLobbyUI();
-  }
+  mpLobby.activeTab = tab;
+  $("mpTabRooms").classList.toggle("sel", tab === "rooms");
+  $("mpTabPlayers").classList.toggle("sel", tab === "players");
+  $("mpTabCode").classList.toggle("sel", tab === "code");
+  $("mpViewRooms").style.display = (tab === "rooms") ? "block" : "none";
+  $("mpViewPlayers").style.display = (tab === "players") ? "block" : "none";
+  $("mpViewCode").style.display = (tab === "code") ? "block" : "none";
+  mpRenderLobbyUI();
 }
 
 function openCreateRoomModal(prefillTitle){
-  const modal=$("mpCreateModal");
+  const modal = $("mpCreateModal");
   if(!modal) return;
-  modal.style.display="flex";
-  const titleInp=$("mpRoomTitle");
-  if(titleInp) titleInp.value=prefillTitle||(mpGetName()+" Grand Prix");
+  modal.style.display = "flex";
+  const titleInp = $("mpRoomTitle");
+  if(titleInp) titleInp.value = prefillTitle || (mpGetName() + " Dirka");
 
-  mpLobby.createCfg={ isPublic:true, track:0, laps:3, nai:0 };
+  mpLobby.createCfg = { isPublic: true, track: 0, laps: 3, nai: 0 };
   renderCreatePills();
 }
 
 function closeCreateRoomModal(){
-  const modal=$("mpCreateModal");
-  if(modal) modal.style.display="none";
+  const modal = $("mpCreateModal");
+  if(modal) modal.style.display = "none";
 }
 
 function renderCreatePills(){
-  const optPub=$("mpOptPub"), optPriv=$("mpOptPriv");
-  if(optPub&&optPriv){
-    optPub.classList.toggle("sel",mpLobby.createCfg.isPublic);
-    optPriv.classList.toggle("sel",!mpLobby.createCfg.isPublic);
-    optPub.onclick=()=>{ mpLobby.createCfg.isPublic=true; renderCreatePills(); };
-    optPriv.onclick=()=>{ mpLobby.createCfg.isPublic=false; renderCreatePills(); };
+  const optPub = $("mpOptPub"), optPriv = $("mpOptPriv");
+  if(optPub && optPriv){
+    optPub.classList.toggle("sel", mpLobby.createCfg.isPublic);
+    optPriv.classList.toggle("sel", !mpLobby.createCfg.isPublic);
+    optPub.onclick = () => { mpLobby.createCfg.isPublic = true; renderCreatePills(); };
+    optPriv.onclick = () => { mpLobby.createCfg.isPublic = false; renderCreatePills(); };
   }
 
-  const trContainer=$("mpNewTracks");
+  const trContainer = $("mpNewTracks");
   if(trContainer){
-    trContainer.innerHTML="";
-    MP_TRACKS.forEach(tr=>{
-      const p=document.createElement("div");
-      p.className="mpPill"+(mpLobby.createCfg.track===tr?" sel":"");
-      p.textContent="Proga "+(tr+1);
-      p.onclick=()=>{ mpLobby.createCfg.track=tr; renderCreatePills(); };
+    trContainer.innerHTML = "";
+    MP_TRACKS.forEach(tr => {
+      const p = document.createElement("div");
+      p.className = "mpPill" + (mpLobby.createCfg.track === tr ? " sel" : "");
+      p.textContent = "Proga " + (tr + 1);
+      p.onclick = () => { mpLobby.createCfg.track = tr; renderCreatePills(); };
       trContainer.appendChild(p);
     });
   }
-  const lapContainer=$("mpNewLaps");
+  const lapContainer = $("mpNewLaps");
   if(lapContainer){
-    lapContainer.innerHTML="";
-    MP_LAPS.forEach(lp=>{
-      const p=document.createElement("div");
-      p.className="mpPill"+(mpLobby.createCfg.laps===lp?" sel":"");
-      p.textContent=lp+" krog"+(lp===1?"":"i");
-      p.onclick=()=>{ mpLobby.createCfg.laps=lp; renderCreatePills(); };
+    lapContainer.innerHTML = "";
+    MP_LAPS.forEach(lp => {
+      const p = document.createElement("div");
+      p.className = "mpPill" + (mpLobby.createCfg.laps === lp ? " sel" : "");
+      p.textContent = lp + " kr.";
+      p.onclick = () => { mpLobby.createCfg.laps = lp; renderCreatePills(); };
       lapContainer.appendChild(p);
     });
   }
-  const aiContainer=$("mpNewAI");
+  const aiContainer = $("mpNewAI");
   if(aiContainer){
-    aiContainer.innerHTML="";
-    MP_AI.forEach(ai=>{
-      const p=document.createElement("div");
-      p.className="mpPill"+(mpLobby.createCfg.nai===ai?" sel":"");
-      p.textContent=ai===0?"Brez AI":(ai+" AI");
-      p.onclick=()=>{ mpLobby.createCfg.nai=ai; renderCreatePills(); };
+    aiContainer.innerHTML = "";
+    MP_AI.forEach(ai => {
+      const p = document.createElement("div");
+      p.className = "mpPill" + (mpLobby.createCfg.nai === ai ? " sel" : "");
+      p.textContent = ai === 0 ? "Brez AI" : (ai + " AI");
+      p.onclick = () => { mpLobby.createCfg.nai = ai; renderCreatePills(); };
       aiContainer.appendChild(p);
     });
   }
@@ -7070,364 +7107,245 @@ function renderCreatePills(){
 
 /* ---------- ROOM CREATION & CONNECTION ---------- */
 function mpCreateRoom(){
-  const nm=mpGetName();
-  save.playerName=nm; persist();
-  const roomTitle=($("mpRoomTitle").value||"").trim().slice(0,24)||(nm+" Dirka");
-  const isPublic=!!mpLobby.createCfg.isPublic;
+  const nm = mpGetName();
+  save.playerName = nm; persist();
+  const roomTitle = ($("mpRoomTitle").value || "").trim().slice(0, 24) || (nm + " Dirka");
+  const isPublic = !!mpLobby.createCfg.isPublic;
   closeCreateRoomModal();
 
   mpReset();
-  const roomCode=mpCode();
-  const peerId=isPublic ? ("PD-PUB-"+roomCode) : ("PD-"+roomCode);
+  const roomCode = mpCode();
+  const roomId = isPublic ? ("PUB-" + roomCode) : ("PRIV-" + roomCode);
 
-  mp={
-    isHost:true,
+  mp = {
+    isHost: true,
     isPublic,
-    name:nm,
-    myColor:mpGetColor(),
-    oppName:null,
-    oppColor:"#ff6b6b",
-    oppTitle:"Dirkač",
-    conn:null,
-    peer:null,
-    peerId,
-    code:roomCode,
-    title:roomTitle,
-    track:mpLobby.createCfg.track,
-    laps:mpLobby.createCfg.laps,
-    nai:mpLobby.createCfg.nai,
-    seed:(Math.random()*1e9)|0,
-    ready:true,
-    oppReady:false,
-    started:false,
-    opp:null,
-    oppFin:null,
-    myFin:null
+    name: nm,
+    myColor: mpGetColor(),
+    oppName: null,
+    oppColor: "#ff6b6b",
+    oppTitle: "Dirkač",
+    code: roomCode,
+    roomId,
+    title: roomTitle,
+    track: mpLobby.createCfg.track,
+    laps: mpLobby.createCfg.laps,
+    nai: mpLobby.createCfg.nai,
+    seed: (Math.random()*1e9)|0,
+    ready: true,
+    oppReady: false,
+    started: false,
+    opp: null,
+    oppFin: null,
+    myFin: null
   };
 
   setScreen("mpLobby");
   mpUpdateRoomView();
-  mpStatus(isPublic ? "Povezujem javno sobo…" : "Ustvarjam zasebno sobo…");
+  mpStatus(isPublic ? "Javna soba je odprta! Čakam igralca iz lobija…" : ("Zasebna soba pripravljena! Deli kodo: " + roomCode));
+  mpRenderHostSettings();
 
-  let peer;
-  try{
-    peer=new Peer(peerId,{debug:0});
-  }catch(e){
-    mpStatus("Napaka pri povezavi: "+(e.message||e));
-    return;
-  }
-  mp.peer=peer;
-
-  peer.on("open",()=>{
-    if(!mp) { try{ peer.destroy(); }catch(_){} return; }
-    if(isPublic){
-      mpStatus("Javna soba je odprta! Čakam igralca iz lobija…");
-      mpStartAnnouncingRoom();
-    } else {
-      mpStatus("Zasebna soba pripravljena! Deli kodo s prijateljem.");
-    }
-    mpUpdateRoomView();
-    mpRenderHostSettings();
-  });
-
-  peer.on("connection",(conn)=>{
-    mpHandleHostIncomingConn(conn);
-  });
-
-  peer.on("error",(e)=>{
-    if(e && e.type==="unavailable-id"){
-      mpCreateRoom();
-    } else {
-      mpStatus("Napaka: "+(e.type||e.message||e));
-    }
-  });
-}
-
-function mpHandleHostIncomingConn(conn){
-  const sendRoomInfo=()=>{
-    try{
-      if(conn.open){
-        conn.send({
-          t:"room_info",
-          slotId:mp ? (mp.peerId||("PD-"+mp.code)) : "",
-          title:mp ? mp.title : "Javna dirka",
-          host:mp ? mp.name : "Gostitelj",
-          color:mp ? mp.myColor : "var(--green)",
-          track:mp ? mp.track : 0,
-          laps:mp ? mp.laps : 3,
-          ai:mp ? mp.nai : 0,
-          players:(mp && mp.oppName) ? 2 : 1,
-          max:2,
-          isPublic:mp ? mp.isPublic : false
+  mpRelay.currentRoomTopic = "finger-racer/v2/room/" + roomId + "/#";
+  const subscribeAndAnnounce = () => {
+    if(mpRelay.client && mpRelay.connected){
+      mpRelay.client.subscribe(mpRelay.currentRoomTopic);
+      mpRelay.subTopics.add(mpRelay.currentRoomTopic);
+      if(isPublic){
+        mpPublishMqtt("finger-racer/v2/lobby/rooms", {
+          id: roomId,
+          code: roomCode,
+          title: roomTitle,
+          host: nm,
+          color: mp.myColor,
+          track: mp.track,
+          laps: mp.laps,
+          ai: mp.nai,
+          players: 1,
+          max: 2,
+          isPublic: true,
+          time: Date.now(),
+          closed: false
         });
       }
-    }catch(_){}
+    }
   };
 
-  if(conn.open) sendRoomInfo();
-  else conn.on("open", sendRoomInfo);
-
-  conn.on("data",(d)=>{
-    if(!d || !mp) return;
-
-    if(d.t==="join" || d.t==="hi"){
-      if(mp.oppName && mp.conn && mp.conn!==conn && mp.conn.open){
-        try{
-          conn.send({t:"busy"});
-          setTimeout(()=>{ try{ conn.close(); }catch(_){} },300);
-        }catch(_){}
-        return;
-      }
-
-      mp.conn=conn;
-      mp.oppName=d.name||"Nasprotnik";
-      if(d.color) mp.oppColor=d.color;
-      if(d.title) mp.oppTitle=d.title;
-      if(d.ready!=null) mp.oppReady=!!d.ready;
-
-      mpStatus("Povezan z "+mp.oppName+" ✅");
-      mpUpdateRoomView();
-
-      try{
-        conn.send({
-          t:"welcome",
-          name:mp.name,
-          color:mp.myColor,
-          title:playerTitle(),
-          track:mp.track,
-          laps:mp.laps,
-          nai:mp.nai,
-          seed:mp.seed,
-          ready:mp.ready
-        });
-      }catch(_){}
-
-      mpBindConn(conn);
-    }
-  });
+  if(mpRelay.connected) subscribeAndAnnounce();
+  else mpConnectRelay(() => subscribeAndAnnounce());
 }
 
-function mpJoinPublicSlot(slotId, roomTitle){
-  const nm=mpGetName();
-  save.playerName=nm; persist();
+function mpJoinRoom(roomId, roomCode, roomTitle, isPublic){
+  const nm = mpGetName();
+  save.playerName = nm; persist();
 
   mpReset();
-  mp={
-    isHost:false,
-    isPublic:true,
-    name:nm,
-    myColor:mpGetColor(),
-    oppName:null,
-    oppColor:"#3dff8e",
-    oppTitle:"Gostitelj",
-    conn:null,
-    peer:null,
-    code:"",
-    title:roomTitle||"Javna dirka",
-    track:0,
-    laps:3,
-    nai:0,
-    seed:0,
-    ready:false,
-    oppReady:true,
-    started:false,
-    opp:null,
-    oppFin:null,
-    myFin:null
+  mp = {
+    isHost: false,
+    isPublic,
+    name: nm,
+    myColor: mpGetColor(),
+    oppName: null,
+    oppColor: "#3dff8e",
+    oppTitle: "Gostitelj",
+    code: roomCode || "",
+    roomId,
+    title: roomTitle || ("Soba #" + (roomCode || "")),
+    track: 0,
+    laps: 3,
+    nai: 0,
+    seed: 0,
+    ready: false,
+    oppReady: true,
+    started: false,
+    opp: null,
+    oppFin: null,
+    myFin: null
   };
 
   setScreen("mpLobby");
   mpUpdateRoomView();
-  mpStatus("Pridružujem se javni sobi…");
+  mpStatus("Povezujem s sobo…");
 
-  const peer=new Peer({debug:0});
-  mp.peer=peer;
+  mpRelay.currentRoomTopic = "finger-racer/v2/room/" + roomId + "/#";
+  const doJoin = () => {
+    if(mpRelay.client && mpRelay.connected){
+      mpRelay.client.subscribe(mpRelay.currentRoomTopic);
+      mpRelay.subTopics.add(mpRelay.currentRoomTopic);
+    }
+    mpSend({
+      t: "join",
+      name: mp.name,
+      color: mp.myColor,
+      title: playerTitle(),
+      ready: mp.ready
+    });
+    mpStatus("Povezan! Čakam potrditev gostitelja…");
 
-  peer.on("open",()=>{
-    const conn=peer.connect(slotId,{reliable:false});
-    mp.conn=conn;
-
-    const onOpen=()=>{
-      mpStatus("Povezujem z gostiteljem…");
-      try{
-        conn.send({
-          t:"join",
-          name:mp.name,
-          color:mp.myColor,
-          title:playerTitle(),
-          ready:mp.ready
-        });
-      }catch(_){}
-      mpBindConn(conn);
-    };
-
-    if(conn.open) onOpen();
-    else conn.on("open", onOpen);
-
-    setTimeout(()=>{
+    setTimeout(() => {
       if(mp && !mp.oppName && !mp.started){
-        mpStatus("Gostitelj se ni odzval. Poskusi znova ali izberi drugo sobo.");
+        mpStatus("Gostitelj se ni odzval. Poskusi znova.");
       }
-    },7000);
-  });
+    }, 6000);
+  };
 
-  peer.on("error",(e)=>{
-    mpStatus("Napaka pri povezavi: "+(e.type||e.message||e));
-  });
+  if(mpRelay.connected) doJoin();
+  else mpConnectRelay(() => doJoin());
+}
+
+function mpJoinPublicSlot(roomId, roomTitle){
+  const code = roomId.replace("PUB-", "");
+  mpJoinRoom(roomId, code, roomTitle, true);
 }
 
 function mpJoinCode(customCode){
-  const nm=mpGetName();
-  save.playerName=nm; persist();
-  const code=(customCode||$("mpCodeIn").value||"").trim().toUpperCase();
-  if(code.length<4){
-    showBanner("Vpiši veljavno kodo sobe.",2200,true);
+  const code = (customCode || $("mpCodeIn").value || "").trim().toUpperCase();
+  if(code.length < 4){
+    showBanner("Vpiši veljavno kodo sobe.", 2200, true);
     return;
   }
-
-  mpReset();
-  mp={
-    isHost:false,
-    isPublic:false,
-    name:nm,
-    myColor:mpGetColor(),
-    oppName:null,
-    oppColor:"#3dff8e",
-    oppTitle:"Gostitelj",
-    conn:null,
-    peer:null,
-    code,
-    title:"Soba #"+code,
-    track:0,
-    laps:3,
-    nai:0,
-    seed:0,
-    ready:false,
-    oppReady:true,
-    started:false,
-    opp:null,
-    oppFin:null,
-    myFin:null
-  };
-
-  setScreen("mpLobby");
-  mpUpdateRoomView();
-  mpStatus("Povezujem s sobo "+code+"…");
-
-  const peer=new Peer({debug:0});
-  mp.peer=peer;
-
-  peer.on("open",()=>{
-    const conn=peer.connect("PD-"+code,{reliable:false});
-    mp.conn=conn;
-
-    const onOpen=()=>{
-      mpStatus("Povezujem z gostiteljem…");
-      try{
-        conn.send({
-          t:"join",
-          name:mp.name,
-          color:mp.myColor,
-          title:playerTitle(),
-          ready:mp.ready
-        });
-      }catch(_){}
-      mpBindConn(conn);
-    };
-
-    if(conn.open) onOpen();
-    else conn.on("open", onOpen);
-
-    setTimeout(()=>{
-      if(mp && !mp.oppName && !mp.started){
-        mpStatus("Soba ni najdena ali gostitelj ni dosegljiv.");
-      }
-    },7000);
-  });
-
-  peer.on("error",(e)=>{
-    mpStatus("Napaka: "+(e.type||e.message||e));
-  });
+  let roomId = "PRIV-" + code;
+  for(const [id, r] of mpRelay.activeRooms){
+    if(r.code === code){ roomId = id; break; }
+  }
+  mpJoinRoom(roomId, code, "Soba #" + code, false);
 }
 
 function mpQuick(){
-  if(typeof Peer==="undefined"){
-    showBanner("Multiplayer potrebuje spletno različico.",3200,true);
-    return;
-  }
-  const openRoom=mpLobby.rooms.find(r=>r.players<r.max);
+  const openRoom = mpLobby.rooms.find(r => r.players < r.max);
   if(openRoom){
     mpJoinPublicSlot(openRoom.id, openRoom.title);
     return;
   }
-  mpLobby.createCfg={ isPublic:true, track:(Math.random()*MP_TRACKS.length)|0, laps:3, nai:0 };
+  mpLobby.createCfg = { isPublic: true, track: (Math.random()*MP_TRACKS.length)|0, laps: 3, nai: 0 };
   openCreateRoomModal("Hitra Dirka");
 }
 
-/* ---------- CONNECTION EVENT BINDINGS ---------- */
-function mpBindConn(conn){
-  conn.on("data",(d)=>mpOnData(d));
-
-  conn.on("close",()=>{
-    if(mp && !mp.started){
-      mpStatus(mp.oppName ? (mp.oppName+" je zapustil sobo.") : "Nasprotnik je zapustil sobo.");
-      mp.oppName=null;
-      mp.oppReady=false;
-      mpUpdateRoomView();
-    }
-    if(mp) mp.oppLeft=true;
-  });
-
-  conn.on("error",()=>{});
+function mpSend(o){
+  if(!mp || !mp.roomId) return;
+  o.sender = MP_CLIENT_ID;
+  const role = mp.isHost ? "host" : "guest";
+  const subPath = (o.t === "pos") ? ("t_" + role) : role;
+  const topic = "finger-racer/v2/room/" + mp.roomId + "/" + subPath;
+  mpPublishMqtt(topic, o);
 }
 
 function mpOnData(d){
   if(!mp || !d) return;
 
-  if(d.t==="welcome" || d.t==="hi"){
-    mp.oppName=d.name||"Nasprotnik";
-    if(d.color) mp.oppColor=d.color;
-    if(d.title) mp.oppTitle=d.title;
-    if(d.ready!=null) mp.oppReady=!!d.ready;
-    if(d.track!=null) mp.track=d.track;
-    if(d.laps!=null) mp.laps=d.laps;
-    if(d.nai!=null) mp.nai=d.nai;
-    if(d.seed!=null) mp.seed=d.seed;
-    mpStatus("Povezan z "+mp.oppName+" ✅");
-    mpUpdateRoomView();
-
+  if(d.t === "join" || d.t === "hi"){
     if(mp.isHost){
-      mpBroadcastCfg();
+      if(mp.oppName && mp.oppName !== d.name && !mp.started){
+        mpSend({ t: "busy" });
+        return;
+      }
+      mp.oppName = d.name || "Nasprotnik";
+      if(d.color) mp.oppColor = d.color;
+      if(d.title) mp.oppTitle = d.title;
+      if(d.ready != null) mp.oppReady = !!d.ready;
+
+      mpStatus("Povezan z " + mp.oppName + " ✅");
+      mpUpdateRoomView();
+
+      mpSend({
+        t: "welcome",
+        name: mp.name,
+        color: mp.myColor,
+        title: playerTitle(),
+        track: mp.track,
+        laps: mp.laps,
+        nai: mp.nai,
+        seed: mp.seed,
+        ready: mp.ready
+      });
     }
-  } else if(d.t==="cfg"){
-    mp.track=d.track;
-    mp.laps=d.laps;
-    mp.nai=d.nai;
-    mp.seed=d.seed;
+  } else if(d.t === "welcome"){
+    if(!mp.isHost){
+      mp.oppName = d.name || "Nasprotnik";
+      if(d.color) mp.oppColor = d.color;
+      if(d.title) mp.oppTitle = d.title;
+      if(d.ready != null) mp.oppReady = !!d.ready;
+      if(d.track != null) mp.track = d.track;
+      if(d.laps != null) mp.laps = d.laps;
+      if(d.nai != null) mp.nai = d.nai;
+      if(d.seed != null) mp.seed = d.seed;
+      mpStatus("Povezan z " + mp.oppName + " ✅");
+      mpUpdateRoomView();
+    }
+  } else if(d.t === "cfg"){
+    mp.track = d.track;
+    mp.laps = d.laps;
+    mp.nai = d.nai;
+    mp.seed = d.seed;
     mpUpdateRoomView();
-    mpStatus("Gostitelj: Proga "+(d.track+1)+" · "+d.laps+" kr. · "+(d.nai||0)+" AI");
-  } else if(d.t==="ready"){
-    mp.oppReady=!!d.val;
+    mpStatus("Gostitelj: Proga " + (d.track + 1) + " · " + d.laps + " kr. · " + (d.nai || 0) + " AI");
+  } else if(d.t === "ready"){
+    mp.oppReady = !!d.val;
     mpUpdateRoomView();
-    if(mp.isHost && mp.oppReady) showBanner(mp.oppName+" je pripravljen! 🏁",1500);
-  } else if(d.t==="start"){
-    mp.track=d.track;
-    mp.laps=d.laps;
-    mp.nai=d.nai;
-    mp.seed=d.seed;
+    if(mp.isHost && mp.oppReady) showBanner(mp.oppName + " je pripravljen! 🏁", 1500);
+  } else if(d.t === "start"){
+    mp.track = d.track;
+    mp.laps = d.laps;
+    mp.nai = d.nai;
+    mp.seed = d.seed;
     mpStartRace(false);
-  } else if(d.t==="busy"){
+  } else if(d.t === "busy"){
     mpStatus("Soba je že polna.");
-    showBanner("Soba je že zasedena!",2200,true);
-  } else if(d.t==="pos"){
-    mp.opp=d;
-    mp.oppT=performance.now();
-  } else if(d.t==="fin"){
-    mp.oppFin=d.time;
+    showBanner("Soba je že zasedena!", 2200, true);
+  } else if(d.t === "pos"){
+    mp.opp = d;
+    mp.oppT = performance.now();
+  } else if(d.t === "fin"){
+    mp.oppFin = d.time;
     mpCheckFinish();
-  } else if(d.t==="bye"){
-    mp.oppLeft=true;
-    if(state==="racing") showComment("👋 Nasprotnik je zapustil dirko",0);
+  } else if(d.t === "bye"){
+    mp.oppLeft = true;
+    if(state === "racing") showComment("👋 Nasprotnik je zapustil dirko", 0);
+    else if(!mp.started){
+      mpStatus(mp.oppName ? (mp.oppName + " je zapustil sobo.") : "Nasprotnik je zapustil sobo.");
+      mp.oppName = null;
+      mp.oppReady = false;
+      mpUpdateRoomView();
+    }
   }
 }
 
@@ -7435,76 +7353,76 @@ function mpOnData(d){
 function mpUpdateRoomView(){
   if(!mp) return;
 
-  const rh=$("mpRoomHeading"), rs=$("mpRoomSub"), cd=$("mpCode");
-  const pubTag=$("mpPublicTag"), codeBox=$("mpCodeBoxNew");
+  const rh = $("mpRoomHeading"), rs = $("mpRoomSub"), cd = $("mpCode");
+  const pubTag = $("mpPublicTag"), codeBox = $("mpCodeBoxNew");
 
   if(mp.isPublic){
-    if(rh) rh.innerHTML=`${mp.title||'JAVNA DIRKA'}`;
-    if(pubTag) pubTag.style.display="inline-block";
-    if(codeBox) codeBox.style.display="none";
+    if(rh) rh.innerHTML = `${mp.title||'JAVNA DIRKA'}`;
+    if(pubTag) pubTag.style.display = "inline-block";
+    if(codeBox) codeBox.style.display = "none";
   } else {
-    if(rh) rh.innerHTML=`${mp.title||'ZASEBNA SOBA'} <span>#${mp.code}</span>`;
-    if(pubTag) pubTag.style.display="none";
-    if(codeBox) codeBox.style.display="flex";
-    if(cd) cd.textContent=mp.code;
+    if(rh) rh.innerHTML = `${mp.title||'ZASEBNA SOBA'} <span>#${mp.code}</span>`;
+    if(pubTag) pubTag.style.display = "none";
+    if(codeBox) codeBox.style.display = "flex";
+    if(cd) cd.textContent = mp.code;
   }
 
-  if(rs) rs.textContent=`Proga ${mp.track+1} · ${mp.laps} krogi · ${mp.nai?(mp.nai+' AI'):'Brez AI'}`;
+  if(rs) rs.textContent = `Proga ${mp.track+1} · ${mp.laps} krogi · ${mp.nai?(mp.nai+' AI'):'Brez AI'}`;
 
-  const avMe=$("mpRacerAvatarMe"), nmMe=$("mpRacerNameMe"), rlMe=$("mpRacerRoleMe"), rdMe=$("mpRacerReadyMe");
-  if(avMe) avMe.style.background=mp.myColor;
-  if(nmMe) nmMe.textContent=mp.name;
-  if(rlMe) rlMe.textContent=mp.isHost?"Gostitelj":"Izzivalec";
+  const avMe = $("mpRacerAvatarMe"), nmMe = $("mpRacerNameMe"), rlMe = $("mpRacerRoleMe"), rdMe = $("mpRacerReadyMe");
+  if(avMe) avMe.style.background = mp.myColor;
+  if(nmMe) nmMe.textContent = mp.name;
+  if(rlMe) rlMe.textContent = mp.isHost ? "Gostitelj" : "Izzivalec";
   if(rdMe){
-    rdMe.className="mpReadyBadge"+(mp.ready?"":" notReady");
-    rdMe.textContent=mp.ready?"✓ Pripravljen":"❌ Ni pripravljen";
+    rdMe.className = "mpReadyBadge" + (mp.ready ? "" : " notReady");
+    rdMe.textContent = mp.ready ? "✓ Pripravljen" : "❌ Ni pripravljen";
   }
 
-  const avOpp=$("mpRacerAvatarOpp"), nmOpp=$("mpRacerNameOpp"), rlOpp=$("mpRacerRoleOpp"), rdOpp=$("mpRacerReadyOpp");
+  const avOpp = $("mpRacerAvatarOpp"), nmOpp = $("mpRacerNameOpp"), rlOpp = $("mpRacerRoleOpp"), rdOpp = $("mpRacerReadyOpp");
   if(mp.oppName){
-    if(avOpp) avOpp.style.background=mp.oppColor||"#ff6b6b";
-    if(nmOpp) nmOpp.textContent=mp.oppName;
-    if(rlOpp) rlOpp.textContent=mp.isHost?"Izzivalec":"Gostitelj";
+    if(avOpp) avOpp.style.background = mp.oppColor || "#ff6b6b";
+    if(nmOpp) nmOpp.textContent = mp.oppName;
+    if(rlOpp) rlOpp.textContent = mp.isHost ? "Izzivalec" : "Gostitelj";
     if(rdOpp){
-      rdOpp.className="mpReadyBadge"+(mp.oppReady?"":" waiting");
-      rdOpp.textContent=mp.oppReady?"✓ Pripravljen":"⏳ Izbira…";
+      rdOpp.className = "mpReadyBadge" + (mp.oppReady ? "" : " waiting");
+      rdOpp.textContent = mp.oppReady ? "✓ Pripravljen" : "⏳ Izbira…";
     }
   } else {
-    if(avOpp) avOpp.style.background="rgba(255,255,255,.15)";
-    if(nmOpp) nmOpp.textContent=mp.isPublic?"Čakam igralca iz lobija…":"Čakam kodo nasprotnika…";
-    if(rlOpp) rlOpp.textContent="—";
+    if(avOpp) avOpp.style.background = "rgba(255,255,255,.15)";
+    if(nmOpp) nmOpp.textContent = mp.isPublic ? "Čakam igralca iz lobija…" : "Čakam kodo nasprotnika…";
+    if(rlOpp) rlOpp.textContent = "—";
     if(rdOpp){
-      rdOpp.className="mpReadyBadge waiting";
-      rdOpp.textContent="⏳ Čakanje";
+      rdOpp.className = "mpReadyBadge waiting";
+      rdOpp.textContent = "⏳ Čakanje";
     }
   }
 
-  const btnReady=$("btnMpReadyToggle");
-  const btnStart=$("btnMpStart");
-  const waitBox=$("mpWait");
+  const btnReady = $("btnMpReadyToggle");
+  const btnStart = $("btnMpStart");
+  const waitBox = $("mpWait");
 
   if(!mp.isHost){
     if(btnReady){
-      btnReady.style.display="block";
-      btnReady.className="bigBtn"+(mp.ready?" isReady":"");
-      btnReady.textContent=mp.ready?"❌ Prekliči pripravljenost":"✓ Pripravljen sem!";
+      btnReady.style.display = "block";
+      btnReady.className = "bigBtn" + (mp.ready ? " isReady" : "");
+      btnReady.textContent = mp.ready ? "❌ Prekliči pripravljenost" : "✓ Pripravljen sem!";
     }
-    if(btnStart) btnStart.style.display="none";
-    if(waitBox) waitBox.style.display="block";
+    if(btnStart) btnStart.style.display = "none";
+    if(waitBox) waitBox.style.display = "block";
   } else {
-    if(btnReady) btnReady.style.display="none";
-    if(waitBox) waitBox.style.display="none";
+    if(btnReady) btnReady.style.display = "none";
+    if(waitBox) waitBox.style.display = "none";
     if(btnStart){
-      btnStart.style.display="block";
+      btnStart.style.display = "block";
       if(!mp.oppName){
-        btnStart.textContent=mp.isPublic?"⏳ Čakam igralca iz lobija…":"⏳ Čakam nasprotnika…";
-        btnStart.style.opacity="0.5";
+        btnStart.textContent = mp.isPublic ? "⏳ Čakam igralca iz lobija…" : "⏳ Čakam nasprotnika…";
+        btnStart.style.opacity = "0.5";
       } else if(!mp.oppReady){
-        btnStart.textContent="⏳ "+mp.oppName+" se še pripravlja…";
-        btnStart.style.opacity="0.75";
+        btnStart.textContent = "⏳ " + mp.oppName + " se še pripravlja…";
+        btnStart.style.opacity = "0.75";
       } else {
-        btnStart.textContent="🏁 Začni dirko!";
-        btnStart.style.opacity="1";
+        btnStart.textContent = "🏁 Začni dirko!";
+        btnStart.style.opacity = "1";
       }
     }
   }
@@ -7512,23 +7430,23 @@ function mpUpdateRoomView(){
 
 function mpToggleReady(){
   if(!mp) return;
-  mp.ready=!mp.ready;
-  mpSend({t:"ready",val:mp.ready});
+  mp.ready = !mp.ready;
+  mpSend({ t: "ready", val: mp.ready });
   mpUpdateRoomView();
 }
 
 function mpRenderHostSettings(){
-  if(!mp||!mp.isHost) return;
-  const tb=$("mpTracks");
+  if(!mp || !mp.isHost) return;
+  const tb = $("mpTracks");
   if(tb){
-    tb.innerHTML="";
-    MP_TRACKS.forEach(tr=>{
-      const d=document.createElement("div");
-      d.className="setOpt"+(mp.track===tr?" sel":"");
-      d.style.cssText="padding:6px 9px;font-size:12px";
-      d.textContent="Proga "+(tr+1);
-      d.addEventListener("click",()=>{
-        mp.track=tr;
+    tb.innerHTML = "";
+    MP_TRACKS.forEach(tr => {
+      const d = document.createElement("div");
+      d.className = "setOpt" + (mp.track === tr ? " sel" : "");
+      d.style.cssText = "padding:6px 9px;font-size:12px";
+      d.textContent = "Proga " + (tr + 1);
+      d.addEventListener("click", () => {
+        mp.track = tr;
         mpBroadcastCfg();
         mpRenderHostSettings();
         mpUpdateRoomView();
@@ -7536,16 +7454,16 @@ function mpRenderHostSettings(){
       tb.appendChild(d);
     });
   }
-  const lb=$("mpLaps");
+  const lb = $("mpLaps");
   if(lb){
-    lb.innerHTML="";
-    MP_LAPS.forEach(n=>{
-      const d=document.createElement("div");
-      d.className="setOpt"+((mp.laps||3)===n?" sel":"");
-      d.style.cssText="padding:6px 9px;font-size:12px";
-      d.textContent=n+" krog"+(n===1?"":"i");
-      d.addEventListener("click",()=>{
-        mp.laps=n;
+    lb.innerHTML = "";
+    MP_LAPS.forEach(n => {
+      const d = document.createElement("div");
+      d.className = "setOpt" + ((mp.laps || 3) === n ? " sel" : "");
+      d.style.cssText = "padding:6px 9px;font-size:12px";
+      d.textContent = n + " krog" + (n === 1 ? "" : "i");
+      d.addEventListener("click", () => {
+        mp.laps = n;
         mpBroadcastCfg();
         mpRenderHostSettings();
         mpUpdateRoomView();
@@ -7553,16 +7471,16 @@ function mpRenderHostSettings(){
       lb.appendChild(d);
     });
   }
-  const ab=$("mpAI");
+  const ab = $("mpAI");
   if(ab){
-    ab.innerHTML="";
-    MP_AI.forEach(n=>{
-      const d=document.createElement("div");
-      d.className="setOpt"+((mp.nai||0)===n?" sel":"");
-      d.style.cssText="padding:6px 9px;font-size:12px";
-      d.textContent=n===0?"Brez AI":(n+" AI");
-      d.addEventListener("click",()=>{
-        mp.nai=n;
+    ab.innerHTML = "";
+    MP_AI.forEach(n => {
+      const d = document.createElement("div");
+      d.className = "setOpt" + ((mp.nai || 0) === n ? " sel" : "");
+      d.style.cssText = "padding:6px 9px;font-size:12px";
+      d.textContent = n === 0 ? "Brez AI" : (n + " AI");
+      d.addEventListener("click", () => {
+        mp.nai = n;
         mpBroadcastCfg();
         mpRenderHostSettings();
         mpUpdateRoomView();
@@ -7573,157 +7491,158 @@ function mpRenderHostSettings(){
 }
 
 function mpBroadcastCfg(){
-  if(mp&&mp.isHost){
-    mpSend({t:"cfg",track:mp.track,laps:mp.laps||3,nai:mp.nai||0,seed:mp.seed});
+  if(mp && mp.isHost){
+    mpSend({ t: "cfg", track: mp.track, laps: mp.laps || 3, nai: mp.nai || 0, seed: mp.seed });
   }
 }
 
 function mpHostStart(){
-  if(!mp||!mp.isHost) return;
+  if(!mp || !mp.isHost) return;
   if(!mp.oppName){
-    showBanner("Počakaj, da se nekdo pridruži sobi.",2200,true);
+    showBanner("Počakaj, da se nekdo pridruži sobi.", 2200, true);
     return;
   }
   if(!mp.oppReady){
-    showBanner(mp.oppName+" še ni potrdil pripravljenosti.",2000,true);
+    showBanner(mp.oppName + " še ni potrdil pripravljenosti.", 2000, true);
     return;
   }
-  mpUnadvertiseRoom(mp.code);
-  mpSend({t:"start",track:mp.track,laps:mp.laps||3,nai:mp.nai||0,seed:mp.seed});
+  if(mp.isPublic){
+    mpPublishMqtt("finger-racer/v2/lobby/rooms", { id: mp.roomId, closed: true });
+  }
+  mpSend({ t: "start", track: mp.track, laps: mp.laps || 3, nai: mp.nai || 0, seed: mp.seed });
   mpStartRace(true);
 }
 
 function mpStartRace(isHost){
-  mp.started=true;
-  mp.opp=null;
-  mp.oppFin=null;
-  mp.myFin=null;
-  mp.oppPrev=null;
-  training=0;
-  singleMode=true;
-  timeTrial=false;
-  coneHunt=false;
-  wc=null;
-  careerOff&&careerOff();
+  mp.started = true;
+  mp.opp = null;
+  mp.oppFin = null;
+  mp.myFin = null;
+  mp.oppPrev = null;
+  training = 0;
+  singleMode = true;
+  timeTrial = false;
+  coneHunt = false;
+  wc = null;
+  careerOff && careerOff();
 
-  curTrack=mp.track;
+  curTrack = mp.track;
   loadTrack(mp.track);
-  LAPS=mp.laps||3;
-  CROSS_NEED=LAPS+1;
+  LAPS = mp.laps || 3;
+  CROSS_NEED = LAPS + 1;
 
-  const nai=Math.max(0,Math.min(4,mp.nai||0));
-  NRACERS=nai+1;
-  const ALLSK=[1.10,1.04,0.98,0.92];
-  const SKILLS=ALLSK.slice(0,nai);
-  const base=BASE1*DIFFS[save.diff].m*(typeof AI_BOOST!=="undefined"?AI_BOOST:1);
-  aiParams={SKILLS,base,NAI:nai};
-  vRef=Math.max(60,base*(SKILLS[0]||1)*MEANFAC);
+  const nai = Math.max(0, Math.min(4, mp.nai || 0));
+  NRACERS = nai + 1;
+  const ALLSK = [1.10, 1.04, 0.98, 0.92];
+  const SKILLS = ALLSK.slice(0, nai);
+  const base = BASE1 * DIFFS[save.diff].m * (typeof AI_BOOST !== "undefined" ? AI_BOOST : 1);
+  aiParams = { SKILLS, base, NAI: nai };
+  vRef = Math.max(60, base * (SKILLS[0] || 1) * MEANFAC);
 
-  mpMode=true;
-  qPos=NRACERS;
-  raceStarted=false;
+  mpMode = true;
+  qPos = NRACERS;
+  raceStarted = false;
   startRace();
-  finishOrder.length=0;
-  ghostPlay=null;
+  finishOrder.length = 0;
+  ghostPlay = null;
   setScreen("game");
 }
 
 function mpCheckFinish(){
-  if(!mp||!mp.started) return;
-  if(mp.myFin!=null&&mp.oppFin!=null&&!mp.resultShown){
-    mp.resultShown=true;
+  if(!mp || !mp.started) return;
+  if(mp.myFin != null && mp.oppFin != null && !mp.resultShown){
+    mp.resultShown = true;
     mpShowResult();
   }
 }
 
 function mpShowResult(){
-  const meT=mp.myFin, opT=mp.oppFin;
-  const rows=[
-    {n:"TI",t:meT,me:true,c:mp.myColor||"var(--green)"},
-    {n:mp.oppName||"Nasprotnik",t:opT,me:false,c:mp.oppColor||"#ff6b6b"}
+  const meT = mp.myFin, opT = mp.oppFin;
+  const rows = [
+    { n: "TI", t: meT, me: true, c: mp.myColor || "var(--green)" },
+    { n: mp.oppName || "Nasprotnik", t: opT, me: false, c: mp.oppColor || "#ff6b6b" }
   ];
   for(const r of racers){
     if(!r) continue;
-    const ft=(r.finished&&r.finishTime>0)?r.finishTime:(raceTime+50+(CROSS_NEED-(r.crossings||0))*8);
-    rows.push({n:shortName(r.name),t:ft,me:false,c:r.color});
+    const ft = (r.finished && r.finishTime > 0) ? r.finishTime : (raceTime + 50 + (CROSS_NEED - (r.crossings || 0)) * 8);
+    rows.push({ n: shortName(r.name), t: ft, me: false, c: r.color });
   }
-  rows.sort((a,b)=>a.t-b.t);
-  const myPos=rows.findIndex(r=>r.me)+1;
-  const beatFriend=meT<opT;
-  const win=(myPos===1);
+  rows.sort((a, b) => a.t - b.t);
+  const myPos = rows.findIndex(r => r.me) + 1;
+  const beatFriend = meT < opT;
+  const win = (myPos === 1);
 
-  $("resPlace").textContent=win?"ZMAGA!":(myPos+". mesto");
-  $("resPlace").classList.toggle("win",win);
-  $("resSub").innerHTML="🌐 <b>Multiplayer</b><br>"+(beatFriend?"🏆 Premagal si "+mp.oppName+"!":"💨 "+mp.oppName+" je bil hitrejši")+(racers.length?(" · "+myPos+"/"+rows.length+" skupno"):"");
+  $("resPlace").textContent = win ? "ZMAGA!" : (myPos + ". mesto");
+  $("resPlace").classList.toggle("win", win);
+  $("resSub").innerHTML = "🌐 <b>Multiplayer</b><br>" + (beatFriend ? ("🏆 Premagal si " + mp.oppName + "!") : ("💨 " + mp.oppName + " je bil hitrejši")) + (racers.length ? (" · " + myPos + "/" + rows.length + " skupno") : "");
 
-  const rl=$("resList");
-  rl.innerHTML="";
-  rows.forEach((r,i)=>{
-    const d=document.createElement("div");
-    d.className="rrow"+(r.me?" me":"");
-    d.innerHTML='<span class="dot" style="background:'+r.c+'"></span><span>'+(i+1)+". "+r.n+'</span><span class="t">'+fmt(r.t)+"</span>";
+  const rl = $("resList");
+  rl.innerHTML = "";
+  rows.forEach((r, i) => {
+    const d = document.createElement("div");
+    d.className = "rrow" + (r.me ? " me" : "");
+    d.innerHTML = '<span class="dot" style="background:' + r.c + '"></span><span>' + (i + 1) + ". " + r.n + '</span><span class="t">' + fmt(r.t) + '</span>';
     rl.appendChild(d);
   });
 
-  $("resStats").innerHTML="Tvoj čas: "+fmt(meT)+" · "+(mp.oppName||"Nasprotnik")+": "+fmt(opT);
-  $("btnNext").style.display="none";
-  $("btnRetry").style.display="none";
-  $("btnMenu2").style.display="block";
-  $("hud").style.display="none";
-  $("standings").style.display="none";
-  mpMode=false;
-  mp.started=false;
-  try{ if(mp.conn) mp.conn.close(); }catch(e){}
+  $("resStats").innerHTML = "Tvoj čas: " + fmt(meT) + " · " + (mp.oppName || "Nasprotnik") + ": " + fmt(opT);
+  $("btnNext").style.display = "none";
+  $("btnRetry").style.display = "none";
+  $("btnMenu2").style.display = "block";
+  $("hud").style.display = "none";
+  $("standings").style.display = "none";
+  mpMode = false;
+  mp.started = false;
   setScreen("results");
 }
 
-let _mpSendT=0;
+let _mpSendT = 0;
 function mpTick(dt){
   if(!mp) return;
-  _mpSendT-=dt;
-  if(_mpSendT<=0){
-    _mpSendT=0.05;
+  _mpSendT -= dt;
+  if(_mpSendT <= 0){
+    _mpSendT = 0.05;
     mpSend({
-      t:"pos",
-      x:player.x,
-      y:player.y,
-      a:Math.atan2(TYa[player.idx],TXa[player.idx]),
-      p:(player.crossings||0)*L+player.s,
-      dmg:player.dmg||0
+      t: "pos",
+      x: player.x,
+      y: player.y,
+      a: Math.atan2(TYa[player.idx], TXa[player.idx]),
+      p: (player.crossings || 0) * L + player.s,
+      dmg: player.dmg || 0
     });
   }
   if(mp.opp){
-    if(!mp.oppPrev||mp.oppPrev.p!==mp.opp.p||mp.oppPrev.x!==mp.opp.x){
-      mp.oppPrev={x:(mp.opp0?mp.opp0.x:mp.opp.x),y:(mp.opp0?mp.opp0.y:mp.opp.y)};
+    if(!mp.oppPrev || mp.oppPrev.p !== mp.opp.p || mp.oppPrev.x !== mp.opp.x){
+      mp.oppPrev = { x: (mp.opp0 ? mp.opp0.x : mp.opp.x), y: (mp.opp0 ? mp.opp0.y : mp.opp.y) };
     }
-    mp.opp0=mp.opp;
+    mp.opp0 = mp.opp;
   }
 }
 
 function mpFinish(){
   if(!mp) return;
-  player.finished=true;
-  state="finished";
-  Snd.engineStop&&Snd.engineStop();
-  mp.myFin=raceTime;
-  Snd.finishWin&&Snd.finishWin();
-  try{ spawnConfetti(player.x,player.y); }catch(e){}
-  mpSend({t:"fin",time:raceTime});
-  if(mp.oppFin!=null){
+  player.finished = true;
+  state = "finished";
+  Snd.engineStop && Snd.engineStop();
+  mp.myFin = raceTime;
+  Snd.finishWin && Snd.finishWin();
+  try{ spawnConfetti(player.x, player.y); }catch(e){}
+  mpSend({ t: "fin", time: raceTime });
+  if(mp.oppFin != null){
     mpCheckFinish();
   } else {
-    $("resPlace").textContent="KONČAL";
+    $("resPlace").textContent = "KONČAL";
     $("resPlace").classList.remove("win");
-    $("resSub").innerHTML="🌐 <b>Multiplayer</b><br>Tvoj čas: "+fmt(raceTime)+"<br><span style='opacity:.7'>Čakam, da "+(mp.oppName||"nasprotnik")+" konča…</span>";
-    const rl=$("resList"); rl.innerHTML="";
-    $("resStats").innerHTML="";
-    $("btnNext").style.display="none";
-    $("btnRetry").style.display="none";
-    $("btnMenu2").style.display="block";
-    $("hud").style.display="none";
-    $("standings").style.display="none";
+    $("resSub").innerHTML = "🌐 <b>Multiplayer</b><br>Tvoj čas: " + fmt(raceTime) + "<br><span style='opacity:.7'>Čakam, da " + (mp.oppName || 'nasprotnik') + " konča…</span>";
+    const rl = $("resList"); rl.innerHTML = "";
+    $("resStats").innerHTML = "";
+    $("btnNext").style.display = "none";
+    $("btnRetry").style.display = "none";
+    $("btnMenu2").style.display = "block";
+    $("hud").style.display = "none";
+    $("standings").style.display = "none";
     if(mp.oppLeft){
-      mp.oppFin=raceTime+999;
+      mp.oppFin = raceTime + 999;
       mpCheckFinish();
     }
     setScreen("results");
@@ -7731,36 +7650,52 @@ function mpFinish(){
 }
 
 function drawMpOpp(c){
-  if(!mpMode||!mp||!mp.opp) return;
-  const o=mp.opp;
-  let x=o.x,y=o.y,a=o.a;
+  if(!mpMode || !mp || !mp.opp) return;
+  const o = mp.opp;
+  let x = o.x, y = o.y, a = o.a;
   if(mp.oppPrev){
-    const dt=Math.min(1,(performance.now()-(mp.oppT||0))/90);
-    x=mp.oppPrev.x+(o.x-mp.oppPrev.x)*dt;
-    y=mp.oppPrev.y+(o.y-mp.oppPrev.y)*dt;
+    const dt = Math.min(1, (performance.now() - (mp.oppT || 0)) / 90);
+    x = mp.oppPrev.x + (o.x - mp.oppPrev.x) * dt;
+    y = mp.oppPrev.y + (o.y - mp.oppPrev.y) * dt;
   }
   c.save();
-  c.globalAlpha=0.92;
+  c.globalAlpha = 0.92;
   try{
-    drawVehicle(c,x,y,a,0,1,mp.oppColor||"#ff6b6b",Math.max(0,1-(o.dmg||0)),o.dmg||0,1/scale,false);
+    drawVehicle(c, x, y, a, 0, 1, mp.oppColor || "#ff6b6b", Math.max(0, 1 - (o.dmg || 0)), o.dmg || 0, 1 / scale, false);
   }catch(e){}
-  c.globalAlpha=1;
-  c.fillStyle="#fff";
-  c.font="bold "+(11/scale)+"px sans-serif";
-  c.textAlign="center";
-  c.strokeStyle="rgba(0,0,0,.6)";
-  c.lineWidth=3/scale;
-  const nm=mp.oppName||"Nasprotnik";
-  c.strokeText(nm,x,y-RAD*1.3/scale*scale);
-  c.fillText(nm,x,y-RAD*1.3/scale*scale);
+  c.globalAlpha = 1;
+  c.fillStyle = "#fff";
+  c.font = "bold " + (11 / scale) + "px sans-serif";
+  c.textAlign = "center";
+  c.strokeStyle = "rgba(0,0,0,.6)";
+  c.lineWidth = 3 / scale;
+  const nm = mp.oppName || "Nasprotnik";
+  c.strokeText(nm, x, y - RAD * 1.3 / scale * scale);
+  c.fillText(nm, x, y - RAD * 1.3 / scale * scale);
   c.restore();
 
-  if(o.p!=null){
-    const myp=(player.crossings||0)*L+player.s;
-    const gap=(myp-o.p)/Math.max(60,vRef);
-    mp.gap=gap;
+  if(o.p != null){
+    const myp = (player.crossings || 0) * L + player.s;
+    const gap = (myp - o.p) / Math.max(60, vRef);
+    mp.gap = gap;
   }
 }
+
+function mpReset(){
+  if(mp && mp.roomId){
+    if(mp.isHost && mp.isPublic){
+      mpPublishMqtt("finger-racer/v2/lobby/rooms", { id: mp.roomId, closed: true });
+    }
+    mpSend({ t: "bye" });
+    if(mpRelay.currentRoomTopic && mpRelay.client && mpRelay.connected){
+      try{ mpRelay.client.unsubscribe(mpRelay.currentRoomTopic); }catch(_){}
+      mpRelay.subTopics.delete(mpRelay.currentRoomTopic);
+    }
+  }
+  mpRelay.currentRoomTopic = null;
+  mp = null;
+}
+
 
 function startSingle(tIdx){ training=0; careerOff();
   if(testDrive){ setTimeout(()=>showComment("▶️ Preizkusna vožnja — brez vpliva na napredek",2600),1400); }
