@@ -304,6 +304,80 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .modeBtn.multi{border-color:#2f7bff;background:linear-gradient(90deg,rgba(10,14,20,.72) 40%,rgba(30,70,150,.55))}
 .modeBtn.multi .mbD{color:#8ab6ff}
 .modeBtn:active{transform:scale(.98)}
+
+/* ---------- MODERN MULTIPLAYER LOBBY ---------- */
+.mpPanel { width:min(520px,96vw)!important; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; padding:16px 14px!important; }
+.mpHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex:none; }
+.mpStatusIndicator { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:800; background:rgba(255,255,255,.08); padding:4px 10px; border-radius:20px; border:1px solid rgba(255,255,255,.12); color:#dfe6cf; }
+.mpDot { width:8px; height:8px; border-radius:50%; background:#ffbb00; }
+.mpDot.ok { background:var(--green); box-shadow:0 0 8px var(--green); }
+.mpDot.err { background:var(--red); }
+.mpProfileStrip { display:flex; align-items:center; gap:8px; background:rgba(10,12,16,.75); border:1.5px solid rgba(255,255,255,.14); border-radius:14px; padding:8px 10px; margin-bottom:10px; flex:none; }
+.mpAvatar { width:36px; height:36px; border-radius:50%; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.5); flex:none; }
+.mpProfileInfo { flex:1; min-width:0; text-align:left; }
+.mpProfileInfo input { width:100%; max-width:160px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:4px 8px; color:#fff; font-size:13px; font-weight:800; }
+.mpRank { font-size:10px; opacity:.75; margin-top:2px; font-weight:700; color:#b9c2cf; }
+.mpBtnAction { background:rgba(61,255,142,.15); border:1.5px solid var(--green); color:var(--green); font-size:11px; font-weight:900; border-radius:10px; padding:7px 9px; cursor:pointer; flex:none; text-transform:uppercase; -webkit-tap-highlight-color:transparent; }
+.mpBtnAction:active { transform:scale(.95); }
+.mpBtnAction.quick { background:linear-gradient(135deg,#d48b1a,#8c5506); border-color:#ffcc26; color:#fff; }
+.mpTabs { display:flex; gap:6px; border-bottom:1.5px solid rgba(255,255,255,.1); padding-bottom:8px; margin-bottom:10px; flex:none; }
+.mpTab { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:7px 4px; font-size:11.5px; font-weight:800; color:#dfe6cf; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; -webkit-tap-highlight-color:transparent; }
+.mpTab.sel { background:rgba(61,255,142,.18); border-color:var(--green); color:var(--green); }
+.mpBadgeCount { background:rgba(0,0,0,.45); padding:1px 6px; border-radius:10px; font-size:10px; color:#fff; }
+.mpTabView { flex:1; min-height:160px; max-height:44vh; overflow-y:auto; padding-right:2px; }
+.mpList { display:flex; flex-direction:column; gap:8px; }
+.mpEmpty { padding:24px 10px; font-size:13px; opacity:.7; text-align:center; }
+.mpRoomItem { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.12); border-radius:12px; padding:9px 11px; text-align:left; transition:.15s; }
+.mpRoomItem:hover { border-color:rgba(61,255,142,.5); background:rgba(255,255,255,.08); }
+.mpRoomLeft { display:flex; align-items:center; gap:9px; min-width:0; flex:1; }
+.mpRoomIcon { width:32px; height:32px; border-radius:8px; background:rgba(10,12,16,.8); display:flex; align-items:center; justify-content:center; font-size:16px; border:1px solid rgba(255,255,255,.15); flex:none; }
+.mpRoomDetails { min-width:0; }
+.mpRoomTitle { font-size:13px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpRoomMeta { font-size:10.5px; opacity:.75; margin-top:2px; }
+.mpRoomRight { display:flex; align-items:center; gap:8px; flex:none; }
+.mpPillStatus { font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:8px; background:rgba(61,255,142,.15); color:var(--green); border:1px solid rgba(61,255,142,.3); }
+.mpPillStatus.full { background:rgba(255,71,71,.15); color:#ff6b6b; border-color:rgba(255,71,71,.3); }
+.mpBtnJoin { background:var(--green); color:#0c0e0a; border:none; border-radius:8px; font-weight:900; font-size:11.5px; padding:6px 11px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.mpBtnJoin:active { transform:scale(.95); }
+.mpPlayerItem { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:8px 12px; }
+.mpPlayerLeft { display:flex; align-items:center; gap:10px; }
+.mpPlayerAvatar { width:28px; height:28px; border-radius:50%; border:1.5px solid #fff; flex:none; }
+.mpPlayerName { font-size:13px; font-weight:800; color:#fff; }
+.mpPlayerRank { font-size:10px; opacity:.7; margin-top:1px; }
+.mpCodeCard { background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.12); border-radius:14px; padding:18px 12px; text-align:center; max-width:320px; margin:10px auto; }
+.mpCodeLabel { font-size:13px; opacity:.8; margin-bottom:8px; }
+#mpCodeIn { width:70%; max-width:200px; padding:10px; border-radius:10px; border:2px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#ffd21f; font-size:22px; font-weight:900; letter-spacing:4px; text-align:center; text-transform:uppercase; }
+.mpModal { position:absolute; inset:0; background:rgba(8,11,14,.88); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; padding:14px; }
+.mpModalContent { background:#141920; border:2px solid rgba(255,255,255,.18); border-radius:16px; padding:16px; width:100%; max-width:360px; box-shadow:0 8px 30px rgba(0,0,0,.6); text-align:left; }
+.mpModalTitle { font-size:18px; font-weight:900; color:var(--yellow); text-transform:uppercase; font-style:italic; margin-bottom:12px; text-align:center; }
+.mpFormGroup { margin-bottom:10px; }
+.mpFormGroup label { display:block; font-size:11.5px; opacity:.8; font-weight:800; margin-bottom:4px; }
+.mpFormGroup input { width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; font-size:14px; font-weight:700; }
+.mpPills { display:flex; gap:6px; flex-wrap:wrap; }
+.mpPill { padding:5px 9px; font-size:11.5px; font-weight:800; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:8px; cursor:pointer; color:#dfe6cf; }
+.mpPill.sel { background:rgba(61,255,142,.16); border-color:var(--green); color:var(--green); }
+.mpModalActions { display:flex; gap:8px; margin-top:14px; }
+.mpModalActions button { margin:0; flex:1; }
+.mpFooter { margin-top:10px; flex:none; }
+
+/* Room stage (mpLobby) */
+.mpCodeBoxNew { display:flex; align-items:center; gap:6px; background:rgba(10,12,16,.85); border:1.5px solid rgba(255,255,255,.15); padding:4px 8px; border-radius:10px; }
+.mpCodeTag { font-size:15px; font-weight:900; color:#ffd21f; letter-spacing:2px; }
+.mpBtnMini { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:6px; color:#fff; font-size:13px; padding:3px 7px; cursor:pointer; }
+.mpBtnMini:active { transform:scale(.9); }
+.mpStatusBar { background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; color:#dfe6cf; margin:6px 0; }
+.mpRacerGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+.mpRacerCard { background:rgba(255,255,255,.05); border:2px solid rgba(255,255,255,.12); border-radius:14px; padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; }
+.mpRacerCard.me { border-color:rgba(61,255,142,.4); background:rgba(61,255,142,.06); }
+.mpRacerAvatar { width:44px; height:44px; border-radius:50%; border:2px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,.6); position:relative; }
+.mpRacerName { font-size:13px; font-weight:900; color:#fff; max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpRacerRole { font-size:9.5px; opacity:.7; text-transform:uppercase; font-weight:800; color:#b9c2cf; }
+.mpReadyBadge { font-size:10.5px; font-weight:900; padding:2px 8px; border-radius:10px; background:rgba(61,255,142,.18); color:var(--green); border:1px solid var(--green); }
+.mpReadyBadge.waiting { background:rgba(255,204,38,.15); color:var(--yellow); border-color:var(--yellow); }
+.mpReadyBadge.notReady { background:rgba(255,71,71,.15); color:#ff6b6b; border-color:#ff6b6b; }
+.mpRoomActions { margin-top:8px; }
+#btnMpReadyToggle { background:linear-gradient(135deg,#1f7a3f,#125a2c); margin:6px auto; }
+#btnMpReadyToggle.isReady { background:linear-gradient(135deg,#c92a2a,#8f1d1d); }
 </style>
 </head>
 <body>
@@ -412,31 +486,141 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     </div>
   </div>
 
-  <div id="mpHome" class="screen"><div class="panel">
-    <h2>🌐 Multiplayer</h2><div class="sub">Dirkaj proti prijatelju prek kode sobe (potrebna spletna povezava)</div>
-    <input id="mpName" placeholder="Tvoje ime" maxlength="16" style="width:80%;max-width:280px;margin:10px auto;display:block;padding:10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:15px;text-align:center">
-    <button class="bigBtn" id="btnMpQuick" style="background:linear-gradient(135deg,#b8801f,#8a5e12)">⚡ Hitra igra (samodejno poišči nasprotnika)</button>
-    <div style="margin:12px 0;opacity:.6">— ali igraj z določenim prijateljem —</div>
-    <button class="bigBtn" id="btnMpCreate">➕ Ustvari sobo (koda)</button>
-    <div style="margin:10px 0;opacity:.6">— ali —</div>
-    <input id="mpCodeIn" placeholder="Vpiši kodo sobe" maxlength="6" style="width:60%;max-width:200px;margin:0 auto 8px;display:block;padding:10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:20px;text-align:center;letter-spacing:3px;text-transform:uppercase">
-    <button class="bigBtn" id="btnMpJoin" style="background:linear-gradient(135deg,#2a7a4a,#1a5a33)">🔗 Pridruži se</button>
-    <button class="ghostBtn" id="btnMpBack">← Nazaj</button>
-  </div></div>
-  <div id="mpLobby" class="screen"><div class="panel">
-    <h2>🌐 Soba</h2>
-    <div id="mpStatus" style="font-size:14px;margin:8px 0;min-height:20px">Povezovanje…</div>
-    <div id="mpCodeBox" style="display:none;margin:10px 0"><div style="opacity:.7;font-size:13px">Koda sobe (deli s prijateljem):</div><div id="mpCode" style="font-size:42px;font-weight:900;letter-spacing:6px;color:#ffd21f"></div><button class="ghostBtn" id="btnMpCopy" style="padding:6px 14px">📋 Kopiraj kodo</button></div>
-    <div id="mpTrackPick" style="display:none;margin:10px 0">
-      <div style="opacity:.75;font-size:13px;margin-bottom:4px">Proga:</div><div id="mpTracks" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
-      <div style="opacity:.75;font-size:13px;margin:8px 0 4px">Število krogov:</div><div id="mpLaps" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
-      <div style="opacity:.75;font-size:13px;margin:8px 0 4px">AI sotekmovalci:</div><div id="mpAI" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
+  <div id="mpHome" class="screen">
+    <div class="panel wide mpPanel">
+      <div class="mpHeader">
+        <h1 class="disp" style="font-size:24px;margin:0">MULTIPLAYER <span>LOBBY</span></h1>
+        <div class="mpStatusIndicator" id="mpHubStatus"><span class="mpDot" id="mpDot"></span> <span id="mpHubTxt">Povezujem z lobijem…</span></div>
+      </div>
+
+      <!-- User Profile Strip -->
+      <div class="mpProfileStrip">
+        <div class="mpAvatar" id="mpMyAvatar"></div>
+        <div class="mpProfileInfo">
+          <input id="mpName" placeholder="Tvoje ime" maxlength="16" autocomplete="off" />
+          <div class="mpRank" id="mpMyRank">🎖️ Dirkač</div>
+        </div>
+        <button class="mpBtnAction" id="btnMpCreateModalOpen">➕ Nova soba</button>
+        <button class="mpBtnAction quick" id="btnMpQuick">⚡ Hitra igra</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="mpTabs">
+        <button class="mpTab sel" id="mpTabRooms">🏁 Odprte sobe <span class="mpBadgeCount" id="mpRoomCount">0</span></button>
+        <button class="mpTab" id="mpTabPlayers">👥 Igralci v lobiju <span class="mpBadgeCount" id="mpPlayerCount">1</span></button>
+        <button class="mpTab" id="mpTabCode">🔑 Koda sobe</button>
+      </div>
+
+      <!-- Tab 1: Rooms List -->
+      <div id="mpViewRooms" class="mpTabView">
+        <div class="mpList" id="mpRoomList">
+          <div class="mpEmpty">🔎 Iščem odprte sobe na omrežju…</div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Online Players -->
+      <div id="mpViewPlayers" class="mpTabView" style="display:none">
+        <div class="mpList" id="mpPlayerList">
+          <div class="mpEmpty">Nalaganje igralcev…</div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Direct Code Join -->
+      <div id="mpViewCode" class="mpTabView" style="display:none">
+        <div class="mpCodeCard">
+          <div class="mpCodeLabel">Imaš 5-mestno kodo sobe od prijatelja?</div>
+          <input id="mpCodeIn" placeholder="KODA" maxlength="6" />
+          <button class="bigBtn" id="btnMpJoin" style="background:linear-gradient(135deg,#2a7a4a,#1a5a33);margin:10px auto 0;display:block">🔗 Pridruži se sobi</button>
+        </div>
+      </div>
+
+      <!-- Create Room Modal / Overlay -->
+      <div id="mpCreateModal" class="mpModal" style="display:none">
+        <div class="mpModalContent">
+          <div class="mpModalTitle">Ustvari novo sobo</div>
+          <div class="mpFormGroup">
+            <label>Ime sobe:</label>
+            <input id="mpRoomTitle" placeholder="npr. Hitri dvoboj" maxlength="20" />
+          </div>
+          <div class="mpFormGroup">
+            <label>Izberi progo:</label>
+            <div id="mpNewTracks" class="mpPills"></div>
+          </div>
+          <div class="mpFormGroup">
+            <label>Število krogov:</label>
+            <div id="mpNewLaps" class="mpPills"></div>
+          </div>
+          <div class="mpFormGroup">
+            <label>AI sotekmovalci:</label>
+            <div id="mpNewAI" class="mpPills"></div>
+          </div>
+          <div class="mpModalActions">
+            <button class="btn primary disp" id="btnMpConfirmCreate"><span>Ustvari 🏁</span></button>
+            <button class="btn ghost small disp" id="btnMpCancelCreate"><span>Prekliči</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mpFooter">
+        <button class="btn ghost small disp" id="btnMpBack"><span>← Nazaj v meni</span></button>
+      </div>
     </div>
-    <div id="mpPlayers" style="font-size:14px;margin:10px 0"></div>
-    <button class="bigBtn" id="btnMpStart" style="display:none">🏁 Začni dirko</button>
-    <div id="mpWait" style="display:none;opacity:.7;font-size:13px">Čakam, da gostitelj začne…</div>
-    <button class="ghostBtn" id="btnMpLeave">← Zapusti sobo</button>
-  </div></div>
+  </div>
+
+  <div id="mpLobby" class="screen">
+    <div class="panel wide mpPanel">
+      <div class="mpHeader">
+        <div>
+          <h2 id="mpRoomHeading" class="disp" style="font-size:22px;margin:0">SOBA <span>#1</span></h2>
+          <div id="mpRoomSub" style="font-size:11.5px;opacity:.75">Proga 1 · 3 krogi</div>
+        </div>
+        <div class="mpCodeBoxNew">
+          <span style="font-size:10px;opacity:.7">KODA:</span>
+          <span id="mpCode" class="mpCodeTag">-----</span>
+          <button class="mpBtnMini" id="btnMpCopy" title="Kopiraj kodo">📋</button>
+          <button class="mpBtnMini" id="btnMpShare" title="Deli sobo">📤</button>
+        </div>
+      </div>
+
+      <div id="mpStatus" class="mpStatusBar">Povezovanje…</div>
+
+      <!-- Racers Grid -->
+      <div class="mpRacerGrid">
+        <div class="mpRacerCard me" id="mpCardMe">
+          <div class="mpRacerAvatar" id="mpRacerAvatarMe"></div>
+          <div class="mpRacerName" id="mpRacerNameMe">TI</div>
+          <div class="mpRacerRole" id="mpRacerRoleMe">Gostitelj</div>
+          <div class="mpReadyBadge" id="mpRacerReadyMe">✓ Pripravljen</div>
+        </div>
+
+        <div class="mpRacerCard" id="mpCardOpp">
+          <div class="mpRacerAvatar" id="mpRacerAvatarOpp"></div>
+          <div class="mpRacerName" id="mpRacerNameOpp">Čakam igralca…</div>
+          <div class="mpRacerRole" id="mpRacerRoleOpp">Gost</div>
+          <div class="mpReadyBadge waiting" id="mpRacerReadyOpp">⏳ Čakanje</div>
+        </div>
+      </div>
+
+      <!-- Host Settings (if host) -->
+      <div id="mpTrackPick" style="display:none;margin:8px 0">
+        <div style="font-size:11px;opacity:.75;margin-bottom:3px">Proga:</div>
+        <div id="mpTracks" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
+        <div style="font-size:11px;opacity:.75;margin:6px 0 3px">Krogi:</div>
+        <div id="mpLaps" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
+        <div style="font-size:11px;opacity:.75;margin:6px 0 3px">AI boti:</div>
+        <div id="mpAI" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mpRoomActions">
+        <button class="bigBtn" id="btnMpReadyToggle" style="display:none">✓ Pripravi se</button>
+        <button class="bigBtn" id="btnMpStart" style="display:none">🏁 Začni dirko</button>
+        <div id="mpWait" style="display:none;opacity:.7;font-size:12.5px;padding:6px">Čakam, da gostitelj začne…</div>
+      </div>
+
+      <button class="ghostBtn" id="btnMpLeave" style="margin-top:6px">← Zapusti sobo</button>
+    </div>
+  </div>
   <div id="singlePick" class="screen">
     <div class="panel wide">
       <h1 class="disp" style="font-size:26px">Izberi <span>progo</span></h1>
@@ -6456,144 +6640,953 @@ function drawLivery(c,x,y,ang,kind,u){
   c.restore();
 }
 
-/* ================= MULTIPLAYER (WebRTC / PeerJS) ================= */
+/* ================= MULTIPLAYER (WebRTC / PeerJS + Live Lobby) ================= */
 let mp=null;
 const MP_TRACKS=[0,1,2,3,4,5,6];
-function mpCode(){ let s=""; const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; for(let i=0;i<5;i++) s+=A[(Math.random()*A.length)|0]; return s; }
-function mpReset(){ try{ if(mp){ if(mp.conn)mp.conn.close(); if(mp.peer)mp.peer.destroy(); } }catch(e){} mp=null; }
-function mpSend(o){ try{ if(mp&&mp.conn&&mp.conn.open) mp.conn.send(o); }catch(e){} }
-const MP_SLOTS=12;
-function mpQuick(){ if(typeof Peer==="undefined"){ showBanner("Multiplayer potrebuje spletno različico (Netlify).",3200,true); return; }
-  const nm=($("mpName").value||"").trim().slice(0,16)||"Igralec"; save.playerName=nm; persist();
-  mpReset(); mp={isHost:false,name:nm,oppName:null,conn:null,peer:null,code:"",track:0,laps:3,started:false,opp:null,oppFin:null,myFin:null,busy:false,quick:true};
-  setScreen("mpLobby"); mpStatus("🔎 Iščem nasprotnika…"); $("mpCodeBox").style.display="none"; $("mpTrackPick").style.display="none"; $("btnMpStart").style.display="none"; $("mpWait").style.display="block"; mpRenderPlayers();
-  mpAttempt(1,0);
+const MP_LAPS=[1,2,3,5,8];
+const MP_AI=[0,1,2,3,4];
+const MP_HUB_ID="PD-LOBBY-HUB-V2";
+
+const mpLobby={
+  activeTab:"rooms",
+  hubPeer:null,
+  hubConn:null,
+  isHub:false,
+  hubClients:[],
+  rooms:[],      // [{ code, title, host, color, track, laps, ai, players: 1, max: 2, ts }]
+  players:[],    // [{ id, name, color, rank, status, ts }]
+  pollTimer:null,
+  createCfg:{ track:0, laps:3, nai:0 }
+};
+
+function mpCode(){
+  let s=""; const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  for(let i=0;i<5;i++) s+=A[(Math.random()*A.length)|0];
+  return s;
 }
-function mpAttempt(i,tries){ if(!mp||!mp.quick) return; if(mp.oppName) return;
-  if(tries>MP_SLOTS*2){ mpStatus("Trenutno ni prostih igralcev. Poskusi znova ali uporabi kodo."); return; }
-  const id="PD-LOBBY-"+i;
-  // najprej poskusi biti GOSTITELJ tega slota
-  let peer; try{ peer=new Peer(id,{debug:0}); }catch(e){ mpAttempt((i%MP_SLOTS)+1,tries+1); return; }
-  mp.peer=peer; let settled=false;
-  peer.on("open",()=>{ if(settled)return; settled=true; mp.isHost=true; mp.track=0; mp.laps=3;
-    mpStatus("⏳ Čakam nasprotnika… (soba "+i+")");
-    peer.on("connection",(conn)=>{ if(mp.busy||mp.oppName){ try{ conn.on("open",()=>{ conn.send({t:"busy"}); setTimeout(()=>conn.close(),200); }); }catch(e){} return; }
-      mp.busy=true; mp.conn=conn; mpBindConn(conn); });
+
+function mpGetName(){
+  const inp=$("mpName");
+  const nm=(inp&&inp.value?inp.value:(save.playerName||"Igralec")).trim().slice(0,16);
+  return nm||"Igralec";
+}
+
+function mpGetColor(){
+  return (save&&save.discColor)?save.discColor:"#3dff8e";
+}
+
+function mpReset(){
+  try{
+    if(mp){
+      if(mp.conn) mp.conn.close();
+      if(mp.peer) mp.peer.destroy();
+    }
+  }catch(e){}
+  mp=null;
+}
+
+function mpSend(o){
+  try{
+    if(mp&&mp.conn&&mp.conn.open) mp.conn.send(o);
+  }catch(e){}
+}
+
+function mpStatus(t){
+  const e=$("mpStatus");
+  if(e) e.textContent=t;
+}
+
+function mpUpdateHubIndicator(text,state){
+  const dot=$("mpDot"), txt=$("mpHubTxt");
+  if(txt) txt.textContent=text;
+  if(dot){
+    dot.className="mpDot"+(state==="ok"?" ok":state==="err"?" err":"");
+  }
+}
+
+/* ---------- LOBBY DISCOVERY & HUB ---------- */
+function mpInitHub(){
+  if(typeof Peer==="undefined"){
+    mpUpdateHubIndicator("Spletna povezava ni na voljo","err");
+    return;
+  }
+  if(mpLobby.hubPeer) return;
+
+  mpUpdateHubIndicator("Povezujem z lobijem…","warn");
+  let p;
+  try{
+    p=new Peer(MP_HUB_ID,{debug:0});
+  }catch(e){
+    mpConnectToHub();
+    return;
+  }
+
+  p.on("open",()=>{
+    mpLobby.hubPeer=p;
+    mpLobby.isHub=true;
+    mpUpdateHubIndicator("Lobi povezan (gostitelj) 🟢","ok");
+    mpLobbyRegisterSelf();
+
+    p.on("connection",(conn)=>{
+      conn.on("open",()=>{
+        mpLobby.hubClients.push(conn);
+        conn.send({t:"lobby_sync",rooms:mpLobby.rooms,players:mpLobby.players});
+      });
+      conn.on("data",(d)=>mpHandleHubMessage(conn,d));
+      conn.on("close",()=>{
+        mpLobby.hubClients=mpLobby.hubClients.filter(c=>c!==conn);
+      });
+    });
   });
-  peer.on("error",(e)=>{ if(settled)return; settled=true; try{peer.destroy();}catch(_){}
-    if(e&&e.type==="unavailable-id"){ mpTryJoin(i,tries); }     // slot zaseden -> pridruži se
-    else { setTimeout(()=>mpAttempt((i%MP_SLOTS)+1,tries+1),200); }
+
+  p.on("error",(e)=>{
+    try{p.destroy();}catch(_){}
+    mpLobby.hubPeer=null;
+    mpLobby.isHub=false;
+    mpConnectToHub();
   });
 }
-function mpTryJoin(i,tries){ if(!mp||!mp.quick||mp.oppName) return; const id="PD-LOBBY-"+i;
-  let gp; try{ gp=new Peer({debug:0}); }catch(e){ mpAttempt((i%MP_SLOTS)+1,tries+1); return; }
-  mp.peer=gp; let done=false;
-  gp.on("open",()=>{ const conn=gp.connect(id,{reliable:false}); mp.conn=conn; mp.isHost=false;
-    conn.on("open",()=>{ mpBindConn(conn); });
-    conn.on("data",(d)=>{ if(d&&d.t==="busy"){ if(done)return; done=true; try{gp.destroy();}catch(_){}; setTimeout(()=>mpAttempt((i%MP_SLOTS)+1,tries+1),150); } });
-    setTimeout(()=>{ if(!done&&!mp.oppName){ done=true; try{gp.destroy();}catch(_){}; mpAttempt((i%MP_SLOTS)+1,tries+1); } },3800);
+
+function mpConnectToHub(){
+  if(typeof Peer==="undefined") return;
+  let p;
+  try{
+    p=new Peer({debug:0});
+  }catch(e){
+    mpUpdateHubIndicator("Povezava ni uspela","err");
+    return;
+  }
+  mpLobby.hubPeer=p;
+  p.on("open",()=>{
+    const conn=p.connect(MP_HUB_ID,{reliable:true});
+    mpLobby.hubConn=conn;
+    conn.on("open",()=>{
+      mpUpdateHubIndicator("Lobi povezan 🟢","ok");
+      mpSendPresence();
+    });
+    conn.on("data",(d)=>{
+      if(d&&d.t==="lobby_sync"){
+        mpLobby.rooms=d.rooms||[];
+        mpLobby.players=d.players||[];
+        mpRenderLobbyUI();
+      }
+    });
+    conn.on("close",()=>{
+      mpUpdateHubIndicator("Lobi nepovezan 🟡","warn");
+      mpLobby.hubConn=null;
+      setTimeout(()=>{ if($("mpHome").classList.contains("on")) mpInitHub(); },3000);
+    });
+    conn.on("error",()=>{});
   });
-  gp.on("error",()=>{ if(done)return; done=true; try{gp.destroy();}catch(_){}; setTimeout(()=>mpAttempt((i%MP_SLOTS)+1,tries+1),200); });
+  p.on("error",()=>{
+    mpUpdateHubIndicator("Samostojni P2P način","warn");
+  });
 }
-function openMP(){ if(typeof Peer==="undefined"){ showBanner("Multiplayer potrebuje spletno različico (Netlify).",3200,true); return; }
-  mpReset(); $("mpName").value=save.playerName||""; setScreen("mpHome"); }
-function mpStatus(t){ const e=$("mpStatus"); if(e)e.textContent=t; }
-function mpCreate(){ const nm=($("mpName").value||"").trim().slice(0,16)||"Gostitelj"; save.playerName=nm; persist();
-  const code=mpCode(); mp={isHost:true,name:nm,oppName:null,conn:null,peer:null,code,track:0,ready:false,oppReady:false,started:false,opp:null,oppFin:null,myFin:null};
-  setScreen("mpLobby"); mpStatus("Ustvarjam sobo…"); $("mpCodeBox").style.display="none"; $("mpTrackPick").style.display="none"; $("btnMpStart").style.display="none"; $("mpWait").style.display="none";
-  const peer=new Peer("PD-"+code,{debug:0}); mp.peer=peer;
-  peer.on("open",()=>{ $("mpCode").textContent=code; $("mpCodeBox").style.display="block"; mpStatus("Soba pripravljena. Deli kodo in počakaj prijatelja…"); mpRenderTracks(); });
-  peer.on("connection",(conn)=>{ mp.conn=conn; mpBindConn(conn); });
-  peer.on("error",(e)=>{ mpStatus("Napaka: "+(e.type||e.message||e)+". Poskusi znova."); });
+
+function mpLobbyRegisterSelf(){
+  const me={
+    id:mpLobby.hubPeer?mpLobby.hubPeer.id:"me",
+    name:mpGetName(),
+    color:mpGetColor(),
+    rank:playerTitle(),
+    status:mp?(mp.started?"V dirki 🏎️":"V sobi ⏳"):"V lobiju 🟢",
+    ts:Date.now()
+  };
+  const idx=mpLobby.players.findIndex(p=>p.name===me.name);
+  if(idx>=0) mpLobby.players[idx]=me; else mpLobby.players.push(me);
+  mpRenderLobbyUI();
 }
-function mpJoin(){ const nm=($("mpName").value||"").trim().slice(0,16)||"Gost"; save.playerName=nm; persist();
-  const code=($("mpCodeIn").value||"").trim().toUpperCase(); if(code.length<4){ showBanner("Vpiši veljavno kodo sobe.",2200,true); return; }
-  mp={isHost:false,name:nm,oppName:null,conn:null,peer:null,code,track:0,ready:false,oppReady:false,started:false,opp:null,oppFin:null,myFin:null};
-  setScreen("mpLobby"); mpStatus("Povezujem s sobo "+code+"…"); $("mpCodeBox").style.display="none"; $("mpTrackPick").style.display="none"; $("btnMpStart").style.display="none"; $("mpWait").style.display="block";
-  const peer=new Peer({debug:0}); mp.peer=peer;
-  peer.on("open",()=>{ const conn=peer.connect("PD-"+code,{reliable:false}); mp.conn=conn; mpBindConn(conn);
-    setTimeout(()=>{ if(mp&&!mp.oppName){ mpStatus("Soba ni najdena ali gostitelj ni na voljo. Preveri kodo."); } },7000); });
-  peer.on("error",(e)=>{ mpStatus("Napaka: "+(e.type||e.message||e)+". Preveri kodo/povezavo."); });
+
+function mpSendPresence(){
+  const me={
+    name:mpGetName(),
+    color:mpGetColor(),
+    rank:playerTitle(),
+    status:mp?(mp.started?"V dirki 🏎️":"V sobi ⏳"):"V lobiju 🟢"
+  };
+  if(mpLobby.hubConn&&mpLobby.hubConn.open){
+    mpLobby.hubConn.send({t:"presence",player:me});
+  } else if(mpLobby.isHub){
+    mpLobbyRegisterSelf();
+  }
 }
+
+function mpHandleHubMessage(conn,d){
+  if(!d) return;
+  const now=Date.now();
+  if(d.t==="presence"&&d.player){
+    d.player.id=conn.peer;
+    d.player.ts=now;
+    const idx=mpLobby.players.findIndex(p=>p.name===d.player.name);
+    if(idx>=0) mpLobby.players[idx]=d.player; else mpLobby.players.push(d.player);
+    mpHubBroadcastState();
+  } else if(d.t==="reg_room"&&d.room){
+    d.room.ts=now;
+    const idx=mpLobby.rooms.findIndex(r=>r.code===d.room.code);
+    if(idx>=0) mpLobby.rooms[idx]=d.room; else mpLobby.rooms.push(d.room);
+    mpHubBroadcastState();
+  } else if(d.t==="unreg_room"&&d.code){
+    mpLobby.rooms=mpLobby.rooms.filter(r=>r.code!==d.code);
+    mpHubBroadcastState();
+  }
+}
+
+function mpHubBroadcastState(){
+  const now=Date.now();
+  mpLobby.players=mpLobby.players.filter(p=>now-p.ts<16000);
+  mpLobby.rooms=mpLobby.rooms.filter(r=>now-r.ts<24000);
+  mpRenderLobbyUI();
+  const payload={t:"lobby_sync",rooms:mpLobby.rooms,players:mpLobby.players};
+  mpLobby.hubClients.forEach(c=>{
+    try{ if(c&&c.open) c.send(payload); }catch(_){}
+  });
+}
+
+function mpAdvertiseRoom(room){
+  if(mpLobby.hubConn&&mpLobby.hubConn.open){
+    mpLobby.hubConn.send({t:"reg_room",room});
+  } else if(mpLobby.isHub){
+    room.ts=Date.now();
+    const idx=mpLobby.rooms.findIndex(r=>r.code===room.code);
+    if(idx>=0) mpLobby.rooms[idx]=room; else mpLobby.rooms.push(room);
+    mpHubBroadcastState();
+  }
+}
+
+function mpUnadvertiseRoom(code){
+  if(mpLobby.hubConn&&mpLobby.hubConn.open){
+    mpLobby.hubConn.send({t:"unreg_room",code});
+  } else if(mpLobby.isHub){
+    mpLobby.rooms=mpLobby.rooms.filter(r=>r.code!==code);
+    mpHubBroadcastState();
+  }
+}
+
+/* ---------- LOBBY UI RENDERING ---------- */
+function mpRenderLobbyUI(){
+  const rc=$("mpRoomCount"), pc=$("mpPlayerCount");
+  if(rc) rc.textContent=mpLobby.rooms.length;
+  if(pc) pc.textContent=Math.max(1,mpLobby.players.length);
+
+  // 1. Zavihek Sob
+  const rList=$("mpRoomList");
+  if(rList){
+    if(!mpLobby.rooms||mpLobby.rooms.length===0){
+      rList.innerHTML='<div class="mpEmpty">🏁 Trenutno ni odprtih sob.<br><span style="font-size:11.5px;opacity:.7">Ustvari svojo sobo ali klikni Hitra igra!</span></div>';
+    } else {
+      rList.innerHTML="";
+      mpLobby.rooms.forEach(rm=>{
+        const item=document.createElement("div");
+        item.className="mpRoomItem";
+        const trName="Proga "+(rm.track+1);
+        const isFull=rm.players>=rm.max;
+        item.innerHTML=`
+          <div class="mpRoomLeft">
+            <div class="mpRoomIcon" style="border-color:${rm.color||'var(--green)'}">🏎️</div>
+            <div class="mpRoomDetails">
+              <div class="mpRoomTitle">${rm.title||('Soba '+rm.host)}</div>
+              <div class="mpRoomMeta"><b>${rm.host}</b> · ${trName} · ${rm.laps} kr. · ${rm.ai?(rm.ai+' AI'):'brez AI'}</div>
+            </div>
+          </div>
+          <div class="mpRoomRight">
+            <span class="mpPillStatus ${isFull?'full':''}">${isFull?'Zasedeno':(rm.players+'/'+rm.max)}</span>
+            ${!isFull?`<button class="mpBtnJoin" data-code="${rm.code}">Pridruži se</button>`:''}
+          </div>
+        `;
+        const joinBtn=item.querySelector(".mpBtnJoin");
+        if(joinBtn){
+          joinBtn.addEventListener("click",()=>{
+            Snd.click&&Snd.click();
+            mpJoinCode(rm.code);
+          });
+        }
+        rList.appendChild(item);
+      });
+    }
+  }
+
+  // 2. Zavihek Igralcev
+  const pList=$("mpPlayerList");
+  if(pList){
+    const active=mpLobby.players.length?mpLobby.players:[{name:mpGetName(),color:mpGetColor(),rank:playerTitle(),status:"V lobiju 🟢"}];
+    pList.innerHTML="";
+    active.forEach(p=>{
+      const item=document.createElement("div");
+      item.className="mpPlayerItem";
+      const isMe=p.name===mpGetName();
+      item.innerHTML=`
+        <div class="mpPlayerLeft">
+          <div class="mpPlayerAvatar" style="background:${p.color||'#3dff8e'}"></div>
+          <div>
+            <div class="mpPlayerName">${p.name} ${isMe?'<span style="opacity:.6">(TI)</span>':''}</div>
+            <div class="mpPlayerRank">🎖️ ${p.rank||'Dirkač'} · <span style="color:var(--yellow)">${p.status||'V lobiju'}</span></div>
+          </div>
+        </div>
+        <div>
+          ${!isMe?`<button class="mpBtnAction" style="font-size:10.5px;padding:5px 8px" data-name="${p.name}">⚔️ Izzovi</button>`:''}
+        </div>
+      `;
+      const chBtn=item.querySelector("button");
+      if(chBtn){
+        chBtn.addEventListener("click",()=>{
+          Snd.click&&Snd.click();
+          openCreateRoomModal("Izziv: "+p.name);
+        });
+      }
+      pList.appendChild(item);
+    });
+  }
+}
+
+/* ---------- LOBBY NAVIGATION & ACTIONS ---------- */
+function openMP(){
+  if(typeof Peer==="undefined"){
+    showBanner("Multiplayer potrebuje spletno različico (Netlify / WebView).",3200,true);
+    return;
+  }
+  mpReset();
+  const myName=save.playerName||"Dirkač";
+  const nameInput=$("mpName");
+  if(nameInput) nameInput.value=myName;
+
+  const av=$("mpMyAvatar");
+  if(av) av.style.background=mpGetColor();
+  const rk=$("mpMyRank");
+  if(rk) rk.textContent="🎖️ "+playerTitle();
+
+  setScreen("mpHome");
+  mpSwitchTab("rooms");
+  mpInitHub();
+  mpSendPresence();
+
+  if(mpLobby.pollTimer) clearInterval(mpLobby.pollTimer);
+  mpLobby.pollTimer=setInterval(()=>{
+    if($("mpHome").classList.contains("on")){
+      mpSendPresence();
+    }
+  },4000);
+}
+
+function mpSwitchTab(tab){
+  mpLobby.activeTab=tab;
+  $("mpTabRooms").classList.toggle("sel",tab==="rooms");
+  $("mpTabPlayers").classList.toggle("sel",tab==="players");
+  $("mpTabCode").classList.toggle("sel",tab==="code");
+  $("mpViewRooms").style.display=(tab==="rooms")?"block":"none";
+  $("mpViewPlayers").style.display=(tab==="players")?"block":"none";
+  $("mpViewCode").style.display=(tab==="code")?"block":"none";
+  if(tab==="rooms"||tab==="players") mpRenderLobbyUI();
+}
+
+function openCreateRoomModal(prefillTitle){
+  const modal=$("mpCreateModal");
+  if(!modal) return;
+  modal.style.display="flex";
+  const titleInp=$("mpRoomTitle");
+  if(titleInp) titleInp.value=prefillTitle||(mpGetName()+" Grand Prix");
+
+  mpLobby.createCfg={ track:0, laps:3, nai:0 };
+  renderCreatePills();
+}
+
+function closeCreateRoomModal(){
+  const modal=$("mpCreateModal");
+  if(modal) modal.style.display="none";
+}
+
+function renderCreatePills(){
+  const trContainer=$("mpNewTracks");
+  if(trContainer){
+    trContainer.innerHTML="";
+    MP_TRACKS.forEach(tr=>{
+      const p=document.createElement("div");
+      p.className="mpPill"+(mpLobby.createCfg.track===tr?" sel":"");
+      p.textContent="Proga "+(tr+1);
+      p.onclick=()=>{ mpLobby.createCfg.track=tr; renderCreatePills(); };
+      trContainer.appendChild(p);
+    });
+  }
+  const lapContainer=$("mpNewLaps");
+  if(lapContainer){
+    lapContainer.innerHTML="";
+    MP_LAPS.forEach(lp=>{
+      const p=document.createElement("div");
+      p.className="mpPill"+(mpLobby.createCfg.laps===lp?" sel":"");
+      p.textContent=lp+" krog"+(lp===1?"":"i");
+      p.onclick=()=>{ mpLobby.createCfg.laps=lp; renderCreatePills(); };
+      lapContainer.appendChild(p);
+    });
+  }
+  const aiContainer=$("mpNewAI");
+  if(aiContainer){
+    aiContainer.innerHTML="";
+    MP_AI.forEach(ai=>{
+      const p=document.createElement("div");
+      p.className="mpPill"+(mpLobby.createCfg.nai===ai?" sel":"");
+      p.textContent=ai===0?"Brez AI":(ai+" AI");
+      p.onclick=()=>{ mpLobby.createCfg.nai=ai; renderCreatePills(); };
+      aiContainer.appendChild(p);
+    });
+  }
+}
+
+/* ---------- ROOM CREATION & CONNECTION ---------- */
+function mpCreateRoom(){
+  const nm=mpGetName();
+  save.playerName=nm; persist();
+  const roomTitle=($("mpRoomTitle").value||"").trim().slice(0,24)||(nm+" Dirka");
+  closeCreateRoomModal();
+
+  const code=mpCode();
+  mp={
+    isHost:true,
+    name:nm,
+    myColor:mpGetColor(),
+    oppName:null,
+    oppColor:"#ff6b6b",
+    oppTitle:"Dirkač",
+    conn:null,
+    peer:null,
+    code,
+    title:roomTitle,
+    track:mpLobby.createCfg.track,
+    laps:mpLobby.createCfg.laps,
+    nai:mpLobby.createCfg.nai,
+    seed:(Math.random()*1e9)|0,
+    ready:true,
+    oppReady:false,
+    started:false,
+    opp:null,
+    oppFin:null,
+    myFin:null
+  };
+
+  setScreen("mpLobby");
+  mpUpdateRoomView();
+  mpStatus("Ustvarjam sobo…");
+
+  const peer=new Peer("PD-"+code,{debug:0});
+  mp.peer=peer;
+
+  peer.on("open",()=>{
+    $("mpCode").textContent=code;
+    mpStatus("Soba odprta! Čakam nasprotnika…");
+    mpAdvertiseRoom({
+      code,
+      title:roomTitle,
+      host:nm,
+      color:mp.myColor,
+      track:mp.track,
+      laps:mp.laps,
+      ai:mp.nai,
+      players:1,
+      max:2
+    });
+    mpSendPresence();
+    mpRenderHostSettings();
+  });
+
+  peer.on("connection",(conn)=>{
+    if(mp.oppName){
+      conn.on("open",()=>{ conn.send({t:"busy"}); setTimeout(()=>conn.close(),300); });
+      return;
+    }
+    mp.conn=conn;
+    mpBindConn(conn);
+  });
+
+  peer.on("error",(e)=>{
+    mpStatus("Napaka: "+(e.type||e.message||e));
+  });
+}
+
+function mpJoinCode(customCode){
+  const nm=mpGetName();
+  save.playerName=nm; persist();
+  const code=(customCode||$("mpCodeIn").value||"").trim().toUpperCase();
+  if(code.length<4){
+    showBanner("Vpiši veljavno kodo sobe.",2200,true);
+    return;
+  }
+
+  mpReset();
+  mp={
+    isHost:false,
+    name:nm,
+    myColor:mpGetColor(),
+    oppName:null,
+    oppColor:"#3dff8e",
+    oppTitle:"Gostitelj",
+    conn:null,
+    peer:null,
+    code,
+    title:"Soba #"+code,
+    track:0,
+    laps:3,
+    nai:0,
+    seed:0,
+    ready:false,
+    oppReady:true,
+    started:false,
+    opp:null,
+    oppFin:null,
+    myFin:null
+  };
+
+  setScreen("mpLobby");
+  mpUpdateRoomView();
+  mpStatus("Povezujem s sobo "+code+"…");
+
+  const peer=new Peer({debug:0});
+  mp.peer=peer;
+
+  peer.on("open",()=>{
+    const conn=peer.connect("PD-"+code,{reliable:false});
+    mp.conn=conn;
+    mpBindConn(conn);
+    setTimeout(()=>{
+      if(mp&&!mp.oppName){
+        mpStatus("Soba ni najdena ali gostitelj ni dosegljiv.");
+      }
+    },7000);
+  });
+
+  peer.on("error",(e)=>{
+    mpStatus("Napaka: "+(e.type||e.message||e));
+  });
+}
+
+function mpQuick(){
+  if(typeof Peer==="undefined"){
+    showBanner("Multiplayer potrebuje spletno različico.",3200,true);
+    return;
+  }
+  const openRoom=mpLobby.rooms.find(r=>r.players<r.max);
+  if(openRoom){
+    mpJoinCode(openRoom.code);
+    return;
+  }
+  mpLobby.createCfg={ track:(Math.random()*MP_TRACKS.length)|0, laps:3, nai:0 };
+  openCreateRoomModal("Hitra Dirka");
+}
+
+/* ---------- CONNECTION EVENT BINDINGS ---------- */
 function mpBindConn(conn){
-  conn.on("open",()=>{ mpStatus("Povezan! ✅"); mpSend({t:"hi",name:mp.name}); if(mp.isHost){ $("mpTrackPick").style.display="block"; $("btnMpStart").style.display="block"; mpRenderTracks(); } else { $("mpWait").style.display="block"; } mpRenderPlayers(); });
+  conn.on("open",()=>{
+    mpStatus("Povezan! Izmenjava podatkov… ✅");
+    mpSend({
+      t:"hi",
+      name:mp.name,
+      color:mp.myColor,
+      title:playerTitle(),
+      ready:mp.ready
+    });
+
+    if(mp.isHost){
+      $("mpTrackPick").style.display="block";
+      mpRenderHostSettings();
+      mpBroadcastCfg();
+    }
+  });
+
   conn.on("data",(d)=>mpOnData(d));
-  conn.on("close",()=>{ if(mp&&!mp.started){ mpStatus("Povezava prekinjena."); } if(mp) mp.oppLeft=true; });
+
+  conn.on("close",()=>{
+    if(mp&&!mp.started){
+      mpStatus("Nasprotnik je zapustil sobo.");
+      mp.oppName=null;
+      mp.oppReady=false;
+      mpUpdateRoomView();
+      if(mp.isHost){
+        mpAdvertiseRoom({
+          code:mp.code,
+          title:mp.title,
+          host:mp.name,
+          color:mp.myColor,
+          track:mp.track,
+          laps:mp.laps,
+          ai:mp.nai,
+          players:1,
+          max:2
+        });
+      }
+    }
+    if(mp) mp.oppLeft=true;
+  });
+
   conn.on("error",()=>{});
 }
-const MP_LAPS=[1,2,3,5,8], MP_AI=[0,1,2,3,4];
-function mpRenderTracks(){ if(!mp||!mp.isHost) return;
-  const tb=$("mpTracks"); if(tb){ tb.innerHTML=""; MP_TRACKS.forEach((tr)=>{ const d=document.createElement("div"); d.className="setOpt"+(mp.track===tr?" sel":""); d.style.cssText="padding:7px 11px;font-size:13px"; d.textContent="Proga "+(tr+1);
-    d.addEventListener("click",()=>{ mp.track=tr; mpBroadcastCfg(); mpRenderTracks(); }); tb.appendChild(d); }); }
-  const lb=$("mpLaps"); if(lb){ lb.innerHTML=""; MP_LAPS.forEach((n)=>{ const d=document.createElement("div"); d.className="setOpt"+((mp.laps||3)===n?" sel":""); d.style.cssText="padding:7px 11px;font-size:13px"; d.textContent=n+" krog"+(n===1?"":"i");
-    d.addEventListener("click",()=>{ mp.laps=n; mpBroadcastCfg(); mpRenderTracks(); }); lb.appendChild(d); }); }
-  const ab=$("mpAI"); if(ab){ ab.innerHTML=""; MP_AI.forEach((n)=>{ const d=document.createElement("div"); d.className="setOpt"+((mp.nai||0)===n?" sel":""); d.style.cssText="padding:7px 11px;font-size:13px"; d.textContent=n===0?"brez":(n+" AI");
-    d.addEventListener("click",()=>{ mp.nai=n; mpBroadcastCfg(); mpRenderTracks(); }); ab.appendChild(d); }); }
+
+function mpOnData(d){
+  if(!mp||!d) return;
+
+  if(d.t==="hi"){
+    mp.oppName=d.name||"Nasprotnik";
+    if(d.color) mp.oppColor=d.color;
+    if(d.title) mp.oppTitle=d.title;
+    if(d.ready!=null) mp.oppReady=!!d.ready;
+    mpStatus("Povezan z "+mp.oppName+" ✅");
+    mpUpdateRoomView();
+
+    if(mp.isHost){
+      mpBroadcastCfg();
+      mpAdvertiseRoom({
+        code:mp.code,
+        title:mp.title,
+        host:mp.name,
+        color:mp.myColor,
+        track:mp.track,
+        laps:mp.laps,
+        ai:mp.nai,
+        players:2,
+        max:2
+      });
+    }
+  } else if(d.t==="cfg"){
+    mp.track=d.track;
+    mp.laps=d.laps;
+    mp.nai=d.nai;
+    mp.seed=d.seed;
+    mpUpdateRoomView();
+    mpStatus("Gostitelj: Proga "+(d.track+1)+" · "+d.laps+" kr. · "+(d.nai||0)+" AI");
+  } else if(d.t==="ready"){
+    mp.oppReady=!!d.val;
+    mpUpdateRoomView();
+  } else if(d.t==="start"){
+    mp.track=d.track;
+    mp.laps=d.laps;
+    mp.nai=d.nai;
+    mp.seed=d.seed;
+    mpStartRace(false);
+  } else if(d.t==="pos"){
+    mp.opp=d;
+    mp.oppT=performance.now();
+  } else if(d.t==="fin"){
+    mp.oppFin=d.time;
+    mpCheckFinish();
+  } else if(d.t==="bye"){
+    mp.oppLeft=true;
+    if(state==="racing") showComment("👋 Nasprotnik je zapustil dirko",0);
+  }
 }
-function mpBroadcastCfg(){ if(mp&&mp.isHost) mpSend({t:"cfg",track:mp.track,laps:mp.laps||3,nai:mp.nai||0,seed:mp.seed}); }
-function mpRenderPlayers(){ const e=$("mpPlayers"); if(!e||!mp) return; e.innerHTML="👤 <b>"+mp.name+"</b>"+(mp.oppName?(" 🆚 👤 <b>"+mp.oppName+"</b>"):" <span style='opacity:.6'>· čakam nasprotnika…</span>"); }
-function mpOnData(d){ if(!mp||!d) return;
-  if(d.t==="hi"){ mp.oppName=d.name||"Nasprotnik"; mpStatus("Povezan z "+mp.oppName+" ✅"); mpRenderPlayers();
-      if(mp.isHost){ if(mp.laps==null)mp.laps=3; if(mp.nai==null)mp.nai=0; if(mp.seed==null)mp.seed=(Math.random()*1e9)|0; mpBroadcastCfg();
-        if(mp.quick){ mp.track=(Math.random()*MP_TRACKS.length)|0; mpBroadcastCfg(); mpStatus("Nasprotnik najden: "+mp.oppName+"! Začenjam…"); setTimeout(()=>{ if(mp&&mp.oppName&&!mp.started) mpHostStart(); },1400); } } }
-  else if(d.t==="track"){ mp.track=d.track; mpStatus("Gostitelj je izbral Progo "+(d.track+1)); }
-  else if(d.t==="cfg"){ mp.track=d.track; mp.laps=d.laps; mp.nai=d.nai; mp.seed=d.seed; mpStatus("Gostitelj: Proga "+(d.track+1)+" · "+d.laps+" kr. · "+(d.nai||0)+" AI"); }
-  else if(d.t==="start"){ mp.track=d.track; mp.laps=d.laps; mp.nai=d.nai; mp.seed=d.seed; mpStartRace(false); }
-  else if(d.t==="pos"){ mp.opp=d; mp.oppT=performance.now(); }
-  else if(d.t==="fin"){ mp.oppFin=d.time; mpCheckFinish(); }
-  else if(d.t==="bye"){ mp.oppLeft=true; if(state==="racing") showComment("👋 Nasprotnik je zapustil dirko",0); }
+
+/* ---------- ROOM VIEW & READY TOGGLE ---------- */
+function mpUpdateRoomView(){
+  if(!mp) return;
+
+  const rh=$("mpRoomHeading"), rs=$("mpRoomSub"), cd=$("mpCode");
+  if(rh) rh.innerHTML=`${mp.title||'SOBA'} <span>#${mp.code}</span>`;
+  if(rs) rs.textContent=`Proga ${mp.track+1} · ${mp.laps} krogi · ${mp.nai?(mp.nai+' AI'):'Brez AI'}`;
+  if(cd) cd.textContent=mp.code;
+
+  const avMe=$("mpRacerAvatarMe"), nmMe=$("mpRacerNameMe"), rlMe=$("mpRacerRoleMe"), rdMe=$("mpRacerReadyMe");
+  if(avMe) avMe.style.background=mp.myColor;
+  if(nmMe) nmMe.textContent=mp.name;
+  if(rlMe) rlMe.textContent=mp.isHost?"Gostitelj":"Izzivalec";
+  if(rdMe){
+    rdMe.className="mpReadyBadge"+(mp.ready?"":" notReady");
+    rdMe.textContent=mp.ready?"✓ Pripravljen":"❌ Ni pripravljen";
+  }
+
+  const avOpp=$("mpRacerAvatarOpp"), nmOpp=$("mpRacerNameOpp"), rlOpp=$("mpRacerRoleOpp"), rdOpp=$("mpRacerReadyOpp");
+  if(mp.oppName){
+    if(avOpp) avOpp.style.background=mp.oppColor||"#ff6b6b";
+    if(nmOpp) nmOpp.textContent=mp.oppName;
+    if(rlOpp) rlOpp.textContent=mp.isHost?"Izzivalec":"Gostitelj";
+    if(rdOpp){
+      rdOpp.className="mpReadyBadge"+(mp.oppReady?"":" waiting");
+      rdOpp.textContent=mp.oppReady?"✓ Pripravljen":"⏳ Izbira…";
+    }
+  } else {
+    if(avOpp) avOpp.style.background="rgba(255,255,255,.15)";
+    if(nmOpp) nmOpp.textContent="Čakam nasprotnika…";
+    if(rlOpp) rlOpp.textContent="—";
+    if(rdOpp){
+      rdOpp.className="mpReadyBadge waiting";
+      rdOpp.textContent="⏳ Čakanje";
+    }
+  }
+
+  const btnReady=$("btnMpReadyToggle");
+  const btnStart=$("btnMpStart");
+  const waitBox=$("mpWait");
+
+  if(!mp.isHost){
+    if(btnReady){
+      btnReady.style.display="block";
+      btnReady.className="bigBtn"+(mp.ready?" isReady":"");
+      btnReady.textContent=mp.ready?"❌ Prekliči pripravljenost":"✓ Pripravljen sem!";
+    }
+    if(btnStart) btnStart.style.display="none";
+    if(waitBox) waitBox.style.display="block";
+  } else {
+    if(btnReady) btnReady.style.display="none";
+    if(waitBox) waitBox.style.display="none";
+    if(btnStart){
+      btnStart.style.display="block";
+      if(!mp.oppName){
+        btnStart.textContent="⏳ Čakam nasprotnika…";
+        btnStart.style.opacity="0.5";
+      } else if(!mp.oppReady){
+        btnStart.textContent="⏳ "+mp.oppName+" se še pripravlja…";
+        btnStart.style.opacity="0.75";
+      } else {
+        btnStart.textContent="🏁 Začni dirko!";
+        btnStart.style.opacity="1";
+      }
+    }
+  }
 }
-function mpHostStart(){ if(!mp||!mp.isHost) return; if(!mp.oppName){ showBanner("Počakaj, da se prijatelj pridruži.",2200,true); return; }
-  if(mp.laps==null)mp.laps=3; if(mp.nai==null)mp.nai=0; if(mp.seed==null)mp.seed=(Math.random()*1e9)|0;
-  mpSend({t:"start",track:mp.track,laps:mp.laps,nai:mp.nai,seed:mp.seed}); mpStartRace(true); }
-function mpStartRace(isHost){ mp.started=true; mp.opp=null; mp.oppFin=null; mp.myFin=null; mp.oppPrev=null;
-  training=0; singleMode=true; timeTrial=false; coneHunt=false; wc=null; careerOff&&careerOff();
-  curTrack=mp.track; loadTrack(mp.track); LAPS=mp.laps||3; CROSS_NEED=LAPS+1;
-  const nai=Math.max(0,Math.min(4,mp.nai||0)); NRACERS=nai+1;
-  const ALLSK=[1.10,1.04,0.98,0.92]; const SKILLS=ALLSK.slice(0,nai);
+
+function mpToggleReady(){
+  if(!mp) return;
+  mp.ready=!mp.ready;
+  mpSend({t:"ready",val:mp.ready});
+  mpUpdateRoomView();
+}
+
+function mpRenderHostSettings(){
+  if(!mp||!mp.isHost) return;
+  const tb=$("mpTracks");
+  if(tb){
+    tb.innerHTML="";
+    MP_TRACKS.forEach(tr=>{
+      const d=document.createElement("div");
+      d.className="setOpt"+(mp.track===tr?" sel":"");
+      d.style.cssText="padding:6px 9px;font-size:12px";
+      d.textContent="Proga "+(tr+1);
+      d.addEventListener("click",()=>{
+        mp.track=tr;
+        mpBroadcastCfg();
+        mpRenderHostSettings();
+        mpUpdateRoomView();
+      });
+      tb.appendChild(d);
+    });
+  }
+  const lb=$("mpLaps");
+  if(lb){
+    lb.innerHTML="";
+    MP_LAPS.forEach(n=>{
+      const d=document.createElement("div");
+      d.className="setOpt"+((mp.laps||3)===n?" sel":"");
+      d.style.cssText="padding:6px 9px;font-size:12px";
+      d.textContent=n+" krog"+(n===1?"":"i");
+      d.addEventListener("click",()=>{
+        mp.laps=n;
+        mpBroadcastCfg();
+        mpRenderHostSettings();
+        mpUpdateRoomView();
+      });
+      lb.appendChild(d);
+    });
+  }
+  const ab=$("mpAI");
+  if(ab){
+    ab.innerHTML="";
+    MP_AI.forEach(n=>{
+      const d=document.createElement("div");
+      d.className="setOpt"+((mp.nai||0)===n?" sel":"");
+      d.style.cssText="padding:6px 9px;font-size:12px";
+      d.textContent=n===0?"Brez AI":(n+" AI");
+      d.addEventListener("click",()=>{
+        mp.nai=n;
+        mpBroadcastCfg();
+        mpRenderHostSettings();
+        mpUpdateRoomView();
+      });
+      ab.appendChild(d);
+    });
+  }
+}
+
+function mpBroadcastCfg(){
+  if(mp&&mp.isHost){
+    mpSend({t:"cfg",track:mp.track,laps:mp.laps||3,nai:mp.nai||0,seed:mp.seed});
+  }
+}
+
+function mpHostStart(){
+  if(!mp||!mp.isHost) return;
+  if(!mp.oppName){
+    showBanner("Počakaj, da se nekdo pridruži sobi.",2200,true);
+    return;
+  }
+  if(!mp.oppReady){
+    showBanner(mp.oppName+" še ni potrdil pripravljenosti.",2000,true);
+  }
+  mpUnadvertiseRoom(mp.code);
+  mpSend({t:"start",track:mp.track,laps:mp.laps||3,nai:mp.nai||0,seed:mp.seed});
+  mpStartRace(true);
+}
+
+function mpStartRace(isHost){
+  mp.started=true;
+  mp.opp=null;
+  mp.oppFin=null;
+  mp.myFin=null;
+  mp.oppPrev=null;
+  training=0;
+  singleMode=true;
+  timeTrial=false;
+  coneHunt=false;
+  wc=null;
+  careerOff&&careerOff();
+
+  curTrack=mp.track;
+  loadTrack(mp.track);
+  LAPS=mp.laps||3;
+  CROSS_NEED=LAPS+1;
+
+  const nai=Math.max(0,Math.min(4,mp.nai||0));
+  NRACERS=nai+1;
+  const ALLSK=[1.10,1.04,0.98,0.92];
+  const SKILLS=ALLSK.slice(0,nai);
   const base=BASE1*DIFFS[save.diff].m*(typeof AI_BOOST!=="undefined"?AI_BOOST:1);
-  aiParams={SKILLS,base,NAI:nai}; vRef=Math.max(60,base*(SKILLS[0]||1)*MEANFAC);
-  mpMode=true; qPos=NRACERS; raceStarted=false;
+  aiParams={SKILLS,base,NAI:nai};
+  vRef=Math.max(60,base*(SKILLS[0]||1)*MEANFAC);
+
+  mpMode=true;
+  qPos=NRACERS;
+  raceStarted=false;
   startRace();
   finishOrder.length=0;
   ghostPlay=null;
-  setScreen("game"); }
-function mpCheckFinish(){ if(!mp||!mp.started) return; if(mp.myFin!=null && mp.oppFin!=null && !mp.resultShown){ mp.resultShown=true; mpShowResult(); } }
-function mpShowResult(){ const meT=mp.myFin, opT=mp.oppFin;
-  const rows=[{n:"TI",t:meT,me:true,c:"var(--green)"},{n:mp.oppName||"Nasprotnik",t:opT,me:false,c:"#ff6b6b"}];
-  for(const r of racers){ if(!r) continue; const ft=(r.finished&&r.finishTime>0)?r.finishTime:(raceTime+50+ (CROSS_NEED-(r.crossings||0))*8); rows.push({n:shortName(r.name),t:ft,me:false,c:r.color}); }
+  setScreen("game");
+}
+
+function mpCheckFinish(){
+  if(!mp||!mp.started) return;
+  if(mp.myFin!=null&&mp.oppFin!=null&&!mp.resultShown){
+    mp.resultShown=true;
+    mpShowResult();
+  }
+}
+
+function mpShowResult(){
+  const meT=mp.myFin, opT=mp.oppFin;
+  const rows=[
+    {n:"TI",t:meT,me:true,c:mp.myColor||"var(--green)"},
+    {n:mp.oppName||"Nasprotnik",t:opT,me:false,c:mp.oppColor||"#ff6b6b"}
+  ];
+  for(const r of racers){
+    if(!r) continue;
+    const ft=(r.finished&&r.finishTime>0)?r.finishTime:(raceTime+50+(CROSS_NEED-(r.crossings||0))*8);
+    rows.push({n:shortName(r.name),t:ft,me:false,c:r.color});
+  }
   rows.sort((a,b)=>a.t-b.t);
-  const myPos=rows.findIndex(r=>r.me)+1; const beatFriend=meT<opT; const win=(myPos===1);
-  $("resPlace").textContent=win?"ZMAGA!":(myPos+". mesto"); $("resPlace").classList.toggle("win",win);
+  const myPos=rows.findIndex(r=>r.me)+1;
+  const beatFriend=meT<opT;
+  const win=(myPos===1);
+
+  $("resPlace").textContent=win?"ZMAGA!":(myPos+". mesto");
+  $("resPlace").classList.toggle("win",win);
   $("resSub").innerHTML="🌐 <b>Multiplayer</b><br>"+(beatFriend?"🏆 Premagal si "+mp.oppName+"!":"💨 "+mp.oppName+" je bil hitrejši")+(racers.length?(" · "+myPos+"/"+rows.length+" skupno"):"");
-  const rl=$("resList"); rl.innerHTML="";
-  rows.forEach((r,i)=>{ const d=document.createElement("div"); d.className="rrow"+(r.me?" me":""); d.innerHTML='<span class="dot" style="background:'+r.c+'"></span><span>'+(i+1)+". "+r.n+'</span><span class="t">'+fmt(r.t)+"</span>"; rl.appendChild(d); });
+
+  const rl=$("resList");
+  rl.innerHTML="";
+  rows.forEach((r,i)=>{
+    const d=document.createElement("div");
+    d.className="rrow"+(r.me?" me":"");
+    d.innerHTML='<span class="dot" style="background:'+r.c+'"></span><span>'+(i+1)+". "+r.n+'</span><span class="t">'+fmt(r.t)+"</span>";
+    rl.appendChild(d);
+  });
+
   $("resStats").innerHTML="Tvoj čas: "+fmt(meT)+" · "+(mp.oppName||"Nasprotnik")+": "+fmt(opT);
-  $("btnNext").style.display="none"; $("btnRetry").style.display="none"; $("btnMenu2").style.display="block";
-  $("hud").style.display="none"; $("standings").style.display="none";
-  mpMode=false; mp.started=false; try{if(mp.conn)mp.conn.close();}catch(e){}
-  setScreen("results"); }
+  $("btnNext").style.display="none";
+  $("btnRetry").style.display="none";
+  $("btnMenu2").style.display="block";
+  $("hud").style.display="none";
+  $("standings").style.display="none";
+  mpMode=false;
+  mp.started=false;
+  try{ if(mp.conn) mp.conn.close(); }catch(e){}
+  setScreen("results");
+}
+
 let _mpSendT=0;
-function mpTick(dt){ if(!mp) return; _mpSendT-=dt; if(_mpSendT<=0){ _mpSendT=0.05;
-    mpSend({t:"pos",x:player.x,y:player.y,a:Math.atan2(TYa[player.idx],TXa[player.idx]),p:(player.crossings||0)*L+player.s,dmg:player.dmg||0}); }
-  if(mp.opp){ if(!mp.oppPrev||mp.oppPrev.p!==mp.opp.p||mp.oppPrev.x!==mp.opp.x) { mp.oppPrev={x:(mp.opp0?mp.opp0.x:mp.opp.x),y:(mp.opp0?mp.opp0.y:mp.opp.y)}; } mp.opp0=mp.opp; }
+function mpTick(dt){
+  if(!mp) return;
+  _mpSendT-=dt;
+  if(_mpSendT<=0){
+    _mpSendT=0.05;
+    mpSend({
+      t:"pos",
+      x:player.x,
+      y:player.y,
+      a:Math.atan2(TYa[player.idx],TXa[player.idx]),
+      p:(player.crossings||0)*L+player.s,
+      dmg:player.dmg||0
+    });
+  }
+  if(mp.opp){
+    if(!mp.oppPrev||mp.oppPrev.p!==mp.opp.p||mp.oppPrev.x!==mp.opp.x){
+      mp.oppPrev={x:(mp.opp0?mp.opp0.x:mp.opp.x),y:(mp.opp0?mp.opp0.y:mp.opp.y)};
+    }
+    mp.opp0=mp.opp;
+  }
 }
-function mpFinish(){ if(!mp) return; player.finished=true; state="finished"; Snd.engineStop&&Snd.engineStop(); mp.myFin=raceTime;
-  Snd.finishWin&&Snd.finishWin(); try{spawnConfetti(player.x,player.y);}catch(e){}
+
+function mpFinish(){
+  if(!mp) return;
+  player.finished=true;
+  state="finished";
+  Snd.engineStop&&Snd.engineStop();
+  mp.myFin=raceTime;
+  Snd.finishWin&&Snd.finishWin();
+  try{ spawnConfetti(player.x,player.y); }catch(e){}
   mpSend({t:"fin",time:raceTime});
-  if(mp.oppFin!=null){ mpCheckFinish(); }
-  else { $("resPlace").textContent="KONČAL"; $("resPlace").classList.remove("win"); $("resSub").innerHTML="🌐 <b>Multiplayer</b><br>Tvoj čas: "+fmt(raceTime)+"<br><span style='opacity:.7'>Čakam, da "+(mp.oppName||"nasprotnik")+" konča…</span>";
-    const rl=$("resList"); rl.innerHTML=""; $("resStats").innerHTML=""; $("btnNext").style.display="none"; $("btnRetry").style.display="none"; $("btnMenu2").style.display="block"; $("hud").style.display="none"; $("standings").style.display="none";
-    if(mp.oppLeft){ mp.oppFin=raceTime+999; mpCheckFinish(); }
-    setScreen("results"); }
+  if(mp.oppFin!=null){
+    mpCheckFinish();
+  } else {
+    $("resPlace").textContent="KONČAL";
+    $("resPlace").classList.remove("win");
+    $("resSub").innerHTML="🌐 <b>Multiplayer</b><br>Tvoj čas: "+fmt(raceTime)+"<br><span style='opacity:.7'>Čakam, da "+(mp.oppName||"nasprotnik")+" konča…</span>";
+    const rl=$("resList"); rl.innerHTML="";
+    $("resStats").innerHTML="";
+    $("btnNext").style.display="none";
+    $("btnRetry").style.display="none";
+    $("btnMenu2").style.display="block";
+    $("hud").style.display="none";
+    $("standings").style.display="none";
+    if(mp.oppLeft){
+      mp.oppFin=raceTime+999;
+      mpCheckFinish();
+    }
+    setScreen("results");
+  }
 }
-function drawMpOpp(c){ if(!mpMode||!mp||!mp.opp) return; const o=mp.opp;
-  let x=o.x,y=o.y,a=o.a; if(mp.oppPrev){ const dt=Math.min(1,(performance.now()-(mp.oppT||0))/90); x=mp.oppPrev.x+(o.x-mp.oppPrev.x)*dt; y=mp.oppPrev.y+(o.y-mp.oppPrev.y)*dt; }
-  c.save(); c.globalAlpha=0.92; try{ drawVehicle(c,x,y,a,0,1,"#ff6b6b",Math.max(0,1-(o.dmg||0)),o.dmg||0,1/scale,false);}catch(e){}
-  c.globalAlpha=1; c.fillStyle="#fff"; c.font="bold "+(11/scale)+"px sans-serif"; c.textAlign="center"; c.strokeStyle="rgba(0,0,0,.6)"; c.lineWidth=3/scale;
-  const nm=mp.oppName||"Nasprotnik"; c.strokeText(nm,x,y-RAD*1.3/scale*scale); c.fillText(nm,x,y-RAD*1.3/scale*scale); c.restore();
-  // razlika (gap)
-  if(o.p!=null){ const myp=(player.crossings||0)*L+player.s; const gap=(myp-o.p)/Math.max(60,vRef); mp.gap=gap; }
+
+function drawMpOpp(c){
+  if(!mpMode||!mp||!mp.opp) return;
+  const o=mp.opp;
+  let x=o.x,y=o.y,a=o.a;
+  if(mp.oppPrev){
+    const dt=Math.min(1,(performance.now()-(mp.oppT||0))/90);
+    x=mp.oppPrev.x+(o.x-mp.oppPrev.x)*dt;
+    y=mp.oppPrev.y+(o.y-mp.oppPrev.y)*dt;
+  }
+  c.save();
+  c.globalAlpha=0.92;
+  try{
+    drawVehicle(c,x,y,a,0,1,mp.oppColor||"#ff6b6b",Math.max(0,1-(o.dmg||0)),o.dmg||0,1/scale,false);
+  }catch(e){}
+  c.globalAlpha=1;
+  c.fillStyle="#fff";
+  c.font="bold "+(11/scale)+"px sans-serif";
+  c.textAlign="center";
+  c.strokeStyle="rgba(0,0,0,.6)";
+  c.lineWidth=3/scale;
+  const nm=mp.oppName||"Nasprotnik";
+  c.strokeText(nm,x,y-RAD*1.3/scale*scale);
+  c.fillText(nm,x,y-RAD*1.3/scale*scale);
+  c.restore();
+
+  if(o.p!=null){
+    const myp=(player.crossings||0)*L+player.s;
+    const gap=(myp-o.p)/Math.max(60,vRef);
+    mp.gap=gap;
+  }
 }
 
 function startSingle(tIdx){ training=0; careerOff();
@@ -6874,13 +7867,65 @@ function bindUI(){
     }catch(e){ showBanner("Deljenje ni uspelo",2000,true); }
   });
   $("btnMulti").addEventListener("click",()=>{ Snd.unlock&&Snd.unlock(); Snd.click&&Snd.click(); openMP(); });
-  $("btnMpBack").addEventListener("click",()=>{ mpReset(); setScreen("menu"); });
+  $("btnMpBack").addEventListener("click",()=>{
+    if(mpLobby.pollTimer) clearInterval(mpLobby.pollTimer);
+    mpReset();
+    setScreen("menu");
+  });
   $("btnMpQuick").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpQuick(); });
-  $("btnMpCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpCreate(); });
-  $("btnMpJoin").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpJoin(); });
-  $("btnMpCopy").addEventListener("click",()=>{ try{ navigator.clipboard.writeText(mp&&mp.code||""); showBanner("Koda kopirana!",1400,true); }catch(e){} });
-  $("btnMpStart").addEventListener("click",()=>{ Snd.unlock&&Snd.unlock(); mpHostStart(); });
-  $("btnMpLeave").addEventListener("click",()=>{ mpSend({t:"bye"}); mpReset(); mpMode=false; setScreen("menu"); });
+  $("btnMpCreateModalOpen").addEventListener("click",()=>{ Snd.click&&Snd.click(); openCreateRoomModal(); });
+  $("btnMpConfirmCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpCreateRoom(); });
+  $("btnMpCancelCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); closeCreateRoomModal(); });
+  $("mpTabRooms").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("rooms"); });
+  $("mpTabPlayers").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("players"); });
+  $("mpTabCode").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("code"); });
+  $("btnMpJoin").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpJoinCode(); });
+  $("mpCodeIn").addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ Snd.click&&Snd.click(); mpJoinCode(); } });
+  $("mpName").addEventListener("input",(e)=>{
+    save.playerName=(e.target.value||"").trim().slice(0,16);
+    persist();
+    mpSendPresence();
+  });
+  $("btnMpCopy").addEventListener("click",()=>{
+    const code=mp&&mp.code||"";
+    if(!code) return;
+    try{
+      navigator.clipboard.writeText(code);
+      showBanner("Koda sobe "+code+" kopirana! 📋",1600,true);
+    }catch(e){}
+  });
+  $("btnMpShare").addEventListener("click",()=>{
+    const code=mp&&mp.code||"";
+    if(!code) return;
+    const txt="🏁 Pridruži se moji dirki v Finger Racerju!\nKoda sobe: "+code+"\n\nIgraj zdaj!";
+    try{
+      if(navigator.share){
+        navigator.share({title:"Finger Racer Soba",text:txt}).catch(()=>{});
+      } else if(navigator.clipboard){
+        navigator.clipboard.writeText(txt);
+        showBanner("Vabilo kopirano v odložišče! 📋",1800,true);
+      }
+    }catch(e){}
+  });
+  $("btnMpReadyToggle").addEventListener("click",()=>{
+    Snd.click&&Snd.click();
+    mpToggleReady();
+  });
+  $("btnMpStart").addEventListener("click",()=>{
+    Snd.unlock&&Snd.unlock();
+    mpHostStart();
+  });
+  $("btnMpLeave").addEventListener("click",()=>{
+    Snd.click&&Snd.click();
+    if(mp){
+      if(mp.isHost) mpUnadvertiseRoom(mp.code);
+      mpSend({t:"bye"});
+    }
+    mpReset();
+    mpMode=false;
+    setScreen("mpHome");
+    mpSwitchTab("rooms");
+  });
   $("btnSettings").addEventListener("click",()=>{ settingsFromRace=false; openSettings(); });
   $("btnRaceSettings").addEventListener("click",()=>{ pauseGame(); settingsFromRace=true; openSettings(); });
   $("btnSetBack").addEventListener("click",()=>{ if(settingsFromRace){ settingsFromRace=false; setScreen("pause"); } else setScreen("menu"); });
