@@ -3214,11 +3214,14 @@ function applyLang(l){
 
   // Leaderboard (#leaderboard)
   if($("leaderboardTitleH")) $("leaderboardTitleH").innerHTML = "<span>" + (isEn ? "Leaderboard" : "Lestvica") + "</span> 🏆";
+  if($("btnLbTabSingle")) $("btnLbTabSingle").querySelector("span").textContent = tr.lbTabSingle;
+  if($("btnLbTabWC")) $("btnLbTabWC").querySelector("span").textContent = tr.lbTabWC;
   if($("btnCareerLb")) $("btnCareerLb").querySelector("span").textContent = tr.myCareerBtn;
   if($("btnLbAch")) $("btnLbAch").querySelector("span").textContent = tr.achTab;
-  if($("lbHint")) $("lbHint").textContent = tr.lbHint;
+  if($("lbHint")) $("lbHint").textContent = (typeof currentLbTab !== "undefined" && currentLbTab === "single") ? tr.lbSingleHint : tr.lbHint;
   if($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = tr.shareResult;
   if($("btnLbBack")) $("btnLbBack").querySelector("span").textContent = tr.back;
+  if(typeof currentLbTab !== "undefined" && currentLbTab === "single" && typeof updateTrackTitle === "function") updateTrackTitle();
 
   // Settings (#settings)
   if($("settingsTitleH")) $("settingsTitleH").innerHTML = "<span>" + (isEn ? "Settings" : "Nastavitve") + "</span>";
@@ -7314,11 +7317,13 @@ async function submitGlobalRecord(trackId, timeSeconds) {
     const name = (save.playerName || "Racer").trim().slice(0, 14) || "Racer";
     const roundTime = Math.round(timeSeconds * 1000) / 1000;
     const docRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(save.uid);
+    const flag = save.countryFlag || (save.lang === "en" ? "🇬🇧" : "🇸🇮");
     const snap = await docRef.get();
     if (!snap.exists || !snap.data().time || snap.data().time > roundTime) {
       await docRef.set({
         name: name,
         time: roundTime,
+        flag: flag,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
@@ -7381,8 +7386,9 @@ async function loadGlobalTrackLeaderboard(trackNum) {
         row.className = "rrow" + (isMe ? " me" : "");
         const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : ((idx + 1) + ".");
         const displayTime = (typeof fmt === "function") ? fmt(d.time) : (d.time.toFixed(3) + "s");
+        const flagStr = d.flag ? (d.flag + " ") : "";
         row.innerHTML = '<span class="rn" style="' + (isMe ? 'color:var(--green);font-weight:900;' : '') + '">' + 
-          medal + ' ' + (d.name || "Racer") + (isMe ? ' ★' : '') + '</span>' +
+          medal + ' ' + flagStr + (d.name || "Racer") + (isMe ? ' ★' : '') + '</span>' +
           '<span class="rp" style="min-width:40px"></span>' +
           '<span class="t" style="' + (isMe ? 'color:var(--green);font-weight:900;' : '') + '">' + displayTime + ' ⏱️</span>';
         l.appendChild(row);
@@ -11924,7 +11930,21 @@ function bindUI(){
     openTraining("singlePick");
   });
 
-  $("btnLeaderboard").addEventListener("click",openLeaderboard);
+  $("btnLeaderboard").addEventListener("click", () => openLeaderboard("single"));
+  if($("btnLbTabSingle")) $("btnLbTabSingle").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("single"); });
+  if($("btnLbTabWC")) $("btnLbTabWC").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("wc"); });
+  if($("btnLbTrackPrev")) $("btnLbTrackPrev").addEventListener("click", () => {
+    Snd.click&&Snd.click();
+    currentLbTrack = (currentLbTrack > 1) ? currentLbTrack - 1 : MAXLVL;
+    updateTrackTitle();
+    loadGlobalTrackLeaderboard(currentLbTrack);
+  });
+  if($("btnLbTrackNext")) $("btnLbTrackNext").addEventListener("click", () => {
+    Snd.click&&Snd.click();
+    currentLbTrack = (currentLbTrack < MAXLVL) ? currentLbTrack + 1 : 1;
+    updateTrackTitle();
+    loadGlobalTrackLeaderboard(currentLbTrack);
+  });
   $("btnLbBack").addEventListener("click",()=>setScreen("menu"));
   if($("btnCareerLb")) $("btnCareerLb").addEventListener("click",()=>{ Snd.click&&Snd.click(); openCareerStats("leaderboard"); });
   if($("btnCareerStatsBack")) $("btnCareerStatsBack").addEventListener("click",()=>setScreen(careerStatsFrom||"leaderboard"));
@@ -11963,15 +11983,32 @@ function bindUI(){
     document.querySelectorAll(".setPage").forEach(pg=>pg.style.display=(pg.dataset.page===tab)?"block":"none");
   }));
   $("btnLbShare").addEventListener("click",()=>{
+    const isEn = (save.lang === "en");
+    if (typeof currentLbTab !== "undefined" && currentLbTab === "single") {
+      const myTime = (save.best && save.best[currentLbTrack]);
+      const tIdx = (currentLbTrack - 1);
+      const tName = (typeof PREVIEWS !== "undefined" && PREVIEWS[tIdx] && PREVIEWS[tIdx].name) ? PREVIEWS[tIdx].name : ("Track " + currentLbTrack);
+      let txt = "🏎️ FINGER RACER — " + tName + "\n";
+      if (myTime) {
+        txt += (isEn ? "My record: " : "Moj rekord: ") + fmt(myTime) + " ⏱️\n";
+      }
+      txt += (isEn ? "Can you beat me? Play now: " : "Me lahko premagaš? Igraj zdaj: ") + location.href.split("#")[0];
+      try {
+        if(navigator.share){ navigator.share({title:"Finger Racer", text:txt}).catch(()=>{}); }
+        else if(navigator.clipboard){ navigator.clipboard.writeText(txt); showBanner(isEn ? "Copied to clipboard 📋" : "Kopirano v odložišče 📋", 2200, true); }
+        else showBanner(isEn ? "Sharing not supported" : "Deljenje ni podprto", 2200, true);
+      } catch(e) { showBanner(isEn ? "Sharing failed" : "Deljenje ni uspelo", 2000, true); }
+      return;
+    }
     const lb=(save.leaderboard||[]);
-    if(!lb.length){ showBanner("Ni rezultatov za deljenje. Odigraj World Cup! 🏁",2200,true); return; }
-    const top=lb.slice(0,5).map((e,i)=>(i+1)+". "+e.name+" — "+e.pts+" tč").join("\n");
-    const txt="🏆 FINGER RACER — World Cup lestvica\n"+top+"\n\nIgraj tudi ti!";
+    if(!lb.length){ showBanner(isEn ? "No records to share. Play World Cup! 🏁" : "Ni rezultatov za deljenje. Odigraj World Cup! 🏁",2200,true); return; }
+    const top=lb.slice(0,5).map((e,i)=>(i+1)+". "+e.name+" — "+e.pts+(isEn ? " pts" : " tč")).join("\n");
+    const txt="🏆 FINGER RACER — World Cup\n"+top+"\n\n" + (isEn ? "Play now!" : "Igraj tudi ti!");
     try{
       if(navigator.share){ navigator.share({title:"Finger Racer",text:txt}).catch(()=>{}); }
-      else if(navigator.clipboard){ navigator.clipboard.writeText(txt); showBanner("Rezultat kopiran v odložišče 📋",2200,true); }
-      else showBanner("Deljenje ni podprto na tej napravi",2200,true);
-    }catch(e){ showBanner("Deljenje ni uspelo",2000,true); }
+      else if(navigator.clipboard){ navigator.clipboard.writeText(txt); showBanner(isEn ? "Copied to clipboard 📋" : "Rezultat kopiran v odložišče 📋",2200,true); }
+      else showBanner(isEn ? "Sharing not supported on this device" : "Deljenje ni podprto na tej napravi",2200,true);
+    }catch(e){ showBanner(isEn ? "Sharing failed" : "Deljenje ni uspelo",2000,true); }
   });
   $("btnMulti").addEventListener("click",()=>{ Snd.unlock&&Snd.unlock(); Snd.click&&Snd.click(); openMP(); });
   $("btnMpBack").addEventListener("click",()=>{
