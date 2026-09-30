@@ -328,19 +328,19 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;overflow-y:auto;
   background:transparent;pointer-events:auto;z-index:1}
 #menuWrap>*{position:relative;z-index:1}
-#menu .gearBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;z-index:5;
-  width:44px;height:44px;background:none;border:none;border-radius:0;box-shadow:none;
-  color:#fff;font-size:32px;line-height:1;pointer-events:auto;cursor:pointer;
+#menu .gearBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:5;
+  width:34px;height:34px;background:none;border:none;border-radius:0;box-shadow:none;
+  color:#fff;font-size:22px;line-height:1;pointer-events:auto;cursor:pointer;
   text-shadow:0 2px 7px rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center}
 #menu .lbBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;z-index:5;
   width:44px;height:44px;background:none;border:none;border-radius:0;box-shadow:none;
   color:#ffd21f;font-size:30px;line-height:1;pointer-events:auto;cursor:pointer;
   text-shadow:0 2px 7px rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center}
-#menuTitle{margin-top:calc(env(safe-area-inset-top,0px) + 46px);text-align:center;transform:skewX(-8deg)}
+#menuTitle{margin-top:calc(env(safe-area-inset-top,0px) + 40px);text-align:center;transform:skewX(-8deg)}
 #menuTitle .mt1,#menuTitle .mt2{font-family:"Arial Black",system-ui,sans-serif;font-weight:900;
   font-style:italic;letter-spacing:1px;line-height:.92;position:relative;display:inline-block}
-#menuTitle .mt1{font-size:min(12vw,64px);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px rgba(255,255,255,.25)}
-#menuTitle .mt2{font-size:min(12vw,64px);color:#e5261f;text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 34px rgba(229,38,31,.6)}
+#menuTitle .mt1{font-size:min(17vw,92px);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.5),0 0 30px rgba(255,255,255,.25)}
+#menuTitle .mt2{font-size:min(17vw,92px);color:#e5261f;text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 34px rgba(229,38,31,.6)}
 .spd{position:absolute;right:-2px;top:26%;width:34px;height:5px;border-radius:3px;
   background:linear-gradient(90deg,transparent,#fff);box-shadow:0 12px 0 -1px #fff,0 -12px 0 -1px #fff}
 .spd.r{background:linear-gradient(90deg,transparent,#e5261f);box-shadow:0 11px 0 -1px #e5261f,0 -11px 0 -1px #e5261f}
@@ -2062,7 +2062,7 @@ const DISC_SKINS=[
   {c:"#3dff8e",n:"Zelena",req:0},{c:"#3f8cff",n:"Modra",req:20},{c:"#ffd21f",n:"Rumena",req:50},
   {c:"#ff4747",n:"Rdeča",req:100},{c:"#b45bff",n:"Vijola",req:180},{c:"#ff8c1a",n:"Oranžna",req:280},
   {c:"#2fd6c3",n:"Turkiz",req:400},{c:"#ff5fa2",n:"Roza",req:550}];
-function playerColor(){ return save.discColor||"#3dff8e"; }
+function playerColor(){ return (typeof mpMode!=="undefined"&&mpMode&&typeof mp!=="undefined"&&mp&&mp.raceColor)?mp.raceColor:(save.discColor||"#3dff8e"); }
 const MAXLVL=20;
 const WC_TRACKS=[0,1,2,3,4,5,6];   // World Cup: proge 1-4 (5 in 6 le v Single Race)
 let LAPS=6, CROSS_NEED=LAPS+1, NRACERS=5;   // nastavljeno po nivoju (skupaj z igralcem)
@@ -4653,6 +4653,7 @@ function update(dt){
       // (1) kazen za AI: odsluži z upočasnitvijo
       let scHold=1;
       if(safetyCar){ const g2=wrapS(safetyCar.s-rc.s); if(g2<30||g2>L*0.9) scHold=0; }   // AI ne prehitijo varnostnega avta
+      if(rc.finished&&mpMode){ rc.finSlow=Math.max(0,(rc.finSlow==null?1:rc.finSlow)-dt*0.7); mul*=rc.finSlow; }   // multiplayer: AI rolls to a stop after the flag instead of lapping forever
       const adv=rc.v*f*dt*mul*cornerFac*scHold*(yellowFlagT>0?0.5:1);
       rc.s+=adv; rc.dist+=adv;
       if(rc.pushS){ const p=rc.pushS*dt; rc.s+=p; rc.dist+=p; rc.pushS*=Math.max(0,1-dt*5); if(Math.abs(rc.pushS)<3)rc.pushS=0; }  // odriv naprej po trku
@@ -4919,7 +4920,11 @@ function update(dt){
 
     if(state==="racing"||state==="crashed") updatePitCrew(dt);
     if(state==="racing") updateRescue(dt);
-    if(state==="racing" && (player.dmg||0)>0.5) spawnCarSmoke(player.x,player.y,player.dmg);
+    if(state==="racing"||state==="finished"){
+      if(!player.dnf) spawnDmgSmoke(player.x,player.y,player.dmg||0,Math.atan2(TYa[player.idx]||0,TXa[player.idx]||1),player,dt);
+      for(const rc of racers){ if(rc.px!=null&&!rc.wrecked&&!rc.inPit) spawnDmgSmoke(rc.px,rc.py,rc.dmg||0,rc.ang,rc,dt); }
+      if(mpMode&&mp&&mp.peers) mp.peers.forEach(pe=>{ if(!pe.isSpectator&&pe.x!=null) spawnDmgSmoke(pe.x,pe.y,pe.dmg||0,pe.a,pe,dt); });
+    }
     if(state==="racing"){ crowdCheerT=(crowdCheerT||0)-dt; if(crowdCheerT<=0){ crowdCheerT=3+Math.random()*4; try{ Snd.cheer&&Snd.cheer(Math.random()<0.3); }catch(e){} } }
     if(state==="racing") radioTipTick(dt);
     if(state==="racing"||state==="crashed"){ for(const rc of racers){ if(rc.burning&&rc.wrecked&&animOn("burning")){ if(Math.random()<0.4){ particles.push({x:rc.burnX+(Math.random()-.5)*14,y:rc.burnY+(Math.random()-.5)*14,vx:(Math.random()-.5)*20,vy:-20-Math.random()*30,life:.5+Math.random()*.5,age:0,r:3+Math.random()*5,c:["#ffd21f","#ff8c1a","#ff5a1a"][Math.random()*3|0],kind:"fire"}); } if(Math.random()<0.25){ particles.push({x:rc.burnX,y:rc.burnY,vx:(Math.random()-.5)*12,vy:-30-Math.random()*20,life:1+Math.random()*.6,age:0,r:8+Math.random()*8,kind:"smoke"}); } } } }
@@ -5106,7 +5111,7 @@ function updateHUD(force){
       const _last=_sn[_sn.length-1]||(e.r&&e.r.name)||"";
       const myNm=(mpMode&&mp&&mp.name)?mp.name:(save.playerName||"TI");
       const nm=(i+1)+". "+(e.me?esc(myNm.slice(0,4).toUpperCase()):_last.slice(0,3).toUpperCase());
-      const myCol=(mpMode&&mp)?mpSafeColor(mp.myColor,"#3dff8e"):"var(--green)";
+      const myCol=(mpMode&&mp)?mpSafeColor(playerColor(),"#3dff8e"):"var(--green)";
       d.innerHTML='<span class="dot" style="background:'+(e.me?myCol:e.r.color)+'"></span><span class="nm">'+nm+'</span>'+gap;
       st.appendChild(d);
     });
@@ -5166,19 +5171,21 @@ function spawnDust(x,y){                // prah/kajenje na pesku (gostejši dim)
     vx:(Math.random()-.5)*34,vy:(Math.random()-.5)*30-12,
     life:.7+Math.random()*.6,age:0,r:6+Math.random()*10,kind:"dust"});
 }
-let smokeT=0;
-function spawnCarSmoke(x,y,dmg){        // dim iz poškodovanega avta — v zadnjih 10% se stopnjuje, pri 0% zdravja močan dim
-  if(!animOn("smoke")) return;
-  const heavy=dmg>=0.999;
-  smokeT-=0.016; if(smokeT>0) return;
-  smokeT = heavy?0.03 : Math.max(0.05, 0.18-(dmg-0.5)*0.30);   // več poškodb -> gostejši dim
-  const n = heavy?3:(dmg>0.9?2:1);
+// Progressive damage smoke: starts as a thin light wisp at ~15% damage and grows continuously —
+// denser, bigger and darker — until a thick black plume at 100%. src = any object (holds its own timer).
+function spawnDmgSmoke(x,y,dmg,ang,src,dt){
+  if(!animOn("smoke")||!src||dmg<0.15) return;
+  const lvl=Math.min(1,(dmg-0.15)/0.84), heavy=dmg>=0.999;
+  src._smT=(src._smT||0)-dt; if(src._smT>0) return;
+  src._smT=heavy?0.028:(0.34-0.30*lvl*lvl-0.04*lvl);
+  const n=heavy?3:(lvl>0.75?2:1);
+  const bx=x-Math.cos(ang||0)*RAD*0.35, by=y-Math.sin(ang||0)*RAD*0.35;
   for(let q=0;q<n;q++){
-    const dark = dmg>0.9 || heavy;
-    particles.push({x:x+(Math.random()-.5)*(heavy?12:8),y:y+(Math.random()-.5)*(heavy?12:8),
-      vx:(Math.random()-.5)*(heavy?24:18),vy:-14-Math.random()*(heavy?24:16),
-      life:.8+Math.random()*(heavy?.8:.5),age:0,r:(heavy?7:4)+Math.random()*(heavy?7:5),
-      c:dark?["#2f2f2f","#444","#5a5a5a"][Math.random()*3|0]:null,kind:"smoke"});
+    const v=Math.round(200-lvl*165+Math.random()*24);          // light grey -> near black
+    particles.push({x:bx+(Math.random()-.5)*(6+lvl*8),y:by+(Math.random()-.5)*(6+lvl*8),
+      vx:(Math.random()-.5)*(14+lvl*16),vy:-12-Math.random()*(12+lvl*22),
+      life:.7+lvl*.7+Math.random()*.4,age:0,r:2.5+lvl*7+Math.random()*(2+lvl*4),
+      c:"rgb("+v+","+v+","+v+")",kind:"smoke"});
   }
 }
 function spawnCrash(x,y){
@@ -5683,15 +5690,18 @@ function drawDisc(c,x,y,ang,tilt,tdir,color,energy,dmg,u,ghost){
   c.fillStyle="#1a1d22";
   c.beginPath(); c.ellipse(0,off,R,R*sq,0,0,6.283); c.fill();
   // tint v barvi voznika
-  const ga=c.globalAlpha; c.globalAlpha=ga*0.18; c.fillStyle=color;
+  const ga=c.globalAlpha; c.globalAlpha=ga*0.42; c.fillStyle=color;
   c.beginPath(); c.ellipse(0,off,R,R*sq,0,0,6.283); c.fill(); c.globalAlpha=ga;
+  // coloured rim band so every disc is recognisable by its colour at a glance
+  c.strokeStyle=color; c.lineWidth=R*0.13;
+  c.beginPath(); c.ellipse(0,off,R*0.9,R*0.9*sq,0,0,6.283); c.stroke();
   if(dmg>0.03){ c.fillStyle="rgba(8,6,5,"+Math.min(0.5,dmg*0.5).toFixed(2)+")";
     c.beginPath(); c.ellipse(0,off,R,R*sq,0,0,6.283); c.fill(); }
   if(dmg>0.5){ c.strokeStyle="rgba(0,0,0,.7)"; c.lineWidth=1.1*u;
     c.beginPath(); c.moveTo(-R*0.5,off-R*0.2*sq); c.lineTo(R*0.1,off+R*0.3*sq); c.stroke(); }
   // sredinski pokrov v barvi voznika
   c.fillStyle=color;
-  c.beginPath(); c.ellipse(0,off,R*0.22,R*0.22*sq,0,0,6.283); c.fill();
+  c.beginPath(); c.ellipse(0,off,R*0.3,R*0.3*sq,0,0,6.283); c.fill();
   // ENERGIJSKI OBROČ na ploskvi: lok = preostala energija, zeleno->oranžno->rdeče
   const ecol="hsl("+(140*energy*energy).toFixed(0)+",100%,55%)";
   c.strokeStyle=ecol; c.lineWidth=2.6*u; c.lineCap="round";
@@ -6273,7 +6283,7 @@ function draw(){
   }
   for(const p of particles){
     c.globalAlpha=(1-p.age/p.life)*(p.kind?0.55:1);
-    c.fillStyle=p.kind==="dust"?"#d9b878":(p.kind==="smoke"?"#7a7d82":(p.kind==="fire"?p.c:(p.kind==="leaf"?p.c:p.c)));
+    c.fillStyle=p.kind==="dust"?"#d9b878":(p.kind==="smoke"?(p.c||"#7a7d82"):(p.kind==="fire"?p.c:(p.kind==="leaf"?p.c:p.c)));
     if(p.kind==="dust"||p.kind==="smoke") p.r+=14*0.016;
     if(p.kind==="fire") p.r*=0.965;
     c.beginPath(); c.arc(p.x,p.y,p.r,0,6.283); c.fill();
@@ -8236,6 +8246,26 @@ function mpTrackName(i){
   const nm = (parts[1] || parts[0]).trim();
   return (i + 1) + ". " + nm;
 }
+// Everybody gets a different colour in a race: if two players picked the same one, the later slot
+// gets the first free colour from the palette. Same inputs on every client -> same result.
+function mpAssignRaceColors(){
+  if(!mp) return;
+  const palette = DISC_SKINS.map(sk => sk.c);
+  const entries = [{ me:true, slot: mp.isHost ? 0 : mpGetMySlot(), base: mpGetColor() }];
+  if(mp.peers) mp.peers.forEach(p => { if(!p.isSpectator) entries.push({ peer:p, slot: p.slot != null ? p.slot : 99, base: p.baseColor || p.color }); });
+  entries.sort((a,b) => a.slot - b.slot);
+  // pass 1: first player to hold a colour keeps it; pass 2: duplicates take a free palette colour
+  const used = new Set();
+  entries.forEach(e => {
+    const c = mpSafeColor(e.base, "#3dff8e");
+    e.color = used.has(c.toLowerCase()) ? null : c;
+    if(e.color) used.add(c.toLowerCase());
+  });
+  entries.forEach(e => {
+    if(!e.color){ e.color = palette.find(x => !used.has(x.toLowerCase())) || mpSafeColor(e.base, "#3dff8e"); used.add(e.color.toLowerCase()); }
+    if(e.me) mp.raceColor = e.color; else { if(!e.peer.baseColor) e.peer.baseColor = e.peer.color; e.peer.color = e.color; }
+  });
+}
 function mpTrackLocked(i){ return isFreemiumActive() && i !== 0; }
 // my visual look, sent to other players so they see my real car
 function mpMyLook(){
@@ -8248,7 +8278,7 @@ function mpMyLook(){
 }
 function mpApplyLook(peer, d){
   if(!peer || !d) return;
-  if(d.color) peer.color = mpSafeColor(d.color, peer.color);
+  if(d.color){ peer.color = mpSafeColor(d.color, peer.color); peer.baseColor = peer.color; }
   if(d.look && typeof d.look === "object"){
     peer.look = {
       style: d.look.style === "car" ? "car" : "disc",
@@ -9782,7 +9812,7 @@ function mpUpdateRoomView(){
       const pReadyText = peer.isSpectator ? "👁️ " + (isEn ? "Watching" : "Gleda") : (peer.ready ? (isEn ? "✓ Ready" : "✓ Pripravljen") : (isEn ? "⏳ Choosing…" : "⏳ Izbira…"));
       const pVoiceIcon = mp.voiceEnabled ? (peer.voiceMuted ? " 🔇" : " 🎙️") : "";
       card.innerHTML = `
-        <div class="mpRacerAvatar" style="background:${mpSafeColor(peer.color, '#ff6b6b')}" id="mpAvatar_${esc(peer.id)}"></div>
+        <div class="mpRacerAvatar" style="background:${mpSafeColor(peer.baseColor || peer.color, '#ff6b6b')}" id="mpAvatar_${esc(peer.id)}"></div>
         <div class="mpRacerName">${esc(peer.name || "Dirkač")}${pVoiceIcon}</div>
         <div class="mpRacerRole">${pRole}</div>
         <div class="mpReadyBadge${pReadyClass}">${pReadyText}</div>
@@ -10017,6 +10047,7 @@ function mpStartRace(isHost){
     guestIds.sort();
     mp.peers.forEach(p => { p.slot = p.isHost ? 0 : (guestIds.indexOf(p.id) + 1); });
   }
+  mpAssignRaceColors();
   const mySlot = mp.isHost ? 0 : mpGetMySlot();
   qPos = mySlot + 1;
   raceGrid = mySlot;
@@ -10177,7 +10208,7 @@ function mpRenderResults(){
       t: meT,
       p: myProgress,
       me: true,
-      c: mp.myColor || "var(--green)",
+      c: mp.raceColor || mp.myColor || "var(--green)",
       dnf: !!player.dnf || (meT == null)
     }
   ];
