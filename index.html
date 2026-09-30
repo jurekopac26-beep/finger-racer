@@ -7423,7 +7423,7 @@ function renderSizeHaptics(){
 /* ================= WORLD CUP ================= */
 function openWC(){ if(isFreemiumActive()){ openPaywall("wc"); return; } $("wcNameInput").value=""; setScreen("wcName"); setTimeout(()=>$("wcNameInput").focus(),100); }
 let mpMode=false;
-let singleMode=false, timeTrial=false, ttSelected=false, coneHunt=false, coneHuntSel=false, coneHuntTime=0, coneScore=0, ttTrack=0, ghostRec=[], ghostPlay=null, ghostKind="off", ghostT=0, ghostPlayIdx=0, ttNumOpp=0, ttFriend={}, ghostIsFriend=false, ttGhostChoice=null, ttChallenge=null;
+let singleMode=false, timeTrial=false, ttSelected=false, coneHunt=false, coneHuntSel=false, coneHuntTime=0, coneScore=0, ttTrack=0, ghostRec=[], ghostPlay=null, ghostT=0, ghostPlayIdx=0, ttNumOpp=0, ttFriend={}, ghostIsFriend=false, ttGhostChoice=null, ttChallenge=null;
 function encodeGhost(g){
   if(!g||!g.length) return "";
   const step=3, pts=[]; for(let i=0;i<g.length;i+=step) pts.push(g[i]);
