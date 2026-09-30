@@ -231,6 +231,49 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .rrow .dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #000}
 .rrow.me{background:rgba(61,255,142,.14);color:var(--green)}
 .rrow .t{margin-left:auto;font-variant-numeric:tabular-nums;color:#b8c49f;font-weight:600;font-size:12px}
+/* ---------- Leaderboard ---------- */
+.lbPanel{display:flex;flex-direction:column;height:calc(100dvh - 40px);max-height:760px;margin:0 auto}
+.lbHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
+.lbHead h1{flex:1;min-width:0;font-size:clamp(18px,6vw,26px)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.lbSide{display:flex;gap:6px;flex:none}
+.lbIco{width:38px;height:38px;border-radius:50%;border:1px solid rgba(244,239,227,.3);background:rgba(244,239,227,.1);
+  font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.lbIco:active{transform:translateY(2px)}
+.lbSeg{display:flex;padding:4px;gap:4px;border-radius:12px;background:rgba(10,12,9,.8);border:1px solid rgba(244,239,227,.16);margin-bottom:10px}
+.lbSegBtn{flex:1;border:none;border-radius:9px;padding:11px 6px;background:transparent;color:#cfd8bd;
+  font-size:15px;font-weight:900;font-style:italic;cursor:pointer;transition:background .15s,color .15s}
+.lbSegBtn.on{background:var(--paper);color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.45)}
+.lbCard{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:rgba(10,12,9,.78);
+  border:1px solid rgba(244,239,227,.16);border-radius:14px;overflow:hidden}
+.lbTrackBar{display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid rgba(244,239,227,.1);background:rgba(244,239,227,.04)}
+.lbArrow{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid rgba(244,239,227,.25);background:rgba(244,239,227,.08);
+  color:var(--paper);font-size:15px;cursor:pointer}
+.lbArrow:active{transform:translateY(2px)}
+.lbTrackMid{flex:1;min-width:0}
+.lbTrackTitle{font-weight:900;font-size:16px;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbTrackSub{font-size:11px;font-weight:700;color:#9aa887;margin-top:1px}
+.lbHintBar{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9aa887;padding:8px 12px 4px;text-align:left}
+#lbList{flex:1 1 auto;min-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 8px 8px}
+.lbRow{display:flex;align-items:center;gap:10px;padding:9px 10px;margin:3px 0;border-radius:9px;background:rgba(244,239,227,.04);
+  font-weight:800;font-size:14.5px;text-align:left}
+.lbRow .lbRk{width:30px;flex:none;text-align:center;font-size:14px;color:#9aa887;font-variant-numeric:tabular-nums}
+.lbRow .lbNm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--paper)}
+.lbRow .lbSub{font-size:11px;font-weight:700;color:#9aa887;flex:none}
+.lbRow .lbTm{flex:none;font-variant-numeric:tabular-nums;font-weight:900;color:#e7eed6}
+.lbRow.p1{background:linear-gradient(90deg,rgba(255,204,38,.22),rgba(255,204,38,.05));border:1px solid rgba(255,204,38,.35)}
+.lbRow.p1 .lbTm{color:var(--yellow)}
+.lbRow.p2{background:linear-gradient(90deg,rgba(210,220,230,.16),rgba(210,220,230,.03))}
+.lbRow.p3{background:linear-gradient(90deg,rgba(205,127,50,.18),rgba(205,127,50,.03))}
+.lbRow .lbRk.medal{font-size:20px}
+.lbRow.me{outline:2px solid var(--green);outline-offset:-2px}
+.lbRow.me .lbNm,.lbRow.me .lbTm{color:var(--green)}
+.lbEmpty{padding:40px 12px;color:#9aa887;font-size:14px;font-weight:700;text-align:center}
+#lbMine:empty{display:none}
+#lbMine{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;
+  border-top:1px solid rgba(244,239,227,.12);background:rgba(61,255,142,.08);font-size:13px;font-weight:800}
+#lbMine b{color:var(--green);font-size:15px;font-variant-numeric:tabular-nums}
+.lbFoot{display:flex;gap:10px;margin-top:10px}
+.lbFoot .btn{margin:4px 0;white-space:nowrap}
 #resStats{font-size:12.5px;color:#b8c49f;margin-bottom:10px}
 #loading{z-index:60}
 .spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(244,239,227,.2);border-top-color:var(--yellow);
@@ -1224,24 +1267,36 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   </div>
 
   <div id="leaderboard" class="screen">
-    <div class="panel wide">
-      <h1 class="disp" id="leaderboardTitleH" style="font-size:26px"><span>Lestvica</span> 🏆</h1>
-      <div class="checker"></div>
-      <div style="display:flex;gap:8px;justify-content:center;margin:0 auto 10px;flex-wrap:wrap">
-        <button class="btn disp small" id="btnLbTabSingle"><span>⏱️ Single Race</span></button>
-        <button class="btn ghost small disp" id="btnLbTabWC"><span>🏆 World Cup</span></button>
-        <button class="btn ghost small disp" id="btnCareerLb"><span>📊 Moja kariera</span></button>
-        <button class="btn ghost small disp" id="btnLbAch"><span>🏅 Dosežki</span></button>
+    <div class="panel wide lbPanel">
+      <div class="lbHead">
+        <h1 class="disp" id="leaderboardTitleH" style="font-size:26px"><span>Lestvica</span> 🏆</h1>
+        <div class="lbSide">
+          <button class="lbIco" id="btnCareerLb" title="Moja kariera" aria-label="Moja kariera">📊</button>
+          <button class="lbIco" id="btnLbAch" title="Dosežki" aria-label="Dosežki">🏅</button>
+        </div>
       </div>
-      <div id="lbTrackBar" style="display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 10px;">
-        <button class="btn ghost small disp" id="btnLbTrackPrev" style="min-width:38px;padding:6px 12px;font-size:15px">◀</button>
-        <span id="lbTrackTitle" style="font-weight:900;font-size:16px;color:var(--yellow);min-width:140px;text-align:center">Track 1</span>
-        <button class="btn ghost small disp" id="btnLbTrackNext" style="min-width:38px;padding:6px 12px;font-size:15px">▶</button>
+      <div class="checker" style="margin:8px 0 12px"></div>
+      <div class="lbSeg" role="tablist">
+        <button class="lbSegBtn on" id="btnLbTabSingle" role="tab"><span>⏱️ Single Race</span></button>
+        <button class="lbSegBtn" id="btnLbTabWC" role="tab"><span>🏆 World Cup</span></button>
       </div>
-      <div class="hint" id="lbHint" style="margin:-2px 0 8px">Globalni rekordi prog (najboljši časi)</div>
-      <div id="lbList"></div>
-      <button class="btn disp" id="btnLbShare"><span>Deli rezultat 📤</span></button>
-      <button class="btn ghost small disp" id="btnLbBack"><span>Back</span></button>
+      <div class="lbCard">
+        <div id="lbTrackBar" class="lbTrackBar">
+          <button class="lbArrow" id="btnLbTrackPrev" aria-label="Previous track">◀</button>
+          <div class="lbTrackMid">
+            <div id="lbTrackTitle" class="lbTrackTitle">Track 1</div>
+            <div id="lbTrackSub" class="lbTrackSub">1 / 20</div>
+          </div>
+          <button class="lbArrow" id="btnLbTrackNext" aria-label="Next track">▶</button>
+        </div>
+        <div class="lbHintBar" id="lbHint">Globalni rekordi prog (najboljši časi)</div>
+        <div id="lbList"></div>
+        <div id="lbMine"></div>
+      </div>
+      <div class="lbFoot">
+        <button class="btn ghost small disp" id="btnLbBack"><span>Back</span></button>
+        <button class="btn disp small" id="btnLbShare"><span>Deli rezultat 📤</span></button>
+      </div>
     </div>
   </div>
 
@@ -1460,9 +1515,9 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <div class="itext">Moder pas <b>BOKSI</b> ob progi te <b>popravlja</b>. Zapelji nanj in <b>upočasni</b> za polno popravilo — a pazi, tekmeci medtem vozijo naprej!</div>
       </div>
       <div class="islide" data-i="3">
-        <div class="iicon">👻🏁</div>
-        <div class="ititle">Kvalifikacije</div>
-        <div class="itext">Pred vsako tekmo je <b>1 krog kvalifikacij</b>. Voziš proti <b>senci 5. mesta</b> — <b>prehiti jo</b>, da se kvalificiraš. Tvoj čas določi, s katerega <b>mesta startaš</b> na tekmi.</div>
+        <div class="iicon">💨🏎️</div>
+        <div class="ititle">Zavetrje</div>
+        <div class="itext">Vožnja <b>tik za tekmecem</b> ti prinaša <b>zavetrje</b> — tvoj avto pospeši, hkrati pa se vozilo <b>delno popravlja</b>. Izkoristi zavetrje za hitro prehitevanje!</div>
       </div>
       <div class="islide" data-i="4">
         <div class="iicon">🏆</div>
@@ -2562,7 +2617,7 @@ const I18N = {
     myCareerBtn: "📊 My Career",
     achTab: "🏅 Achievements",
     lbHint: "Best World Cup results (points + difficulty bonus)",
-    lbSingleHint: "Global track records (fastest times worldwide)",
+    lbSingleHint: "Top 50 global records (fastest times worldwide)",
     shareResult: "Share Result 📤",
 
     // settings
@@ -2725,7 +2780,7 @@ const I18N = {
     myCareerBtn: "📊 Moja kariera",
     achTab: "🏅 Dosežki",
     lbHint: "Najboljši rezultati World Cupa (točke + bonus za težavnost)",
-    lbSingleHint: "Globalni rekordi prog (najhitrejši časi na svetu)",
+    lbSingleHint: "Top 50 globalnih rekordov (najhitrejši časi na svetu)",
     shareResult: "Deli rezultat 📤",
 
     // settings
@@ -3216,9 +3271,8 @@ function applyLang(l){
   if($("leaderboardTitleH")) $("leaderboardTitleH").innerHTML = "<span>" + (isEn ? "Leaderboard" : "Lestvica") + "</span> 🏆";
   if($("btnLbTabSingle")) $("btnLbTabSingle").querySelector("span").textContent = tr.lbTabSingle;
   if($("btnLbTabWC")) $("btnLbTabWC").querySelector("span").textContent = tr.lbTabWC;
-  if($("btnCareerLb")) $("btnCareerLb").querySelector("span").textContent = tr.myCareerBtn;
-  if($("btnLbAch")) $("btnLbAch").querySelector("span").textContent = tr.achTab;
-  if($("lbHint")) $("lbHint").textContent = (typeof currentLbTab !== "undefined" && currentLbTab === "single") ? tr.lbSingleHint : tr.lbHint;
+  if($("btnCareerLb")) { $("btnCareerLb").title = tr.myCareerBtn; $("btnCareerLb").setAttribute("aria-label", tr.myCareerBtn); }
+  if($("btnLbAch")) { $("btnLbAch").title = tr.achTab; $("btnLbAch").setAttribute("aria-label", tr.achTab); }
   if($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = tr.shareResult;
   if($("btnLbBack")) $("btnLbBack").querySelector("span").textContent = tr.back;
   if(typeof currentLbTab !== "undefined" && currentLbTab === "single" && typeof updateTrackTitle === "function") updateTrackTitle();
@@ -3553,41 +3607,26 @@ function startLevel(lv){ training=0; careerOff();
   aiParams={SKILLS,base,NAI:NRACERS-1};
   vRef=Math.max(60, base*SKILLS[0]*MEANFAC);   // hitrost vodilnega (px/s) za razmike
   qBench=[]; qAI=[];
-  const nb=wc?5:5;
-  for(let k=0;k<nb;k++){
-    const skill=SKILLS[k]!=null?SKILLS[k]:SKILLS[SKILLS.length-1]*0.9;
-    const lap=L/(base*skill*MEANFAC)+0.4+Math.random()*0.4;
-    qBench.push(lap);
-    qAI.push({name:NAMES[k], color:COLORS[k], time:lap});
+  if(wc){
+    qPos=(wc.race===0)?3:(wc.lastPos||3);
+    raceStarted=false;
+    showWCRaceIntro();
+  } else {
+    qPos=3;
+    raceStarted=false;
+    startRace();
   }
-  qBench.sort((a,b)=>a-b);
-  startQualify();
 }
 function startQualify(){
-  mode="qualify"; state="prestart"; finishOrder=[]; particles=[]; racers=[];
-  raceTime=0; shake=0; holdT=0; cdShown=-1; raceStarted=false; crashAnimT=0;
-  quakeDone=false; quakeCracks=[]; stains=[]; redPaintT=0; balloons=[]; careerEvDone._pa=0; crashedThisRace=false; victoryLap=0; perfectLaunch=0;
-  safetyCar=null; recovery=null; scDrainCd=0; scAlarm=false; try{Snd.sirenStop&&Snd.sirenStop(); Snd.alarmStop&&Snd.alarmStop();}catch(e){} fxReset();
-  drawPath=[]; player.v=0; player.coastV=0; player.lat=0; liftRing=false; liftBannerShown=false; player.penalty=0; player.penWarn=false; if($("penBadge"))$("penBadge").style.display="none"; if($("dmgBar"))$("dmgBar").style.display="none"; if($("fuelBar"))$("fuelBar").style.display="none"; if($("commentBar"))$("commentBar").style.display="none"; if($("ghostDelta"))$("ghostDelta").style.display="none";
-  genCones();
-  try{ genDecor(); }catch(e){}
-  try{ genProps(); }catch(e){} critters=[]; critterT=6+Math.random()*8; genSpectators(); specCross=6+Math.random()*8; specDmgCd=0; radioTipT=16+Math.random()*10; mover=null; throwObjs=[]; throwT=10+Math.random()*8; rockT=16+Math.random()*12; genPasture();
-  { overpasses=[]; const nOv=(!animOn("bridge")&&!(typeof mpMode!=="undefined"&&mpMode))?0:(L>4200?2:1);
-    for(let k=0;k<nOv;k++){ const s=((k+0.6)/nOv)*L; const i=idxOf(s);
-      overpasses.push({s, i, ang:Math.atan2(TYa[i],TXa[i]), collapsed:false, hit:0}); } }
-  player.crossings=0; player.finished=false; player.crashes=0; player.trail.length=0; player.spd=0;
-  player.dmg=0; vibT=0; pitOn=false; pitSnd=0; dmgFlash=0; dnf=false; colT=0; pitSafe=false; player.dmgPhase=Math.random()*6.28;
-  startSlot=gridSlot(0);          // v kvalifikacijah startaš sam (pole)
-  player.s=startSlot.s; player.idx=startSlot.i; player.x=startSlot.x; player.y=startSlot.y;
-  lastOn={x:startSlot.x,y:startSlot.y,s:startSlot.s}; resetCP(); player.ang=Math.atan2(TYa[startSlot.i],TXa[startSlot.i]); player.path=[{x:startSlot.x,y:startSlot.y}]; player.v=0; player.vx=0; player.vy=0;
-  // senca 5. uvrščenega — duh, ki vozi z enakomernim tempom (qBench[4] na krog)
-  const g=gridSlot(1);
-  qShadow={s:g.s,spd:L/qBench[4],px:g.x,py:g.y,lat:g.lat,started:false};
-  setScreen(null); $("hud").style.display="flex"; $("standings").style.display="flex";
-  layout();
-  state="prestart";
-  showBanner("KVALIFIKACIJE · 1 krog — prehiti senco 5. mesta!",2800,true);
-  updateHUD(true);
+  if(wc){
+    qPos=(wc.race===0)?3:(wc.lastPos||3);
+    raceStarted=false;
+    showWCRaceIntro();
+  } else {
+    qPos=3;
+    raceStarted=false;
+    startRace();
+  }
 }
 let _sampC=null,_sampData=null,_sampW=0,_sampH=0,_sampFor=null;
 function ensureSample(){
@@ -7316,17 +7355,28 @@ async function submitGlobalRecord(trackId, timeSeconds) {
     }
     const name = (save.playerName || "Racer").trim().slice(0, 14) || "Racer";
     const roundTime = Math.round(timeSeconds * 1000) / 1000;
-    const docRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(save.uid);
     const flag = save.countryFlag || (save.lang === "en" ? "🇬🇧" : "🇸🇮");
-    const snap = await docRef.get();
-    if (!snap.exists || !snap.data().time || snap.data().time > roundTime) {
-      await docRef.set({
-        name: name,
-        time: roundTime,
-        flag: flag,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
+
+    // Deterministic doc ID per user + time (e.g. p_abc_20458): saves previous records on the leaderboard
+    // (up to top 50) and avoids duplicate rows if the same time is synced again.
+    const recordDocId = save.uid + '_' + Math.round(roundTime * 1000);
+    const docRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(recordDocId);
+    await docRef.set({
+      uid: save.uid,
+      name: name,
+      time: roundTime,
+      flag: flag,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // Clean up any legacy single-doc record keyed by `save.uid` if present
+    try {
+      const legacyRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(save.uid);
+      const legacySnap = await legacyRef.get();
+      if (legacySnap.exists) {
+        await legacyRef.delete();
+      }
+    } catch(e) {}
   } catch(err) {
     console.warn("Global record submit error:", err);
   }
@@ -7335,9 +7385,14 @@ async function submitGlobalRecord(trackId, timeSeconds) {
 async function syncLocalRecordsToGlobal() {
   if (!db || !save.best) return;
   try {
+    if (!save._syncedBests) save._syncedBests = {};
     for (let i = 1; i <= MAXLVL; i++) {
       if (save.best[i] && !isNaN(save.best[i])) {
-        submitGlobalRecord(i, save.best[i]);
+        const bestTime = Math.round(save.best[i] * 1000) / 1000;
+        if (save._syncedBests[i] !== bestTime) {
+          await submitGlobalRecord(i, bestTime);
+          save._syncedBests[i] = bestTime;
+        }
       }
     }
   } catch(e) {}
@@ -7348,65 +7403,76 @@ function updateTrackTitle() {
   if ($("lbTrackTitle")) {
     const tIdx = (currentLbTrack - 1);
     let extra = "";
-    if (typeof PREVIEWS !== "undefined" && PREVIEWS[tIdx] && PREVIEWS[tIdx].name) {
-      const parts = PREVIEWS[tIdx].name.split(" · ");
-      if (parts.length > 1) extra = " (" + parts[1] + ")";
+    if (typeof PREVIEWS !== "undefined" && PREVIEWS[tIdx]) {
+      const p = (typeof getPreview === "function") ? getPreview(tIdx) : PREVIEWS[tIdx];
+      const parts = (p.name || "").split(" · ");
+      if (parts.length > 1) extra = " · " + parts[1];
     }
     $("lbTrackTitle").textContent = (isEn ? "Track " : "Proga ") + currentLbTrack + extra;
   }
+  if ($("lbTrackSub")) $("lbTrackSub").textContent = currentLbTrack + " / " + MAXLVL;
+}
+
+function lbEsc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// One leaderboard row: rank (medal for top 3), name, optional sub-label, value
+function lbRow(i, name, sub, value, isMe) {
+  const row = document.createElement("div");
+  row.className = "lbRow" + (i < 3 ? " p" + (i + 1) : "") + (isMe ? " me" : "");
+  const medal = ["🥇", "🥈", "🥉"][i];
+  row.innerHTML = '<span class="lbRk' + (medal ? ' medal' : '') + '">' + (medal || (i + 1)) + '</span>' +
+    '<span class="lbNm">' + name + (isMe ? ' ★' : '') + '</span>' +
+    (sub ? '<span class="lbSub">' + sub + '</span>' : '') +
+    '<span class="lbTm">' + value + '</span>';
+  return row;
+}
+
+function lbSetMine(label, value) {
+  const m = $("lbMine");
+  if (!m) return;
+  m.innerHTML = value ? '<span>' + label + '</span><b>' + value + '</b>' : "";
 }
 
 async function loadGlobalTrackLeaderboard(trackNum) {
   const l = $("lbList");
   if (!l) return;
   const isEn = (save.lang === "en");
-  l.innerHTML = '<div class="hint" style="padding:24px 0">' + (isEn ? "Loading global records... ⏳" : "Nalaganje globalnih rekordov... ⏳") + '</div>';
+  const myBest = save.best && save.best[trackNum];
+  lbSetMine(isEn ? "Your best on this track" : "Tvoj rekord na tej progi", myBest ? fmt(myBest) + " ⏱️" : "");
+  l.innerHTML = '<div class="lbEmpty">' + (isEn ? "Loading global records... ⏳" : "Nalaganje globalnih rekordov... ⏳") + '</div>';
 
   if (!db) {
-    l.innerHTML = '<div class="hint" style="padding:24px 0;color:#ff8a80">' + (isEn ? "Database connection not available" : "Povezava z bazo ni na voljo") + '</div>';
+    l.innerHTML = '<div class="lbEmpty" style="color:#ff8a80">' + (isEn ? "Database connection not available" : "Povezava z bazo ni na voljo") + '</div>';
     return;
   }
 
   try {
-    const snap = await db.collection("tracks").doc(String(trackNum)).collection("records").orderBy("time", "asc").limit(10).get();
+    const snap = await db.collection("tracks").doc(String(trackNum)).collection("records").orderBy("time", "asc").limit(50).get();
 
     if (currentLbTab !== "single" || currentLbTrack !== trackNum) return; // Prevent race conditions
 
     l.innerHTML = "";
     if (snap.empty) {
-      l.innerHTML = '<div class="hint" style="padding:20px 0">' + 
-        (isEn ? "No global records for this track yet. Be the first! 🏁" : "Še ni globalnih rekordov za to progo. Bodi prvi! 🏁") + 
+      l.innerHTML = '<div class="lbEmpty">' +
+        (isEn ? "No global records for this track yet.<br>Be the first! 🏁" : "Še ni globalnih rekordov za to progo.<br>Bodi prvi! 🏁") +
         '</div>';
     } else {
       let idx = 0;
       snap.forEach(doc => {
         const d = doc.data();
-        const isMe = (doc.id === save.uid);
-        const row = document.createElement("div");
-        row.className = "rrow" + (isMe ? " me" : "");
-        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : ((idx + 1) + ".");
+        const isMe = (d.uid === save.uid || doc.id === save.uid || doc.id.startsWith(save.uid + '_'));
         const displayTime = (typeof fmt === "function") ? fmt(d.time) : (d.time.toFixed(3) + "s");
-        const flagStr = d.flag ? (d.flag + " ") : "";
-        row.innerHTML = '<span class="rn" style="' + (isMe ? 'color:var(--green);font-weight:900;' : '') + '">' + 
-          medal + ' ' + flagStr + (d.name || "Racer") + (isMe ? ' ★' : '') + '</span>' +
-          '<span class="rp" style="min-width:40px"></span>' +
-          '<span class="t" style="' + (isMe ? 'color:var(--green);font-weight:900;' : '') + '">' + displayTime + ' ⏱️</span>';
-        l.appendChild(row);
+        const flagStr = d.flag ? (lbEsc(d.flag) + " ") : "";
+        l.appendChild(lbRow(idx, flagStr + lbEsc(d.name || "Racer"), "", displayTime, isMe));
         idx++;
       });
     }
-
-    // Show player's personal local record below list
-    if (save.best && save.best[trackNum]) {
-      const pRow = document.createElement("div");
-      pRow.style.cssText = "margin-top:12px;padding:8px 12px;background:rgba(255,255,255,0.06);border-radius:10px;font-size:13px;display:flex;justify-content:space-between;align-items:center;";
-      pRow.innerHTML = '<span style="opacity:0.8">' + (isEn ? "Your local best:" : "Tvoj lokalni rekord:") + '</span><b style="color:var(--yellow);font-size:14px">' + fmt(save.best[trackNum]) + ' ⏱️</b>';
-      l.appendChild(pRow);
-    }
   } catch(err) {
     console.error("Leaderboard load error:", err);
-    l.innerHTML = '<div class="hint" style="padding:20px 0;color:#ff8a80">' + 
-      (isEn ? "Could not fetch global records (check Firestore rules)." : "Ni bilo mogoče naložiti rekordov (preveri povezavo).") + 
+    l.innerHTML = '<div class="lbEmpty" style="color:#ff8a80">' +
+      (isEn ? "Could not fetch global records (check Firestore rules)." : "Ni bilo mogoče naložiti rekordov (preveri povezavo).") +
       '</div>';
   }
 }
@@ -7418,32 +7484,30 @@ function openLeaderboard(tabOverride){
   const tab = currentLbTab;
   const isEn = (save.lang === "en");
 
-  // Tab button styles
-  if ($("btnLbTabSingle")) $("btnLbTabSingle").className = "btn small disp" + (tab === "single" ? "" : " ghost");
-  if ($("btnLbTabWC")) $("btnLbTabWC").className = "btn small disp" + (tab === "wc" ? "" : " ghost");
+  // Segmented control state
+  if ($("btnLbTabSingle")) { $("btnLbTabSingle").classList.toggle("on", tab === "single"); $("btnLbTabSingle").setAttribute("aria-selected", tab === "single"); }
+  if ($("btnLbTabWC")) { $("btnLbTabWC").classList.toggle("on", tab === "wc"); $("btnLbTabWC").setAttribute("aria-selected", tab === "wc"); }
 
   // Track selector visibility
   if ($("lbTrackBar")) $("lbTrackBar").style.display = (tab === "single" ? "flex" : "none");
 
   if (tab === "single") {
-    if ($("lbHint")) $("lbHint").textContent = isEn ? "Global track records (fastest times worldwide)" : "Globalni rekordi prog (najhitrejši časi na svetu)";
+    if ($("lbHint")) $("lbHint").textContent = isEn ? "🌍 Top 50 fastest times worldwide" : "🌍 Top 50 najhitrejših časov na svetu";
     updateTrackTitle();
     loadGlobalTrackLeaderboard(currentLbTrack);
     // Background sync of player's local records if any
     try { syncLocalRecordsToGlobal(); } catch(e){}
   } else {
-    if ($("lbHint")) $("lbHint").textContent = isEn ? "Best World Cup results (points + diff bonus)" : "Najboljši rezultati World Cupa (točke + bonus za težavnost)";
+    if ($("lbHint")) $("lbHint").textContent = isEn ? "🏆 Points + difficulty bonus" : "🏆 Točke + bonus za težavnost";
     const l = $("lbList"); l.innerHTML = "";
     const lb = (save.leaderboard || []);
+    lbSetMine("", "");
     if (!lb.length) {
-      l.innerHTML = '<div class="hint" style="padding:16px 0">' + (isEn ? "No records yet. Play World Cup! 🏁" : "Še ni rezultatov. Odigraj World Cup! 🏁") + '</div>';
+      l.innerHTML = '<div class="lbEmpty">' + (isEn ? "No records yet.<br>Play World Cup! 🏁" : "Še ni rezultatov.<br>Odigraj World Cup! 🏁") + '</div>';
     } else {
       lb.forEach((e, i) => {
-        const d = document.createElement("div"); d.className = "rrow" + (i === 0 ? " me" : "");
-        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : ((i + 1) + ".");
         const dn = (DIFFS[e.diff] ? DIFFS[e.diff].n : "");
-        d.innerHTML = '<span class="rn">' + medal + ' ' + e.name + '</span><span class="rp" style="min-width:60px">' + dn + '</span><span class="t">' + e.pts + ' 🏆</span>';
-        l.appendChild(d);
+        l.appendChild(lbRow(i, lbEsc(e.name), lbEsc(dn), e.pts + " 🏆", false));
       });
     }
   }
@@ -12133,14 +12197,12 @@ function bindUI(){
     if(coneHunt){ startConeHunt(ttTrack); return; }
     if(timeTrial){ startTimeTrial(ttTrack,ttNumOpp); return; }
     if(singleMode){ startSingle(curTrack); return; }
-    if(resultMode==="race") startLevel(level); else startQualify();
+    startLevel(level);
   });
   $("btnNext").addEventListener("click",()=>{
     { const cr=$("btnNext")._career; if(cr){ $("btnNext")._career=null; openRepairQ(cr.dmg); return; } }
     { const tr=$("btnNext")._train; if(tr){ $("btnNext")._train=null; openTraining(); return; } }
-    if(resultMode==="qualify-ok"){ if(wc) showWCRaceIntro(); else startRace(); }
-    else if(resultMode==="qualify-fail"){ if(wc) wcQualFail(); else startQualify(); }
-    else if(resultMode==="single"){ toMenu(); }
+    if(resultMode==="single"){ toMenu(); }
     else startLevel(Math.min(MAXLVL,level+1));
   });
   $("btnWCRaceGo").addEventListener("click",startRace);
