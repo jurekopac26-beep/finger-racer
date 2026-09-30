@@ -733,29 +733,52 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   letter-spacing: 0.5px;
   z-index: 4;
 }
-.modeBtn.freemiumLocked .mbImg {
-  filter: grayscale(40%) brightness(0.7);
-}
 .modeBtn.freemiumLocked {
-  border-color: rgba(255,210,31,0.45) !important;
+  opacity: 0.45;
+  filter: grayscale(85%) brightness(0.85);
+  border-color: rgba(255,255,255,0.18) !important;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+.modeBtn.freemiumLocked:hover {
+  opacity: 0.65;
+  filter: grayscale(50%) brightness(0.95);
+}
+.modeBtn.freemiumLocked .mbImg {
+  filter: grayscale(100%) brightness(0.7);
+}
+.setOpt.freemiumLocked {
+  opacity: 0.45;
+  filter: grayscale(85%);
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+.setOpt.freemiumLocked:hover {
+  opacity: 0.65;
+  filter: grayscale(50%);
 }
 .trackCardLocked {
-  opacity: 0.72;
+  opacity: 0.42;
+  filter: grayscale(85%) brightness(0.85);
   position: relative;
-  border-color: rgba(255,204,38,0.4) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+.trackCardLocked:hover {
+  opacity: 0.65;
+  filter: grayscale(50%) brightness(0.95);
 }
 .trackCardLocked::after {
-  content: "🔒 4,99 €";
+  content: "🔒";
   position: absolute;
   top: 8px;
   right: 8px;
   background: rgba(10,12,16,0.88);
-  border: 1px solid #ffd21f;
+  border: 1px solid rgba(255,210,31,0.6);
   color: #ffd21f;
-  font-size: 10px;
-  font-weight: 900;
-  padding: 2px 6px;
+  font-size: 13px;
+  line-height: 1;
+  padding: 3px 6px;
   border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
 #paywallModal {
   position: fixed;
@@ -1459,6 +1482,9 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <div class="setLbl" id="lblSetCtrl" style="margin-top:14px">Način vožnje</div>
         <div class="hint" id="hintSetCtrl" style="margin:-2px 0 6px">Prst pod avtom: avto sledi prstu. Riši pot: avto sledi risani poti s svojo hitrostjo.</div>
         <div id="ctrlOpts" style="display:flex;gap:8px;justify-content:center"></div>
+        <div class="setLbl" id="lblSetGhost" style="margin-top:14px">Duh dirkača 👻</div>
+        <div class="hint" id="hintSetGhost" style="margin:-2px 0 6px">Prikaz prozornega vozila za primerjavo časa med dirko.</div>
+        <div id="ghostOpts" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
       </div>
       <div class="setPage" data-page="look" style="display:none">
         <div class="setLbl">Vrsta vozila</div>
@@ -1763,7 +1789,7 @@ function updateFreemiumVisuals(){
         badge.className = "freemiumLockBadge";
         bWC.appendChild(badge);
       }
-      badge.textContent = isEn ? "🔒 $4.99" : "🔒 4,99 €";
+      badge.textContent = "🔒";
     } else if(badge){
       badge.remove();
     }
@@ -2347,7 +2373,7 @@ try {
   console.warn("Firebase init failed:", e);
 }
 
-const save={unlocked:3,best:{},sound:true,diff:2,fingerOff:0,lang:"en",freemiumMode:false};
+const save={unlocked:3,best:{},sound:true,diff:2,fingerOff:0,lang:"en",freemiumMode:false,ghostMode:"off"};
 const DIFFS=[{n:"lahko",m:.82},{n:"normalno",m:1},{n:"težko",m:1.22},{n:"Xtra Hard",m:1.42}];
 const AI_BOOST=1.08;   // splošno hitrejši AI (srednje)
 
@@ -2357,7 +2383,7 @@ let respawn=null, rejoinPos=null, startSlot=null, finishOrder=[];
 let racers=[], particles=[], fallenObs=[];
 let mode="race";               // "qualify" | "race"
 let weather=0, overtakeT=0, lastRank=0, weatherChanged=false, weatherChangeAt=999, halfSaid=false, raceCommentT=6, yellowFlagT=0, coCommentT=10, treeDmgCd=0;
-let slowmo=0, ghostDelta=null, recordBeat=false, pendingResults=null, resultsTimer=null, finishCam=false, finishCamScale=1, finishCamBase=1, finishCamT=0, finishCamAngle=-1;
+let slowmo=0, ghostDelta=null, ghostKind="off", recordBeat=false, pendingResults=null, resultsTimer=null, finishCam=false, finishCamScale=1, finishCamBase=1, finishCamT=0, finishCamAngle=-1;
 let drawPath=[], liftRing=false, liftBannerShown=false, cones=[];
 let sayT=0;
 function say(msg,dur){ if(sayT>0||state!=="racing")return; sayT=1.5; showComment(msg,0); Snd.announce(); if((save.commLang||"en")==="sl") speakSL(msg); }
@@ -2660,6 +2686,11 @@ const I18N = {
     setDiffLbl: "Difficulty",
     setCtrlLbl: "Driving mode",
     setCtrlHint: "Finger under car: car follows finger. Draw path: car follows drawn path at its own speed.",
+    setGhostLbl: "Ghost Racer 👻",
+    setGhostHint: "Race against a transparent benchmark ghost vehicle and see live time deltas.",
+    ghostOff: "Off 🚫",
+    ghostPersonal: "Personal Best 👻",
+    ghostWorld: "World Record 👑",
     setVehLbl: "Vehicle type",
     setColorLbl: "Disc color",
     setSizeLbl: "Disc size",
@@ -2823,6 +2854,11 @@ const I18N = {
     setDiffLbl: "Težavnost",
     setCtrlLbl: "Način vožnje",
     setCtrlHint: "Prst pod avtom: avto sledi prstu. Riši pot: avto sledi risani poti s svojo hitrostjo.",
+    setGhostLbl: "Duh dirkača 👻",
+    setGhostHint: "Dirkaj proti prosojnemu duhu in spremljaj časovno razliko v živo.",
+    ghostOff: "Izklopljeno 🚫",
+    ghostPersonal: "Osebni rekord 👻",
+    ghostWorld: "Svetovni rekord 👑",
     setVehLbl: "Vrsta vozila",
     setColorLbl: "Barva krožnika",
     setSizeLbl: "Velikost krožnika",
@@ -2877,6 +2913,11 @@ const I18N = {
     setFingerHint: "Wenn der Finger das Auto verdeckt, bewege ihn nach unten.",
     setDiffLbl: "Schwierigkeit",
     setCtrlLbl: "Fahrmodus",
+    setGhostLbl: "Geisterfahrer 👻",
+    setGhostHint: "Fahre gegen ein transparentes Geist-Fahrzeug mit Live-Zeitdifferenz.",
+    ghostOff: "Aus 🚫",
+    ghostPersonal: "Persönliche Bestzeit 👻",
+    ghostWorld: "Weltrekord 👑",
     setVehLbl: "Fahrzeugtyp",
     setColorLbl: "Scheibenfarbe",
     setSizeLbl: "Scheibengröße",
@@ -2929,6 +2970,11 @@ const I18N = {
     setFingerHint: "Se il dito copre l'auto, posizionalo più in basso.",
     setDiffLbl: "Difficoltà",
     setCtrlLbl: "Modalità di guida",
+    setGhostLbl: "Pilota fantasma 👻",
+    setGhostHint: "Gareggia contro un veicolo fantasma trasparente con distacchi in tempo reale.",
+    ghostOff: "Disattivato 🚫",
+    ghostPersonal: "Record personale 👻",
+    ghostWorld: "Record mondiale 👑",
     setVehLbl: "Tipo di veicolo",
     setColorLbl: "Colore del disco",
     setSizeLbl: "Dimensione del disco",
@@ -2981,6 +3027,11 @@ const I18N = {
     setFingerHint: "Si le doigt cache la voiture, placez-le plus bas.",
     setDiffLbl: "Difficulté",
     setCtrlLbl: "Mode de conduite",
+    setGhostLbl: "Pilote fantôme 👻",
+    setGhostHint: "Fais la course contre un véhicule fantôme transparent avec écarts en direct.",
+    ghostOff: "Désactivé 🚫",
+    ghostPersonal: "Record personnel 👻",
+    ghostWorld: "Record du monde 👑",
     setVehLbl: "Type de véhicule",
     setColorLbl: "Couleur du disque",
     setSizeLbl: "Taille du disque",
@@ -3033,6 +3084,11 @@ const I18N = {
     setFingerHint: "Si el dedo cubre el coche, bájalo un poco.",
     setDiffLbl: "Dificultad",
     setCtrlLbl: "Modo de conducción",
+    setGhostLbl: "Piloto fantasma 👻",
+    setGhostHint: "Compite contra un vehículo fantasma transparente con diferencias de tiempo en vivo.",
+    ghostOff: "Desactivado 🚫",
+    ghostPersonal: "Récord personal 👻",
+    ghostWorld: "Récord mundial 👑",
     setVehLbl: "Tipo de vehículo",
     setColorLbl: "Color del disco",
     setSizeLbl: "Tamaño del disco",
@@ -3085,6 +3141,11 @@ const I18N = {
     setFingerHint: "Ako prst prekriva auto, postavi ga niže.",
     setDiffLbl: "Težina",
     setCtrlLbl: "Način vožnje",
+    setGhostLbl: "Duh vozač 👻",
+    setGhostHint: "Utrkuj se protiv prozirnog duha i prati vremensku razliku uživo.",
+    ghostOff: "Isključeno 🚫",
+    ghostPersonal: "Osobni rekord 👻",
+    ghostWorld: "Svjetski rekord 👑",
     setVehLbl: "Vrsta vozila",
     setColorLbl: "Boja diska",
     setSizeLbl: "Veličina diska",
@@ -3327,6 +3388,8 @@ function applyLang(l){
     setTx("lblSetCtrl", tr.setCtrlLbl);
     setTx("hintSetFinger", tr.setFingerHint);
     setTx("hintSetCtrl", tr.setCtrlHint);
+    setTx("lblSetGhost", tr.setGhostLbl);
+    setTx("hintSetGhost", tr.setGhostHint);
     setTx("lblSettingLang", isEn ? "🌐 Language" : "🌐 Jezik");
     setTx("lblSettingPlayerName", isEn ? "Player name" : "Ime igralca");
     setTx("hintSettingPlayerName", isEn ? "Shown in multiplayer and on leaderboards (max 12 characters)." : "Ime, ki se prikazuje v multiplayerju in na lestvicah (do 12 znakov).");
@@ -3515,6 +3578,7 @@ async function loadSave(){
   save.unlocked=Math.max(3,Math.min(MAXLVL,save.unlocked|0||3));
   save.diff=Math.max(0,Math.min(DIFFS.length-1,save.diff|0));
   if(!save.lang) save.lang="en";
+  if(!save.ghostMode) save.ghostMode = "off";
   if(save.freemiumMode == null) save.freemiumMode = false;
   if(!save.uid){ save.uid = 'p_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36); persist(); }
 }
@@ -4671,14 +4735,60 @@ function drawCones(c,u){
   }
 }
 function _ghostKey(){ const m = careerLv?("c"+careerLv):(wc?"wc":(training?("tr"+training):(singleMode?"s":"r"))); return m+"_"+curTrack; }
+function generateWorldRecordGhost(trackIdx, crossNeed){
+  try {
+    if(!L || !BASE1 || !FAC) return null;
+    const laps = Math.max(1, crossNeed || CROSS_NEED || 6);
+    const slot = gridSlot(0);
+    let s = slot.s;
+    let crossings = 0;
+    let t = 0;
+    const dt = 0.05;
+    const pts = [];
+    let curV = 0;
+    const maxV = BASE1 * 1.46;
+    const accel = 650;
+    const maxPts = 6000;
+    while(crossings < laps && pts.length < maxPts){
+      const i = idxOf(s);
+      const cFac = FAC[i] != null ? FAC[i] : 1;
+      const targetV = maxV * (0.78 + 0.22 * cFac);
+      if(curV < targetV) curV = Math.min(targetV, curV + accel * dt);
+      else curV = Math.max(targetV, curV - accel * 1.5 * dt);
+      const p = posAt(s, 0);
+      const ang = Math.atan2(TYa[i], TXa[i]);
+      const prog = crossings * L + s;
+      pts.push({ t: Math.round(t * 1000) / 1000, x: p.x, y: p.y, a: ang, p: prog });
+      s += curV * dt;
+      if(s >= L){ s %= L; crossings++; }
+      t += dt;
+    }
+    if(pts.length > 0){
+      const last = pts[pts.length - 1];
+      pts.push({ t: last.t + 3, x: last.x, y: last.y, a: last.a, p: last.p });
+    }
+    return pts;
+  } catch(e) {
+    return null;
+  }
+}
 function startRace(){
   let _tw=careerLv?careerCfg(careerLv).weather:((training&&TRAIN_STEPS[training-1]&&TRAIN_STEPS[training-1].weather!=null)?TRAIN_STEPS[training-1].weather:null);
   if(mpMode&&mp&&mp.weather!=null) _tw=mp.weather;   // multiplayer: everybody gets the host's weather
   mode="race"; finishOrder=[]; particles=[]; groundMarks=[]; fastestLap={name:null,time:1e9,me:false};
   ghostRec=[]; ghostPlayIdx=0; ghostT=0; ghostDelta=null; recordBeat=false;
-  if(!timeTrial){                                   // ghost proti sebi v Single/Trening/WC (5)
-    const gk=_ghostKey(); if(!save.ghosts) save.ghosts={};
-    ghostPlay=save.ghosts[gk]||null; ghostIsFriend=false;
+  if(!timeTrial){                                   // ghost izbira v Single/Trening/WC/Kariera
+    const gm = save.ghostMode || "off";
+    if(gm === "personal"){
+      const gk=_ghostKey(); if(!save.ghosts) save.ghosts={};
+      ghostPlay=save.ghosts[gk]||null; ghostIsFriend=false; ghostKind="personal";
+    } else if(gm === "world"){
+      ghostPlay=generateWorldRecordGhost(curTrack, CROSS_NEED); ghostIsFriend=false; ghostKind="world";
+    } else {
+      ghostPlay=null; ghostIsFriend=false; ghostKind="off";
+    }
+  } else {
+    ghostKind = ghostIsFriend ? "friend" : "personal";
   }
   genCones();
   try{ genDecor(); }catch(e){}
@@ -5565,7 +5675,8 @@ function update(dt){
     { const gd=$("ghostDelta");
       if(gd){ if(ghostPlay&&ghostPlay.length&&ghostDelta!=null&&state==="racing"){
           gd.style.display="block"; const ahead=ghostDelta>=0;
-          gd.textContent=(ahead?"▲ ":"▼ ")+(ahead?"−":"+")+Math.abs(ghostDelta).toFixed(2)+"s";
+          const gIcon = (typeof ghostKind !== "undefined" && ghostKind === "world") ? "👑 " : (ghostIsFriend ? "👥 " : "👻 ");
+          gd.textContent=gIcon+(ahead?"▲ ":"▼ ")+(ahead?"−":"+")+Math.abs(ghostDelta).toFixed(2)+"s";
           gd.style.color=ahead?"#7fe08a":"#ff8a80";
         } else gd.style.display="none"; } }
     { const db=$("dmgBar"); if(db){ const show=(state==="racing"||state==="crashed");
@@ -6869,10 +6980,12 @@ function draw(){
     if(a.p!=null && state==="racing"){ const gp=a.p+((b2.p!=null?b2.p:a.p)-a.p)*f;
       const myp=(player.crossings||0)*L+player.s; ghostDelta=(myp-gp)/Math.max(60,vRef); }
     c.save(); c.globalAlpha=0.5;
-    drawVehicle(c,gx,gy,ga,0,1,"#8fa3b8",0.6,0,1/scale,true);
+    const gCol = (typeof ghostKind !== "undefined" && ghostKind === "world") ? "#ffd700" : "#8fa3b8";
+    drawVehicle(c,gx,gy,ga,0,1,gCol,0.6,0,1/scale,true);
     c.restore();
     c.save(); c.globalAlpha=0.8; c.fillStyle="#cdd6e0"; c.font="bold "+(11/scale)+"px sans-serif"; c.textAlign="center";
-    c.fillText(ghostIsFriend?"👥":"👻",gx,gy-RAD*0.9/scale*scale); c.restore();
+    const gMark = (typeof ghostKind !== "undefined" && ghostKind === "world") ? "👑" : (ghostIsFriend ? "👥" : "👻");
+    c.fillText(gMark,gx,gy-RAD*0.9/scale*scale); c.restore();
   }
   if(mpMode) drawMpOpp(c);
   if(mpMode&&mp&&mp.gap!=null&&state==="racing"){ c.save(); c.setTransform(1,0,0,1,0,0); c.font="bold 15px sans-serif"; c.textAlign="center"; const g=mp.gap; c.fillStyle=g<0?"#7fe08a":"#ff8a80"; c.fillText((g<0?"▲ ":"▼ ")+Math.abs(g).toFixed(2)+"s", W/2, 96); c.restore(); }
@@ -7212,6 +7325,28 @@ function renderSizeHaptics(){
   const co=$("ctrlOpts"); co.innerHTML="";
   CTRL.forEach(o=>{ const d=document.createElement("div"); d.className="setOpt"+(save.controlMode===o.v?" sel":"");
     d.textContent=o.n; d.addEventListener("click",()=>{ save.controlMode=o.v; persist(); openSettings(); }); co.appendChild(d); });
+  const tr = Object.assign({}, I18N.en, I18N[save.lang] || {});
+  const GHOST_OPTS = [
+    { n: tr.ghostOff || "Off 🚫", v: "off" },
+    { n: tr.ghostPersonal || "Personal 👻", v: "personal" },
+    { n: tr.ghostWorld || "World Record 👑", v: "world" }
+  ];
+  if(!save.ghostMode) save.ghostMode = "off";
+  const go = $("ghostOpts");
+  if(go){
+    go.innerHTML = "";
+    GHOST_OPTS.forEach(o=>{
+      const d = document.createElement("div");
+      d.className = "setOpt" + (save.ghostMode === o.v ? " sel" : "");
+      d.textContent = o.n;
+      d.addEventListener("click", () => {
+        save.ghostMode = o.v;
+        persist();
+        openSettings();
+      });
+      go.appendChild(d);
+    });
+  }
   const VEH = isEn
     ? [{n:"Disc 🛸",v:"disc"},{n:"Car 🏎️",v:"car"}]
     : [{n:"Krožnik 🛸",v:"disc"},{n:"Avto 🏎️",v:"car"}];
@@ -7221,7 +7356,7 @@ function renderSizeHaptics(){
     const isLocked = isFreemiumActive() && (o.v === "car");
     const d=document.createElement("div");
     d.className="setOpt"+(save.vehicleStyle===o.v?" sel":"");
-    if(isLocked) d.style.opacity="0.7";
+    if(isLocked) d.classList.add("freemiumLocked");
     d.textContent=o.n + (isLocked ? " 🔒" : "");
     d.addEventListener("click",()=>{
       if(isLocked){
@@ -7288,7 +7423,7 @@ function renderSizeHaptics(){
 /* ================= WORLD CUP ================= */
 function openWC(){ if(isFreemiumActive()){ openPaywall("wc"); return; } $("wcNameInput").value=""; setScreen("wcName"); setTimeout(()=>$("wcNameInput").focus(),100); }
 let mpMode=false;
-let singleMode=false, timeTrial=false, ttSelected=false, coneHunt=false, coneHuntSel=false, coneHuntTime=0, coneScore=0, ttTrack=0, ghostRec=[], ghostPlay=null, ghostT=0, ghostPlayIdx=0, ttNumOpp=0, ttFriend={}, ghostIsFriend=false, ttGhostChoice=null, ttChallenge=null;
+let singleMode=false, timeTrial=false, ttSelected=false, coneHunt=false, coneHuntSel=false, coneHuntTime=0, coneScore=0, ttTrack=0, ghostRec=[], ghostPlay=null, ghostKind="off", ghostT=0, ghostPlayIdx=0, ttNumOpp=0, ttFriend={}, ghostIsFriend=false, ttGhostChoice=null, ttChallenge=null;
 function encodeGhost(g){
   if(!g||!g.length) return "";
   const step=3, pts=[]; for(let i=0;i<g.length;i+=step) pts.push(g[i]);
@@ -7826,9 +7961,7 @@ function openSingle(){
     const isLocked = isFreemiumActive() && (i > 0);
     if(isLocked) d.classList.add("trackCardLocked");
     let extra="";
-    if(isLocked){
-      extra = isEn ? "  ·  <b style='color:#ffd21f'>🔒 Full Unlock ($4.99)</b>" : "  ·  <b style='color:#ffd21f'>🔒 Polna verzija (4,99 €)</b>";
-    } else if(ttSelected){
+    if(!isLocked && ttSelected){
       const bb=(save.tt||{})[i]; const mi={gold:"🥇",silver:"🥈",bronze:"🥉"}[bb&&bb.medal]||""; extra=bb?"  ·  "+mi+" ⏱️ "+fmt(bb.time):(isEn ? "  ·  ⏱️ no time yet" : "  ·  ⏱️ še ni časa");
     }
     d.innerHTML='<img src="'+p.img+'" alt=""><div><div class="wcT">'+p.name+(isLocked ? " 🔒" : "")+'</div><div class="wcD">'+p.desc+extra+'</div></div>';
@@ -10176,7 +10309,7 @@ function openMpTrackPicker(currentIdx, onPick){
     const locked = mpTrackLocked(i);
     const d = document.createElement("div");
     d.className = "wcCard" + (i === currentIdx ? " sel" : "") + (locked ? " trackCardLocked" : "");
-    const extra = locked ? (isEn ? " · <b style='color:#ffd21f'>🔒 Full Unlock</b>" : " · <b style='color:#ffd21f'>🔒 Polna verzija</b>") : "";
+    const extra = "";
     d.innerHTML = '<img src="' + p.img + '" alt=""><div><div class="wcT">' + esc(p.name) + (locked ? " 🔒" : "") + (i === currentIdx ? " ✓" : "")
       + '</div><div class="wcD">' + esc(p.desc || "") + extra + '</div></div>';
     d.addEventListener("click", () => {
@@ -12574,7 +12707,7 @@ function openCustomizeModal(){
   const bs=$("btnMpSaveCust"); if(bs) bs.querySelector("span").textContent=isEn?"Save 💾":"Shrani 💾";
   const bc=$("btnMpCancelCust"); if(bc) bc.querySelector("span").textContent=isEn?"Cancel":"Prekliči";
 
-  const pill=(txt,sel,locked,onClick)=>{ const d=document.createElement("div"); d.className="mpPill"+(sel?" sel":""); if(locked) d.style.opacity="0.55"; d.textContent=txt+(locked?" 🔒":""); d.addEventListener("click",()=>{ Snd.click&&Snd.click(); onClick(); }); return d; };
+  const pill=(txt,sel,locked,onClick)=>{ const d=document.createElement("div"); d.className="mpPill"+(sel?" sel":"")+(locked?" freemiumLocked":""); if(locked) d.style.cssText="opacity:0.45;filter:grayscale(85%);"; d.textContent=txt+(locked?" 🔒":""); d.addEventListener("click",()=>{ Snd.click&&Snd.click(); onClick(); }); return d; };
 
   const vo=$("mpCustVeh");
   if(vo){ vo.innerHTML="";
