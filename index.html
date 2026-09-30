@@ -10,6 +10,8 @@ if(typeof Paho === "undefined"){
   document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"><\/script>');
 }
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 :root{
   --asphalt:#14171a; --paper:#f4efe3; --red:#d6402b; --deep:#0d1408;
@@ -33,7 +35,7 @@ canvas.tIll{position:static;inset:auto;touch-action:auto}
 #hud{position:absolute;left:0;right:0;top:0;display:none;justify-content:flex-end;gap:6px;
   padding:calc(env(safe-area-inset-top,0px) + 56px) 8px 8px;z-index:20;pointer-events:none}
 .chip{background:rgba(10,12,9,.78);border:1px solid rgba(244,239,227,.16);border-radius:8px;
-  padding:5px 9px;font-size:12px;font-weight:800;letter-spacing:.03em;white-space:nowrap}
+  padding:5px 9px;font-size:12px;font-weight:800;letter-spacing:.03em;white-space:nowrap;font-variant-numeric:tabular-nums}
 .chip b{color:var(--yellow)}
 #hGauge{position:absolute;left:10px;top:calc(env(safe-area-inset-top,0px) + 6px);width:40px;height:40px;
   border-radius:50%;background:conic-gradient(var(--green) 0%,rgba(244,239,227,.13) 0);
@@ -318,6 +320,124 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   animation: scrIn .2s ease-out;
   padding: 2px 0 12px;
 }
+
+/* ---------- Settings Top Language / Country Picker ---------- */
+#setLangCard {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#setLangCard:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(61, 255, 142, 0.45) !important;
+}
+#setLangCard:active {
+  transform: scale(0.98);
+}
+#countryPickerModal {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(6, 9, 14, 0.86) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80 !important;
+  padding: 14px;
+}
+#countryPickerModal .mpModalContent {
+  max-width: 440px;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px;
+  background: #141920;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  animation: scrIn .22s ease-out;
+}
+.countryItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 9px 12px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.15s ease;
+  text-align: left;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.countryItem:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+.countryItem:active {
+  transform: scale(0.98);
+}
+.countryItem.sel {
+  background: rgba(61, 255, 142, 0.16) !important;
+  border-color: var(--green) !important;
+  box-shadow: 0 0 12px rgba(61, 255, 142, 0.22);
+}
+.countryFlag {
+  font-size: 26px;
+  line-height: 1;
+  flex: none;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+}
+.flagSvgWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.flagSvgIcon {
+  width: 36px;
+  height: 23px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  display: block;
+  flex: none;
+}
+.countryMeta {
+  flex: 1;
+  min-width: 0;
+}
+.countryName {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+}
+.countryLang {
+  font-size: 12px;
+  font-weight: 600;
+  color: #aeb6a6;
+  margin-top: 2px;
+}
+.countryItem.sel .countryLang {
+  color: #b8f7cc;
+}
+.countryCheck {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--green);
+  opacity: 0;
+  flex: none;
+}
+.countryItem.sel .countryCheck {
+  opacity: 1;
+}
+
 #btnSkip{display:none;position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:50%;transform:translateX(-50%);
   z-index:30;background:rgba(10,12,9,.85);border:1.5px solid rgba(244,239,227,.4);color:#fff;
   font-weight:800;font-size:14px;padding:10px 22px;border-radius:22px;pointer-events:auto;cursor:pointer}
@@ -745,7 +865,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <canvas id="fg"></canvas>
 
   <div id="hud">
-    <div class="chip" id="hTime">0:00.0</div>
+    <div class="chip" id="hTime">0:00.000</div>
     <div class="chip" id="mpEndTimerChip" style="display:none;background:#d6402b;color:#fff;border-color:#ff8a80;font-size:13px;animation:gpulse .45s infinite alternate">⏱️ 30s</div>
     <button id="btnRaceSettings">⚙</button>
     <button id="btnPause">II</button>
@@ -1044,10 +1164,16 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <!-- Language Picker: Two flags to pick and switch between -->
       <div style="display:flex;justify-content:center;gap:12px;margin-bottom:14px;">
         <button id="tutFlagEn" class="flagBtn" title="English" style="padding:7px 16px;border-radius:12px;border:2px solid #3dff8e;background:rgba(61,255,142,.18);cursor:pointer;pointer-events:auto;transition:all .15s;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:24px;">🇬🇧</span> <span style="font-size:13px;font-weight:900;color:#fff;">English</span>
+          <span class="flagSvgWrap">
+            <svg viewBox="0 0 60 36" class="flagSvgIcon" style="width:26px;height:16px"><rect width="60" height="36" fill="#012169"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#ffffff" stroke-width="7"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#C8102E" stroke-width="4"/><path d="M30 0 v36 M0 18 h60" stroke="#ffffff" stroke-width="11"/><path d="M30 0 v36 M0 18 h60" stroke="#C8102E" stroke-width="7"/></svg>
+          </span>
+          <span style="font-size:13px;font-weight:900;color:#fff;">English</span>
         </button>
         <button id="tutFlagSl" class="flagBtn" title="Slovenščina" style="padding:7px 16px;border-radius:12px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);cursor:pointer;pointer-events:auto;transition:all .15s;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:24px;">🇸🇮</span> <span style="font-size:13px;font-weight:900;color:#fff;">Slovenščina</span>
+          <span class="flagSvgWrap">
+            <svg viewBox="0 0 60 36" class="flagSvgIcon" style="width:26px;height:16px"><rect width="60" height="12" fill="#ffffff"/><rect y="12" width="60" height="12" fill="#005ce6"/><rect y="24" width="60" height="12" fill="#ed1c24"/><path d="M12 6 C12 6 22 6 22 6 C22 13 20 18 17 21 C14 18 12 13 12 6 Z" fill="#005ce6" stroke="#ffffff" stroke-width="1"/><path d="M14 17 L15.5 13 L17 15 L18.5 13 L20 17 Z" fill="#ffffff"/><path d="M14.5 19 C15.5 18 18.5 18 19.5 19" stroke="#005ce6" stroke-width="0.8" fill="none"/><circle cx="17" cy="8.5" r="0.9" fill="#facc15"/><circle cx="15" cy="10.5" r="0.9" fill="#facc15"/><circle cx="19" cy="10.5" r="0.9" fill="#facc15"/></svg>
+          </span>
+          <span style="font-size:13px;font-weight:900;color:#fff;">Slovenščina</span>
         </button>
       </div>
 
@@ -1102,10 +1228,17 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <h1 class="disp" id="leaderboardTitleH" style="font-size:26px"><span>Lestvica</span> 🏆</h1>
       <div class="checker"></div>
       <div style="display:flex;gap:8px;justify-content:center;margin:0 auto 10px;flex-wrap:wrap">
-        <button class="btn disp small" id="btnCareerLb"><span>📊 Moja kariera</span></button>
+        <button class="btn disp small" id="btnLbTabSingle"><span>⏱️ Single Race</span></button>
+        <button class="btn ghost small disp" id="btnLbTabWC"><span>🏆 World Cup</span></button>
+        <button class="btn ghost small disp" id="btnCareerLb"><span>📊 Moja kariera</span></button>
         <button class="btn ghost small disp" id="btnLbAch"><span>🏅 Dosežki</span></button>
       </div>
-      <div class="hint" id="lbHint" style="margin:-2px 0 8px">Najboljši rezultati World Cupa (točke + bonus za težavnost)</div>
+      <div id="lbTrackBar" style="display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 10px;">
+        <button class="btn ghost small disp" id="btnLbTrackPrev" style="min-width:38px;padding:6px 12px;font-size:15px">◀</button>
+        <span id="lbTrackTitle" style="font-weight:900;font-size:16px;color:var(--yellow);min-width:140px;text-align:center">Track 1</span>
+        <button class="btn ghost small disp" id="btnLbTrackNext" style="min-width:38px;padding:6px 12px;font-size:15px">▶</button>
+      </div>
+      <div class="hint" id="lbHint" style="margin:-2px 0 8px">Globalni rekordi prog (najboljši časi)</div>
       <div id="lbList"></div>
       <button class="btn disp" id="btnLbShare"><span>Deli rezultat 📤</span></button>
       <button class="btn ghost small disp" id="btnLbBack"><span>Back</span></button>
@@ -1169,9 +1302,42 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <!-- Voice Chat Floating Button (Multiplayer) -->
   <button id="btnVoiceToggle" style="display:none" title="Voice chat"><span id="voiceIco">🎙️</span><span id="voiceBadge"></span></button>
 
+  <!-- Country & Language Popout Picker Modal -->
+  <div id="countryPickerModal" style="display:none">
+    <div class="mpModalContent">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex:none">
+        <div class="mpModalTitle" id="countryPickerTitle" style="margin:0;text-align:left;font-size:17px">🌐 Jezik in zastava</div>
+        <button id="btnCountryPickerCloseX" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;padding:0">✕</button>
+      </div>
+      <div id="countryPickerSub" style="font-size:11.5px;color:#cfd8bd;margin-bottom:12px;text-align:left;line-height:1.35;flex:none">
+        Izberi jezik z zastavo (slovenska ali angleška zastava).
+      </div>
+      <div id="countryListGrid" style="display:flex;flex-direction:column;gap:10px;padding-right:2px">
+      </div>
+      <div class="mpModalActions" style="margin-top:14px;flex:none">
+        <button class="btn ghost small disp" id="btnCountryPickerCancel" style="margin:0;width:100%"><span>Zapri</span></button>
+      </div>
+    </div>
+  </div>
+
   <div id="settings" class="screen">
     <div class="panel">
       <h1 class="disp" id="settingsTitleH" style="font-size:26px"><span>Settings</span></h1>
+
+      <!-- Country & Language Picker Trigger (First Setting at the Top) -->
+      <div id="setLangCard" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.18);border-radius:14px;padding:10px 14px;margin:8px 0 12px;cursor:pointer;pointer-events:auto;transition:all .18s;box-shadow:0 3px 12px rgba(0,0,0,0.3)">
+        <div style="display:flex;align-items:center;gap:12px;text-align:left;min-width:0;flex:1">
+          <div id="setLangCurFlag" style="display:flex;align-items:center;line-height:1;flex:none"></div>
+          <div style="min-width:0">
+            <div id="setLangHeaderLbl" style="font-size:10.5px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Jezik in zastava</div>
+            <div id="setLangCurName" style="font-size:15px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Slovenščina <span style="font-size:12.5px;color:#cfd8bd;font-weight:700">(Slovenska zastava · Slovenija)</span></div>
+          </div>
+        </div>
+        <div class="setLangBtnBadge" style="display:flex;align-items:center;gap:5px;background:rgba(61,255,142,0.14);border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:900;flex:none;letter-spacing:.02em">
+          <span id="setLangBtnTxt">Izberi</span>
+          <span style="font-size:10px;transform:translateY(1px)">▼</span>
+        </div>
+      </div>
 
       <!-- Freemium / Full Unlock Mode Switcher -->
       <div id="freemiumToggleBox" style="background:linear-gradient(135deg,rgba(255,204,38,.12),rgba(20,24,30,.8));border:1.5px solid rgba(255,204,38,.35);border-radius:14px;padding:10px 12px;margin:8px 0 12px;text-align:left">
@@ -1202,8 +1368,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
           <input type="text" id="settingPlayerName" maxlength="12" placeholder="Tvoje ime" style="flex:1;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.22);border-radius:10px;padding:9px 12px;color:#fff;font-weight:800;font-size:14px;outline:none" />
           <button class="btn small disp" id="btnSaveSettingName" style="white-space:nowrap;padding:9px 16px"><span>Shrani</span></button>
         </div>
-        <div class="setLbl" id="lblSettingLang">🌐 Jezik / Language</div>
-        <div id="uiLangOpts" style="display:flex;gap:8px;justify-content:center;margin-bottom:14px"></div>
         <div class="setLbl" id="lblSetFinger">Lega prsta glede na avto</div>
         <div class="hint" id="hintSetFinger" style="margin:-2px 0 8px">Če prst prekriva avto, ga postavi nižje.</div>
         <div id="fingerOpts"></div>
@@ -2079,6 +2243,27 @@ const WC_TRACKS=[0,1,2,3,4,5,6];   // World Cup: proge 1-4 (5 in 6 le v Single R
 let LAPS=6, CROSS_NEED=LAPS+1, NRACERS=5;   // nastavljeno po nivoju (skupaj z igralcem)
 const R_START=62, R_HOLD=58, HOLD_TIME=1.0;
 
+/* ================= FIREBASE GLOBAL LEADERBOARD ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBqN8B7cRe9JMxOuDeGPHQf73Djq8fYgKI",
+  authDomain: "finger-racer.firebaseapp.com",
+  projectId: "finger-racer",
+  storageBucket: "finger-racer.firebasestorage.app",
+  messagingSenderId: "242531807149",
+  appId: "1:242531807149:web:54e9c448f1ea073302bb24",
+  measurementId: "G-28WGBKXZQX"
+};
+
+let db = null;
+try {
+  if (typeof firebase !== "undefined") {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  }
+} catch(e) {
+  console.warn("Firebase init failed:", e);
+}
+
 const save={unlocked:3,best:{},sound:true,diff:2,fingerOff:0,lang:"en",freemiumMode:false};
 const DIFFS=[{n:"lahko",m:.82},{n:"normalno",m:1},{n:"težko",m:1.22},{n:"Xtra Hard",m:1.42}];
 const AI_BOOST=1.08;   // splošno hitrejši AI (srednje)
@@ -2372,9 +2557,12 @@ const I18N = {
 
     // leaderboard
     leaderboardTitle: "Leaderboard 🏆",
+    lbTabSingle: "⏱️ Single Race",
+    lbTabWC: "🏆 World Cup",
     myCareerBtn: "📊 My Career",
     achTab: "🏅 Achievements",
     lbHint: "Best World Cup results (points + difficulty bonus)",
+    lbSingleHint: "Global track records (fastest times worldwide)",
     shareResult: "Share Result 📤",
 
     // settings
@@ -2532,9 +2720,12 @@ const I18N = {
 
     // leaderboard
     leaderboardTitle: "Lestvica 🏆",
+    lbTabSingle: "⏱️ Enojna dirka",
+    lbTabWC: "🏆 World Cup",
     myCareerBtn: "📊 Moja kariera",
     achTab: "🏅 Dosežki",
     lbHint: "Najboljši rezultati World Cupa (točke + bonus za težavnost)",
+    lbSingleHint: "Globalni rekordi prog (najhitrejši časi na svetu)",
     shareResult: "Deli rezultat 📤",
 
     // settings
@@ -2563,14 +2754,274 @@ const I18N = {
     loadingTrack: "Nalagam progo …",
     levelsTitle: "Izberi <span>level</span>",
     helpTitle: "Navodila"
+  },
+  de: {
+    langBadge: "🌐 DE",
+    singleTitle: "EINZELRENNEN",
+    singleDesc: "STRECKE WÄHLEN & STARTEN",
+    multiTitle: "MEHRSPIELER",
+    multiDesc: "Fahre gegen Freunde · Raum-Code",
+    wcTitle: "WELTCUP",
+    wcDesc: "KÄMPFE UM DIE MEISTERSCHAFT",
+    careerTitle: "KARRIERE",
+    careerDesc: "50 LEVEL · JEDES SCHWERER",
+    ttTitle: "ZEITFAHREN",
+    ttDesc: "10 RUNDEN GEGEN GEIST ⏱️",
+    trainTitle: "TRAINING",
+    trainDesc: "FAHREN LERNEN · 3 SCHRITTE",
+    achTitle: "ERFOLGE",
+    achDescSuffix: "freigeschaltet",
+    settingsTitle: "EINSTELLUNGEN",
+    settingsDesc: "AUDIO, STEUERUNG, SCHWIERIGKEIT",
+    pauseTitle: "Pause",
+    resume: "Fortsetzen",
+    restartLvl: "Neustart",
+    mainMenu: "Hauptmenü",
+    nextLevel: "Nächstes Level",
+    retry: "Wiederholen",
+    continueBtn: "WEITER 🏁",
+    back: "Zurück",
+    backArrow: "← Zurück",
+    skip: "Überspringen",
+    next: "Weiter",
+    settingsTitleH: "Einstellungen",
+    setDriveTab: "🏎️ Fahren",
+    setLookTab: "🎨 Aussehen",
+    setSoundTab: "🔊 Audio",
+    setFingerLbl: "Fingerposition relativ zum Auto",
+    setFingerHint: "Wenn der Finger das Auto verdeckt, bewege ihn nach unten.",
+    setDiffLbl: "Schwierigkeit",
+    setCtrlLbl: "Fahrmodus",
+    setVehLbl: "Fahrzeugtyp",
+    setColorLbl: "Scheibenfarbe",
+    setSizeLbl: "Scheibengröße",
+    setWeatherLbl: "Wetter",
+    setAnimLbl: "Animationen 🎬",
+    setVoiceLbl: "Sprachkommentar 🎙️",
+    setLangLbl: "Kommentator-Sprache 🌐",
+    setCommLbl: "Kommentator 🎤",
+    setVolLbl: "Lautstärke 🔊",
+    setHapticsLbl: "Vibrationen (Haptik)",
+    setSoundLbl: "Ton",
+    loadingTrack: "Lade Strecke …",
+    levelsTitle: "Wähle <span>Level</span>",
+    helpTitle: "Anleitung"
+  },
+  it: {
+    langBadge: "🌐 IT",
+    singleTitle: "GARA SINGOLA",
+    singleDesc: "SCEGLI IL CIRCUITO E GAREGGIA",
+    multiTitle: "MULTIGIOCATORE",
+    multiDesc: "Sfida gli amici · codice stanza",
+    wcTitle: "COPPA DEL MONDO",
+    wcDesc: "COMPETI PER IL CAMPIONATO",
+    careerTitle: "CARRIERA",
+    careerDesc: "50 LIVELLI · SEMPRE PIÙ DIFFICILI",
+    ttTitle: "PROVA A TEMPO",
+    ttDesc: "10 GIRI CONTRO IL FANTASMA ⏱️",
+    trainTitle: "ALLENAMENTO",
+    trainDesc: "IMPARA A GUIDARE · 3 PASSI",
+    achTitle: "OBIETTIVI",
+    achDescSuffix: "sbloccati",
+    settingsTitle: "IMPOSTAZIONI",
+    settingsDesc: "AUDIO, CONTROLLI, DIFFICOLTÀ",
+    pauseTitle: "Pausa",
+    resume: "Riprendi",
+    restartLvl: "Ricomincia livello",
+    mainMenu: "Menu principale",
+    nextLevel: "Prossimo livello",
+    retry: "Riprova",
+    continueBtn: "CONTINUA 🏁",
+    back: "Indietro",
+    backArrow: "← Indietro",
+    skip: "Salta",
+    next: "Avanti",
+    settingsTitleH: "Impostazioni",
+    setDriveTab: "🏎️ Guida",
+    setLookTab: "🎨 Aspetto",
+    setSoundTab: "🔊 Audio",
+    setFingerLbl: "Posizione del dito rispetto all'auto",
+    setFingerHint: "Se il dito copre l'auto, posizionalo più in basso.",
+    setDiffLbl: "Difficoltà",
+    setCtrlLbl: "Modalità di guida",
+    setVehLbl: "Tipo di veicolo",
+    setColorLbl: "Colore del disco",
+    setSizeLbl: "Dimensione del disco",
+    setWeatherLbl: "Meteo",
+    setAnimLbl: "Animazioni 🎬",
+    setVoiceLbl: "Commento vocale 🎙️",
+    setLangLbl: "Lingua commentatore 🌐",
+    setCommLbl: "Commentatore 🎤",
+    setVolLbl: "Volume 🔊",
+    setHapticsLbl: "Vibrazione (feedback aptico)",
+    setSoundLbl: "Suono",
+    loadingTrack: "Caricamento pista …",
+    levelsTitle: "Scegli <span>livello</span>",
+    helpTitle: "Istruzioni"
+  },
+  fr: {
+    langBadge: "🌐 FR",
+    singleTitle: "COURSE SIMPLE",
+    singleDesc: "CHOISIS LE CIRCUIT ET JOUE",
+    multiTitle: "MULTIJOUEUR",
+    multiDesc: "Course contre un ami · code de salon",
+    wcTitle: "COUPE DU MONDE",
+    wcDesc: "DISPUTE LE CHAMPIONNAT",
+    careerTitle: "CARRIÈRE",
+    careerDesc: "50 NIVEAUX · CHACUN PLUS DIFFICILE",
+    ttTitle: "CONTRE-LA-MONTRE",
+    ttDesc: "10 TOURS CONTRE LE FANTÔME ⏱️",
+    trainTitle: "ENTRAÎNEMENT",
+    trainDesc: "APPRENDS À CONDUIRE · 3 ÉTAPES",
+    achTitle: "SUCCÈS",
+    achDescSuffix: "débloqués",
+    settingsTitle: "PARAMÈTRES",
+    settingsDesc: "SON, COMMANDES, DIFFICULTÉ",
+    pauseTitle: "Pause",
+    resume: "Reprendre",
+    restartLvl: "Recommencer",
+    mainMenu: "Menu principal",
+    nextLevel: "Niveau suivant",
+    retry: "Réessayer",
+    continueBtn: "CONTINUER 🏁",
+    back: "Retour",
+    backArrow: "← Retour",
+    skip: "Passer",
+    next: "Suivant",
+    settingsTitleH: "Paramètres",
+    setDriveTab: "🏎️ Conduite",
+    setLookTab: "🎨 Apparence",
+    setSoundTab: "🔊 Audio",
+    setFingerLbl: "Position du doigt par rapport à la voiture",
+    setFingerHint: "Si le doigt cache la voiture, placez-le plus bas.",
+    setDiffLbl: "Difficulté",
+    setCtrlLbl: "Mode de conduite",
+    setVehLbl: "Type de véhicule",
+    setColorLbl: "Couleur du disque",
+    setSizeLbl: "Taille du disque",
+    setWeatherLbl: "Météo",
+    setAnimLbl: "Animations 🎬",
+    setVoiceLbl: "Commentaire vocal 🎙️",
+    setLangLbl: "Langue du commentateur 🌐",
+    setCommLbl: "Commentateur 🎤",
+    setVolLbl: "Volume 🔊",
+    setHapticsLbl: "Vibrations (haptique)",
+    setSoundLbl: "Son",
+    loadingTrack: "Chargement du circuit …",
+    levelsTitle: "Choisis le <span>niveau</span>",
+    helpTitle: "Instructions"
+  },
+  es: {
+    langBadge: "🌐 ES",
+    singleTitle: "CARRERA INDIVIDUAL",
+    singleDesc: "ELIGE PISTA Y CORRE",
+    multiTitle: "MULTIJUGADOR",
+    multiDesc: "Compite con un amigo · código de sala",
+    wcTitle: "COPA MUNDIAL",
+    wcDesc: "COMPITE POR EL CAMPEONATO",
+    careerTitle: "CARRERA",
+    careerDesc: "50 NIVELES · CADA UNO MÁS DIFÍCIL",
+    ttTitle: "CONTRARRELOJ",
+    ttDesc: "10 VUELTAS CONTRA EL FANTASMA ⏱️",
+    trainTitle: "ENTRENAMIENTO",
+    trainDesc: "APRENDE A CONDUCIR · 3 PASOS",
+    achTitle: "LOGROS",
+    achDescSuffix: "desbloqueados",
+    settingsTitle: "AJUSTES",
+    settingsDesc: "SONIDO, CONTROLES, DIFICULTAD",
+    pauseTitle: "Pausa",
+    resume: "Continuar",
+    restartLvl: "Reiniciar nivel",
+    mainMenu: "Menú principal",
+    nextLevel: "Siguiente nivel",
+    retry: "Reintentar",
+    continueBtn: "CONTINUAR 🏁",
+    back: "Atrás",
+    backArrow: "← Atrás",
+    skip: "Omitir",
+    next: "Siguiente",
+    settingsTitleH: "Ajustes",
+    setDriveTab: "🏎️ Conducción",
+    setLookTab: "🎨 Aspecto",
+    setSoundTab: "🔊 Audio",
+    setFingerLbl: "Posición del dedo respecto al coche",
+    setFingerHint: "Si el dedo cubre el coche, bájalo un poco.",
+    setDiffLbl: "Dificultad",
+    setCtrlLbl: "Modo de conducción",
+    setVehLbl: "Tipo de vehículo",
+    setColorLbl: "Color del disco",
+    setSizeLbl: "Tamaño del disco",
+    setWeatherLbl: "Clima",
+    setAnimLbl: "Animaciones 🎬",
+    setVoiceLbl: "Comentarios de voz 🎙️",
+    setLangLbl: "Idioma del comentarista 🌐",
+    setCommLbl: "Comentarista 🎤",
+    setVolLbl: "Volumen 🔊",
+    setHapticsLbl: "Vibraciones (háptica)",
+    setSoundLbl: "Sonido",
+    loadingTrack: "Cargando pista …",
+    levelsTitle: "Elige <span>nivel</span>",
+    helpTitle: "Instrucciones"
+  },
+  hr: {
+    langBadge: "🌐 HR",
+    singleTitle: "POJEDINAČNA UTRKA",
+    singleDesc: "ODABERI STAZU I UTRKUJ SE",
+    multiTitle: "VIŠE IGRAČA",
+    multiDesc: "Utrkuj se protiv prijatelja · kôd sobe",
+    wcTitle: "SVJETSKI KUP",
+    wcDesc: "NATJEČI SE ZA PRVENSTVO",
+    careerTitle: "KARIJERA",
+    careerDesc: "50 RAZINA · SVAKA TEŽA",
+    ttTitle: "KRONOMETAR",
+    ttDesc: "10 KRUGOVA PROTIV DUHA ⏱️",
+    trainTitle: "TRENING",
+    trainDesc: "NAUČI VOZITI · 3 KORAKA",
+    achTitle: "POSTIGNUĆA",
+    achDescSuffix: "otključano",
+    settingsTitle: "POSTAVKE",
+    settingsDesc: "ZVUK, KONTROLE, TEŽINA",
+    pauseTitle: "Pauza",
+    resume: "Nastavi",
+    restartLvl: "Ponovi razinu",
+    mainMenu: "Glavni izbornik",
+    nextLevel: "Sljedeća razina",
+    retry: "Pokušaj ponovno",
+    continueBtn: "NASTAVI 🏁",
+    back: "Natrag",
+    backArrow: "← Natrag",
+    skip: "Preskoči",
+    next: "Dalje",
+    settingsTitleH: "Postavke",
+    setDriveTab: "🏎️ Vožnja",
+    setLookTab: "🎨 Izgled",
+    setSoundTab: "🔊 Zvuk",
+    setFingerLbl: "Položaj prsta u odnosu na auto",
+    setFingerHint: "Ako prst prekriva auto, postavi ga niže.",
+    setDiffLbl: "Težina",
+    setCtrlLbl: "Način vožnje",
+    setVehLbl: "Vrsta vozila",
+    setColorLbl: "Boja diska",
+    setSizeLbl: "Veličina diska",
+    setWeatherLbl: "Vrijeme",
+    setAnimLbl: "Animacije 🎬",
+    setVoiceLbl: "Glasovni komentar 🎙️",
+    setLangLbl: "Jezik komentatora 🌐",
+    setCommLbl: "Komentator 🎤",
+    setVolLbl: "Glasnoća 🔊",
+    setHapticsLbl: "Vibracije (haptika)",
+    setSoundLbl: "Zvuk",
+    loadingTrack: "Učitavanje staze …",
+    levelsTitle: "Odaberi <span>razinu</span>",
+    helpTitle: "Upute"
   }
 };
 
 function applyLang(l){
-  const lang = (l === "sl") ? "sl" : "en";
+  const lang = I18N[l] ? l : "en";
   save.lang = lang;
   save.commLang = (lang === "sl") ? "sl" : "en";
-  const tr = I18N[lang];
+  const tr = Object.assign({}, I18N.en, I18N[lang] || {});
   const isEn = (lang === "en");
 
 
@@ -2834,54 +3285,116 @@ function applyLang(l){
   if($("mpLobby") && $("mpLobby").classList.contains("on")) { mpUpdateRoomView(); mpRenderHostSettings(); }
 
   if(typeof mpUpdateVoteUI !== "undefined" && typeof mp !== "undefined" && mp) mpUpdateVoteUI();
-}
-
-let _langPickerFirstTime = false;
-let _tempLang = "en";
-
-function openLangPicker(firstTime){
-  _langPickerFirstTime = !!firstTime;
-  _tempLang = save.lang || "en";
-  updateLangCards();
-  setScreen("langPicker");
-}
-
-function selectLangOption(l){
-  _tempLang = l;
-  updateLangCards();
-}
-
-function updateLangCards(){
-  const isEn = (_tempLang === "en");
-  const optEn = $("langOptEn"), optSl = $("langOptSl");
-  const chkEn = $("checkLangEn"), chkSl = $("checkLangSl");
-  const btnC = $("btnLangConfirm")?.querySelector("span");
-
-  if(optEn){
-    optEn.style.borderColor = isEn ? "#3dff8e" : "rgba(255,255,255,.18)";
-    optEn.style.background = isEn ? "rgba(61,255,142,.15)" : "rgba(255,255,255,.05)";
+  updateCountryPickerTrigger();
+  if($("countryPickerTitle")) $("countryPickerTitle").textContent = isEn ? "🌐 Choose Language" : "🌐 Izberi jezik";
+  if($("countryPickerSub")) $("countryPickerSub").textContent = isEn ? "Choose your language for the game." : "Izberi jezik za igro.";
+  if($("btnCountryPickerCancel")) {
+    const sp = $("btnCountryPickerCancel").querySelector("span");
+    if(sp) sp.textContent = isEn ? "Close" : "Zapri";
   }
-  if(optSl){
-    optSl.style.borderColor = !isEn ? "#3dff8e" : "rgba(255,255,255,.18)";
-    optSl.style.background = !isEn ? "rgba(61,255,142,.15)" : "rgba(255,255,255,.05)";
-  }
-  if(chkEn) chkEn.style.display = isEn ? "inline" : "none";
-  if(chkSl) chkSl.style.display = !isEn ? "inline" : "none";
-
-  if(btnC) btnC.textContent = isEn ? "CONTINUE 🏁" : "NADALJUJ 🏁";
 }
 
-function confirmLangChoice(){
-  save.lang = _tempLang;
+/* ================= COUNTRY & LANGUAGE POPUP PICKER ================= */
+const COUNTRY_LANGS = [
+  {
+    code: "sl",
+    countryCode: "SI",
+    name: "Slovenščina",
+    subName: "Slovenščina · Slovenija",
+    subNameEn: "Slovenian · Slovenia",
+    flag: "🇸🇮",
+    flagHtml: '<span class="flagSvgWrap"><svg viewBox="0 0 60 36" class="flagSvgIcon" aria-hidden="true"><rect width="60" height="12" fill="#ffffff"/><rect y="12" width="60" height="12" fill="#005ce6"/><rect y="24" width="60" height="12" fill="#ed1c24"/><path d="M12 6 C12 6 22 6 22 6 C22 13 20 18 17 21 C14 18 12 13 12 6 Z" fill="#005ce6" stroke="#ffffff" stroke-width="1"/><path d="M14 17 L15.5 13 L17 15 L18.5 13 L20 17 Z" fill="#ffffff"/><path d="M14.5 19 C15.5 18 18.5 18 19.5 19" stroke="#005ce6" stroke-width="0.8" fill="none"/><circle cx="17" cy="8.5" r="0.9" fill="#facc15"/><circle cx="15" cy="10.5" r="0.9" fill="#facc15"/><circle cx="19" cy="10.5" r="0.9" fill="#facc15"/></svg></span>',
+    lang: "sl"
+  },
+  {
+    code: "en",
+    countryCode: "GB",
+    name: "English",
+    subName: "English · Angleščina",
+    subNameEn: "English · UK / International",
+    flag: "🇬🇧",
+    flagHtml: '<span class="flagSvgWrap"><svg viewBox="0 0 60 36" class="flagSvgIcon" title="English (UK / International)" aria-hidden="true"><rect width="60" height="36" fill="#012169"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#ffffff" stroke-width="7"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#C8102E" stroke-width="4"/><path d="M30 0 v36 M0 18 h60" stroke="#ffffff" stroke-width="11"/><path d="M30 0 v36 M0 18 h60" stroke="#C8102E" stroke-width="7"/></svg></span>',
+    lang: "en"
+  }
+];
+
+function getPlayerCountry(){
+  const curLang = (save && save.lang) || "sl";
+  const curCountry = (save && save.country) || (curLang === "en" ? "GB" : "SI");
+  if(curLang === "en" || curCountry === "GB" || curCountry === "en"){
+    return COUNTRY_LANGS[1];
+  }
+  return COUNTRY_LANGS[0];
+}
+
+function updateCountryPickerTrigger(){
+  const c = getPlayerCountry();
+  const isEn = (save.lang === "en");
+  const flagEl = $("setLangCurFlag");
+  const nameEl = $("setLangCurName");
+  const headEl = $("setLangHeaderLbl");
+  const btnTxtEl = $("setLangBtnTxt");
+  if(flagEl) flagEl.innerHTML = c.flagHtml;
+  if(nameEl) {
+    const sub = isEn ? c.subNameEn : c.subName;
+    nameEl.innerHTML = c.name + ' <span style="font-size:12.5px;color:#cfd8bd;font-weight:700">(' + sub + ')</span>';
+  }
+  if(headEl) headEl.textContent = isEn ? "LANGUAGE & FLAG" : "JEZIK IN ZASTAVA";
+  if(btnTxtEl) btnTxtEl.textContent = isEn ? "Change" : "Izberi";
+}
+
+function openCountryPickerModal(){
+  const m = $("countryPickerModal");
+  if(!m) return;
+  renderCountryList();
+  m.style.display = "flex";
+}
+
+function closeCountryPickerModal(){
+  const m = $("countryPickerModal");
+  if(m) m.style.display = "none";
+}
+
+function renderCountryList(){
+  const grid = $("countryListGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  const cur = getPlayerCountry();
+  const isEn = (save.lang === "en");
+  COUNTRY_LANGS.forEach(c => {
+    const isSelected = (cur.code === c.code);
+    const row = document.createElement("div");
+    row.className = "countryItem" + (isSelected ? " sel" : "");
+    row.setAttribute("data-code", c.code);
+    const sub = isEn ? c.subNameEn : c.subName;
+    row.innerHTML = '<span class="countryFlag">' + c.flagHtml + '</span>' +
+      '<div class="countryMeta">' +
+        '<div class="countryName">' + c.name + '</div>' +
+        '<div class="countryLang">' + sub + '</div>' +
+      '</div>' +
+      '<span class="countryCheck">✓</span>';
+    row.addEventListener("click", () => {
+      selectCountry(c.code);
+    });
+    grid.appendChild(row);
+  });
+}
+
+function selectCountry(countryCode){
+  const item = COUNTRY_LANGS.find(c => c.code === countryCode || c.countryCode === countryCode) || (countryCode === "en" ? COUNTRY_LANGS[1] : COUNTRY_LANGS[0]);
+  if(!item) return;
+  save.country = item.countryCode;
+  save.countryFlag = item.flag;
+  save.countryName = item.name;
+  save.lang = item.lang;
+  save.commLang = (item.lang === "sl") ? "sl" : "en";
   save.langPicked = true;
   persist();
   applyLang(save.lang);
-  if(_langPickerFirstTime){
-    toMenu();
-    if(!save.tutSeen){ setScreen("tutorial"); }
-  } else {
-    toMenu();
-  }
+  updateCountryPickerTrigger();
+  closeCountryPickerModal();
+  showBanner((item.flag ? (item.flag + " ") : "") + item.name + " (" + (save.lang === "en" ? item.subNameEn : item.subName) + ")", 1800, true);
+  try{ if(typeof Snd !== "undefined" && Snd.click) Snd.click(); }catch(e){}
 }
 
 function showBanner(txt,ms,ok){
@@ -2889,22 +3402,34 @@ function showBanner(txt,ms,ok){
   b.style.opacity=1; clearTimeout(banTO);
   banTO=setTimeout(()=>b.style.opacity=0, ms||1600);
 }
-function fmt(t){
-  const m=Math.floor(t/60), s=t-m*60;
-  return m+":"+(s<10?"0":"")+s.toFixed(1);
+function fmt(t, prec = 3){
+  if(t == null || isNaN(t) || t < 0) return "—";
+  const p = prec != null ? prec : 3;
+  const factor = Math.pow(10, p);
+  const rounded = Math.round(t * factor) / factor;
+  const m = Math.floor(rounded / 60);
+  const s = rounded - m * 60;
+  return m + ":" + (s < 10 ? "0" : "") + s.toFixed(p);
 }
 
 /* ================= STORAGE ================= */
 async function loadSave(){
-  try{ if(window.storage){
-    const r=await window.storage.get("prstna-dirka",false);
-    if(r&&r.value){ const d=JSON.parse(r.value);
-      if(d&&typeof d==="object"){ Object.assign(save,d); } }
-  }}catch(e){}
+  try{
+    if(window.storage){
+      const r=await window.storage.get("prstna-dirka",false);
+      if(r&&r.value){ const d=JSON.parse(r.value);
+        if(d&&typeof d==="object"){ Object.assign(save,d); } }
+    } else if(window.localStorage){
+      const r=localStorage.getItem("prstna-dirka");
+      if(r){ const d=JSON.parse(r);
+        if(d&&typeof d==="object"){ Object.assign(save,d); } }
+    }
+  }catch(e){}
   save.unlocked=Math.max(3,Math.min(MAXLVL,save.unlocked|0||3));
   save.diff=Math.max(0,Math.min(DIFFS.length-1,save.diff|0));
   if(!save.lang) save.lang="en";
   if(save.freemiumMode == null) save.freemiumMode = false;
+  if(!save.uid){ save.uid = 'p_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36); persist(); }
 }
 const ANIM_CATS=[
   ["finishline","1. Ciljna črta","Karirast pas čez cesto na ciljni ravnini — vedno viden.",1],
@@ -2996,7 +3521,10 @@ function ensureAnim(){ if(!save.anim) save.anim={}; for(const it of ANIM_CATS){ 
 }
 function animOn(k){ ensureAnim(); return !!save.anim[k]; }   // enak privzeti nabor za vse proge (brez samodejnega prepisa po levelih)
 function persist(){
-  try{ if(window.storage) window.storage.set("prstna-dirka",JSON.stringify(save),false).catch?.(()=>{}); }catch(e){}
+  try{
+    if(window.storage) window.storage.set("prstna-dirka",JSON.stringify(save),false).catch?.(()=>{});
+    else if(window.localStorage) localStorage.setItem("prstna-dirka",JSON.stringify(save));
+  }catch(e){}
 }
 
 /* ================= RACE SETUP ================= */
@@ -4365,7 +4893,7 @@ function buildResRows(rl,order,t){
     if(r.dnf) tt="💥";
     else if(tv==null) tt="—";
     else if(i===0||leader==null) tt=fmt(tv);
-    else { const g=tv-leader; tt=(r.finished||r.me?"+":"~+")+g.toFixed(1); }
+    else { const g=tv-leader; tt=(r.finished||r.me ? "+"+g.toFixed(3) : "~+"+g.toFixed(1)); }
     d.innerHTML='<span class="dot" style="background:'+dot+'"></span><span class="rn">'+(i+1)+". "+nm+'</span><span class="rp">'+pits+'🔧</span><span class="t">'+tt+"</span>";
     rl.appendChild(d);
   });
@@ -4417,9 +4945,12 @@ function finishRace(){
   if(!save.best[level]||t<save.best[level]){
     if(!timeTrial && ghostRec.length){ if(!save.ghosts)save.ghosts={}; save.ghosts[_ghostKey()]=ghostRec.slice(0,2600); }   // shrani rekordni ghost
     if(save.best[level] && !player.dnf) recordBeat=true;                                                                     // premagan osebni rekord
-    save.best[level]=Math.round(t*10)/10;
+    save.best[level]=Math.round(t*1000)/1000;
   }
   persist();
+  if(!player.dnf && !wc && !timeTrial && level){
+    try { submitGlobalRecord(level, t); } catch(e){}
+  }
   $("count").style.display="none";
   pendingResults=()=>{
     const finishers=finishOrder.map(i=>racers[i]).filter(r=>!r.dnf);
@@ -4444,13 +4975,13 @@ function finishRace(){
       $("resSub").textContent="Time Trial (10 krogov) — "+(isBest?"tvoj najboljši čas doslej!":"za rekordom.");
       $("btnNext").querySelector("span").textContent="Glavni meni";
       let html="⏱️ <b>Tvoj čas:</b> "+fmt(t)+"  ·  Medalja: <b>"+medIcon+"</b><br>";
-      if(prev) html+="🏆 <b>Najboljši:</b> "+fmt(isBest?t:prev.time)+(isBest?"":"  ·  <span style='color:#ff8a80'>+"+delta.toFixed(2)+"s</span>")+"<br>";
+      if(prev) html+="🏆 <b>Najboljši:</b> "+fmt(isBest?t:prev.time)+(isBest?"":"  ·  <span style='color:#ff8a80'>+"+delta.toFixed(3)+"s</span>")+"<br>";
       else html+="🏆 Prvi čas na tej progi — postavljen rekord!<br>";
       html+="<span style='opacity:.7;font-size:12px'>Cilji: 🥇 "+fmt(gold)+" · 🥈 "+fmt(silver)+" · 🥉 "+fmt(bronze)+"</span>";
       if(fastestLap.name) html+="<br>⚡ Najhitrejši krog: "+fmt(fastestLap.time);
       if(ttChallenge && ttChallenge.tIdx===ttTrack){
         const beat=t<=ttChallenge.time;
-        html+="<br><b style='color:"+(beat?"#39d353":"#ff8a80")+"'>🎯 Izziv "+ttChallenge.name+" ("+fmt(ttChallenge.time)+"): "+(beat?"PREMAGAN! 🏆":"za "+(t-ttChallenge.time).toFixed(2)+"s — poskusi znova")+"</b>";
+        html+="<br><b style='color:"+(beat?"#39d353":"#ff8a80")+"'>🎯 Izziv "+ttChallenge.name+" ("+fmt(ttChallenge.time)+"): "+(beat?"PREMAGAN! 🏆":"za "+(t-ttChallenge.time).toFixed(3)+"s — poskusi znova")+"</b>";
         if(beat){ speak(pick(["Challenge beaten! Well done "+ME()+"!",""+ME()+" smashes the challenge!"])); ttChallenge=null; }
       }
       $("resList").innerHTML=""; $("resStats").innerHTML=html+dmgStatsHTML();
@@ -4464,12 +4995,12 @@ function finishRace(){
       const stars=pos===1?3:(pos===2?2:(pos<=3?1:0));
       if(!save.career) save.career={unl:1,res:{}};
       const prev=save.career.res[careerLv]||{stars:0,best:null,pos:99};
-      save.career.res[careerLv]={stars:Math.max(prev.stars||0,okC?Math.max(1,stars):0), best:okC?((!prev.best||t<prev.best)?t:prev.best):prev.best, pos:Math.min(prev.pos||99,pos)};
+      save.career.res[careerLv]={stars:Math.max(prev.stars||0,okC?Math.max(1,stars):0), best:okC?((!prev.best||t<prev.best)?Math.round(t*1000)/1000:prev.best):prev.best, pos:Math.min(prev.pos||99,pos)};
       if(okC && careerLv>=(save.career.unl||1) && careerLv<50) save.career.unl=careerLv+1;
       if(!save.lvlBoard) save.lvlBoard={}; const bd=save.lvlBoard[careerLv]||[];
       const meName=(save.playerName||"TI");
-      const ents=[{n:meName,t:t,me:true,ok:okC}];
-      for(const r of racers){ if(r.finished&&!r.dnf&&r.finishTime>0) ents.push({n:r.name,t:r.finishTime,me:false,ok:true}); }
+      const ents=[{n:meName,t:Math.round(t*1000)/1000,me:true,ok:okC}];
+      for(const r of racers){ if(r.finished&&!r.dnf&&r.finishTime>0) ents.push({n:r.name,t:Math.round(r.finishTime*1000)/1000,me:false,ok:true}); }
       for(const e of ents){ if(!e.ok) continue; const ex=bd.find(x=>x.n===e.n); if(ex){ if(e.t<ex.t) ex.t=e.t; } else bd.push({n:e.n,t:e.t,me:e.me}); }
       bd.sort((a,b)=>a.t-b.t); save.lvlBoard[careerLv]=bd.slice(0,10);
       const bonus=player.dnf?5:(pos===1?60:(pos===2?40:(pos===3?25:10)));
@@ -6151,13 +6682,18 @@ function draw(){
     for(const rc of racers){
       if(rc.wrecked||!rc.trail||rc.trail.length<2) continue;
       const hue=(140-132*rc.dmg).toFixed(0);
-      for(let i=1;i<rc.trail.length;i++){
-        const a=i/rc.trail.length;
+      const tL = rc.trail.length;
+      const step = Math.ceil(tL / 4);
+      for(let g=0; g<tL-1; g+=step){
+        const iEnd = Math.min(g+step, tL-1);
+        const a = (g + iEnd)/2 / tL;
         c.strokeStyle="hsla("+hue+",100%,55%,"+(a*.45).toFixed(2)+")";
         c.lineWidth=(1.5+a*4)*u;
         c.beginPath();
-        c.moveTo(rc.trail[i-1].x,rc.trail[i-1].y);
-        c.lineTo(rc.trail[i].x,rc.trail[i].y);
+        c.moveTo(rc.trail[g].x,rc.trail[g].y);
+        for(let i=g+1; i<=iEnd; i++){
+          c.lineTo(rc.trail[i].x,rc.trail[i].y);
+        }
         c.stroke();
       }
     }
@@ -6282,9 +6818,20 @@ function draw(){
         // SVINČNIK pri prstu (riše)
         drawPencil(c,fpx,fpy,u);
       } else {
-        if(animOn("windTrail") && player.trail.length>1){ const tc=trailColor(); c.save(); c.lineCap="round";
-          for(let i=1;i<player.trail.length;i++){ const a=i/player.trail.length; c.globalAlpha=a*0.5; c.strokeStyle=tc; c.lineWidth=(1.5+a*4)*u;
-            c.beginPath(); c.moveTo(player.trail[i-1].x,player.trail[i-1].y); c.lineTo(player.trail[i].x,player.trail[i].y); c.stroke(); } c.restore(); }
+        if(animOn("windTrail") && player.trail.length>1){ 
+          const tc=trailColor(); c.save(); c.lineCap="round";
+          const tL = player.trail.length;
+          const step = Math.ceil(tL / 4);
+          for(let g=0; g<tL-1; g+=step){
+            const iEnd = Math.min(g+step, tL-1);
+            const a = (g + iEnd)/2 / tL;
+            c.globalAlpha=a*0.5; c.strokeStyle=tc; c.lineWidth=(1.5+a*4)*u;
+            c.beginPath(); c.moveTo(player.trail[g].x,player.trail[g].y);
+            for(let i=g+1; i<=iEnd; i++) c.lineTo(player.trail[i].x,player.trail[i].y);
+            c.stroke();
+          } 
+          c.restore(); 
+        }
         drawPlayerVehicle(c,player.x,player.y,Math.atan2(TYa[player.idx],TXa[player.idx]),pt.t,pt.d,playerColor(),Math.max(0,1-fr),fr,u);
       } }
     /* črtkana črta od prsta do vozila odstranjena */
@@ -6473,6 +7020,7 @@ function fingerSVG(off){
     '</svg>';
 }
 function openSettings(){
+  updateCountryPickerTrigger();
   const isEn = (save.lang === "en");
   const spn = $("settingPlayerName");
   if(spn){
@@ -6491,20 +7039,6 @@ function openSettings(){
     };
     $("btnSaveSettingName").addEventListener("click", saveNameFn);
     if(spn) spn.addEventListener("keydown", (e) => { if(e.key === "Enter") saveNameFn(); });
-  }
-  const ulo=$("uiLangOpts");
-  if(ulo){
-    ulo.innerHTML="";
-    [{v:"en",n:"🇬🇧 English"},{v:"sl",n:"🇸🇮 Slovenščina"}].forEach(o=>{
-      const d=document.createElement("div"); d.className="setOpt"+((save.lang||"en")===o.v?" sel":"");
-      d.textContent=o.n;
-      d.addEventListener("click",()=>{
-        if(save.lang===o.v) return;
-        applyLang(o.v); save.langPicked=true; persist(); openSettings();
-        showBanner(o.v==="en"?"Language: English 🇬🇧":"Jezik: Slovenščina 🇸🇮",1500,true);
-      });
-      ulo.appendChild(d);
-    });
   }
   const fo=$("fingerOpts"); fo.innerHTML="";
   FINGER_OPTS.forEach((o,i)=>{
@@ -6767,17 +7301,146 @@ function openCareerStats(from = "leaderboard"){
   }catch(e){}
   setScreen("career");
 }
-function openLeaderboard(){
-  const l=$("lbList"); l.innerHTML="";
-  const lb=(save.leaderboard||[]);
-  if(!lb.length){ l.innerHTML='<div class="hint" style="padding:16px 0">Še ni rezultatov. Odigraj World Cup! 🏁</div>'; }
-  else lb.forEach((e,i)=>{
-    const d=document.createElement("div"); d.className="rrow"+(i===0?" me":"");
-    const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
-    const dn=(DIFFS[e.diff]?DIFFS[e.diff].n:"");
-    d.innerHTML='<span class="rn">'+medal+' '+e.name+'</span><span class="rp" style="min-width:60px">'+dn+'</span><span class="t">'+e.pts+' 🏆</span>';
-    l.appendChild(d);
-  });
+let currentLbTab = "single";
+let currentLbTrack = 1;
+
+async function submitGlobalRecord(trackId, timeSeconds) {
+  if (!db || !trackId || !timeSeconds || isNaN(timeSeconds) || timeSeconds <= 0) return;
+  try {
+    if (!save.uid) {
+      save.uid = 'p_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+      persist();
+    }
+    const name = (save.playerName || "Racer").trim().slice(0, 14) || "Racer";
+    const roundTime = Math.round(timeSeconds * 1000) / 1000;
+    const docRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(save.uid);
+    const snap = await docRef.get();
+    if (!snap.exists || !snap.data().time || snap.data().time > roundTime) {
+      await docRef.set({
+        name: name,
+        time: roundTime,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch(err) {
+    console.warn("Global record submit error:", err);
+  }
+}
+
+async function syncLocalRecordsToGlobal() {
+  if (!db || !save.best) return;
+  try {
+    for (let i = 1; i <= MAXLVL; i++) {
+      if (save.best[i] && !isNaN(save.best[i])) {
+        submitGlobalRecord(i, save.best[i]);
+      }
+    }
+  } catch(e) {}
+}
+
+function updateTrackTitle() {
+  const isEn = (save.lang === "en");
+  if ($("lbTrackTitle")) {
+    const tIdx = (currentLbTrack - 1);
+    let extra = "";
+    if (typeof PREVIEWS !== "undefined" && PREVIEWS[tIdx] && PREVIEWS[tIdx].name) {
+      const parts = PREVIEWS[tIdx].name.split(" · ");
+      if (parts.length > 1) extra = " (" + parts[1] + ")";
+    }
+    $("lbTrackTitle").textContent = (isEn ? "Track " : "Proga ") + currentLbTrack + extra;
+  }
+}
+
+async function loadGlobalTrackLeaderboard(trackNum) {
+  const l = $("lbList");
+  if (!l) return;
+  const isEn = (save.lang === "en");
+  l.innerHTML = '<div class="hint" style="padding:24px 0">' + (isEn ? "Loading global records... ⏳" : "Nalaganje globalnih rekordov... ⏳") + '</div>';
+
+  if (!db) {
+    l.innerHTML = '<div class="hint" style="padding:24px 0;color:#ff8a80">' + (isEn ? "Database connection not available" : "Povezava z bazo ni na voljo") + '</div>';
+    return;
+  }
+
+  try {
+    const snap = await db.collection("tracks").doc(String(trackNum)).collection("records").orderBy("time", "asc").limit(10).get();
+
+    if (currentLbTab !== "single" || currentLbTrack !== trackNum) return; // Prevent race conditions
+
+    l.innerHTML = "";
+    if (snap.empty) {
+      l.innerHTML = '<div class="hint" style="padding:20px 0">' + 
+        (isEn ? "No global records for this track yet. Be the first! 🏁" : "Še ni globalnih rekordov za to progo. Bodi prvi! 🏁") + 
+        '</div>';
+    } else {
+      let idx = 0;
+      snap.forEach(doc => {
+        const d = doc.data();
+        const isMe = (doc.id === save.uid);
+        const row = document.createElement("div");
+        row.className = "rrow" + (isMe ? " me" : "");
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : ((idx + 1) + ".");
+        const displayTime = (typeof fmt === "function") ? fmt(d.time) : (d.time.toFixed(3) + "s");
+        row.innerHTML = '<span class="rn" style="' + (isMe ? 'color:var(--green);font-weight:900;' : '') + '">' + 
+          medal + ' ' + (d.name || "Racer") + (isMe ? ' ★' : '') + '</span>' +
+          '<span class="rp" style="min-width:40px"></span>' +
+          '<span class="t" style="' + (isMe ? 'color:var(--green);font-weight:900;' : '') + '">' + displayTime + ' ⏱️</span>';
+        l.appendChild(row);
+        idx++;
+      });
+    }
+
+    // Show player's personal local record below list
+    if (save.best && save.best[trackNum]) {
+      const pRow = document.createElement("div");
+      pRow.style.cssText = "margin-top:12px;padding:8px 12px;background:rgba(255,255,255,0.06);border-radius:10px;font-size:13px;display:flex;justify-content:space-between;align-items:center;";
+      pRow.innerHTML = '<span style="opacity:0.8">' + (isEn ? "Your local best:" : "Tvoj lokalni rekord:") + '</span><b style="color:var(--yellow);font-size:14px">' + fmt(save.best[trackNum]) + ' ⏱️</b>';
+      l.appendChild(pRow);
+    }
+  } catch(err) {
+    console.error("Leaderboard load error:", err);
+    l.innerHTML = '<div class="hint" style="padding:20px 0;color:#ff8a80">' + 
+      (isEn ? "Could not fetch global records (check Firestore rules)." : "Ni bilo mogoče naložiti rekordov (preveri povezavo).") + 
+      '</div>';
+  }
+}
+
+function openLeaderboard(tabOverride){
+  if (typeof tabOverride === "string") currentLbTab = tabOverride;
+  else if (!currentLbTab) currentLbTab = "single";
+
+  const tab = currentLbTab;
+  const isEn = (save.lang === "en");
+
+  // Tab button styles
+  if ($("btnLbTabSingle")) $("btnLbTabSingle").className = "btn small disp" + (tab === "single" ? "" : " ghost");
+  if ($("btnLbTabWC")) $("btnLbTabWC").className = "btn small disp" + (tab === "wc" ? "" : " ghost");
+
+  // Track selector visibility
+  if ($("lbTrackBar")) $("lbTrackBar").style.display = (tab === "single" ? "flex" : "none");
+
+  if (tab === "single") {
+    if ($("lbHint")) $("lbHint").textContent = isEn ? "Global track records (fastest times worldwide)" : "Globalni rekordi prog (najhitrejši časi na svetu)";
+    updateTrackTitle();
+    loadGlobalTrackLeaderboard(currentLbTrack);
+    // Background sync of player's local records if any
+    try { syncLocalRecordsToGlobal(); } catch(e){}
+  } else {
+    if ($("lbHint")) $("lbHint").textContent = isEn ? "Best World Cup results (points + diff bonus)" : "Najboljši rezultati World Cupa (točke + bonus za težavnost)";
+    const l = $("lbList"); l.innerHTML = "";
+    const lb = (save.leaderboard || []);
+    if (!lb.length) {
+      l.innerHTML = '<div class="hint" style="padding:16px 0">' + (isEn ? "No records yet. Play World Cup! 🏁" : "Še ni rezultatov. Odigraj World Cup! 🏁") + '</div>';
+    } else {
+      lb.forEach((e, i) => {
+        const d = document.createElement("div"); d.className = "rrow" + (i === 0 ? " me" : "");
+        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : ((i + 1) + ".");
+        const dn = (DIFFS[e.diff] ? DIFFS[e.diff].n : "");
+        d.innerHTML = '<span class="rn">' + medal + ' ' + e.name + '</span><span class="rp" style="min-width:60px">' + dn + '</span><span class="t">' + e.pts + ' 🏆</span>';
+        l.appendChild(d);
+      });
+    }
+  }
   setScreen("leaderboard");
 }
 
@@ -11053,7 +11716,7 @@ function wcAfterRace(order,t,pos,dnf){
   if(!dnf){ if(pos===1)S.wins++; if(pos<=3)S.podiums++; if(pos<S.bestPos)S.bestPos=pos; if(S.bestTime===null||t<S.bestTime)S.bestTime=t; }
   if(fastestLap.name&&(S.bestLap===null||fastestLap.time<S.bestLap)){ S.bestLap=fastestLap.time; S.bestLapName=fastestLap.name; }
   wc.recs[wc.race]={time:(dnf?null:t), pos:(dnf?order.length:pos), gained:gains[5], track:wc.race};
-  if(!dnf){ if(!save.best["wc"+wc.order[wc.race]]||t<save.best["wc"+wc.order[wc.race]]){ save.best["wc"+wc.order[wc.race]]=Math.round(t*10)/10; persist(); } }
+  if(!dnf){ if(!save.best["wc"+wc.order[wc.race]]||t<save.best["wc"+wc.order[wc.race]]){ save.best["wc"+wc.order[wc.race]]=Math.round(t*1000)/1000; persist(); } }
   showWCStand(false, gains, dnf);
 }
 function wcQualFail(){
@@ -11388,8 +12051,19 @@ function bindUI(){
   if($("btnPaywallLater")) $("btnPaywallLater").addEventListener("click",closePaywall);
   if($("btnPaywallBuy")) $("btnPaywallBuy").addEventListener("click",simulatePurchase);
   if($("btnPaywallRestore")) $("btnPaywallRestore").addEventListener("click",simulateRestore);
-  if($("tutFlagEn")) $("tutFlagEn").addEventListener("click",()=>{ save.lang="en"; save.commLang="en"; persist(); applyLang("en"); });
-  if($("tutFlagSl")) $("tutFlagSl").addEventListener("click",()=>{ save.lang="sl"; save.commLang="sl"; persist(); applyLang("sl"); });
+  if($("tutFlagEn")) $("tutFlagEn").addEventListener("click",()=>{ save.lang="en"; save.country="GB"; save.commLang="en"; persist(); applyLang("en"); });
+  if($("tutFlagSl")) $("tutFlagSl").addEventListener("click",()=>{ save.lang="sl"; save.country="SI"; save.commLang="sl"; persist(); applyLang("sl"); });
+  if($("setLangCard")) $("setLangCard").addEventListener("click", openCountryPickerModal);
+  if($("btnCountryPickerCloseX")) $("btnCountryPickerCloseX").addEventListener("click", closeCountryPickerModal);
+  if($("btnCountryPickerCancel")) $("btnCountryPickerCancel").addEventListener("click", closeCountryPickerModal);
+  if($("countryPickerModal")) $("countryPickerModal").addEventListener("click", (e) => {
+    if(e.target === $("countryPickerModal")) closeCountryPickerModal();
+  });
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && $("countryPickerModal") && $("countryPickerModal").style.display !== "none"){
+      closeCountryPickerModal();
+    }
+  });
   if($("btnSettingsGear")) $("btnSettingsGear").addEventListener("click",()=>{ settingsFromRace=false; openSettings(); });
   $("btnRaceSettings").addEventListener("click",()=>{ pauseGame(); settingsFromRace=true; openSettings(); });
   $("btnSetBack").addEventListener("click",()=>{ if(settingsFromRace){ settingsFromRace=false; setScreen("pause"); } else setScreen("menu"); });
