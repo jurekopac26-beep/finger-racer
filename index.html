@@ -347,7 +347,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 #menuSub{margin:10px 0 12px;font-family:"Arial Black",system-ui,sans-serif;font-weight:900;font-style:italic;
   font-size:30px;line-height:1.05;text-align:center;color:rgba(255,255,255,.16);letter-spacing:1px;
   text-shadow:0 1px 0 rgba(0,0,0,.3)}
-#menuBtns{width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px;margin-top:auto;margin-bottom:6px}
+#menuBtns{width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px;margin-top:auto;margin-bottom:auto;padding:12px 0}
 .modeBtn{position:relative;display:flex;align-items:stretch;height:82px;padding:0;overflow:hidden;
   border-radius:16px;border:2px solid;background:rgba(10,14,20,.72);pointer-events:auto;cursor:pointer;
   box-shadow:0 6px 18px rgba(0,0,0,.45)}
@@ -440,6 +440,17 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpRacerGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
 .mpRacerCard { background:rgba(255,255,255,.05); border:2px solid rgba(255,255,255,.12); border-radius:14px; padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; }
 .mpRacerCard.me { border-color:rgba(61,255,142,.4); background:rgba(61,255,142,.06); }
+#btnVoiceToggle{position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);z-index:90;width:46px;height:46px;padding:0;border-radius:50%;
+  background:rgba(20,24,30,.85);border:2px solid rgba(255,255,255,.3);font-size:20px;line-height:1;cursor:pointer;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.4);transition:box-shadow .12s,border-color .12s,background .12s;pointer-events:auto}
+#btnVoiceToggle.live{background:rgba(61,255,142,.22);border-color:#3dff8e}
+#btnVoiceToggle.speaking{box-shadow:0 0 0 4px rgba(61,255,142,.45),0 0 16px #3dff8e}
+#btnVoiceToggle.muted{background:rgba(255,71,71,.85);border-color:#ff6b6b}
+#btnVoiceToggle.needsTap{background:rgba(255,204,38,.28);border-color:#ffcc26;animation:gpulse .8s infinite alternate}
+#btnVoiceToggle.off{opacity:.5}
+#voiceBadge{position:absolute;right:-4px;top:-4px;min-width:17px;height:17px;padding:0 3px;border-radius:9px;background:#3dff8e;color:#04120a;
+  font-size:11px;font-weight:900;line-height:17px;text-align:center;display:none;box-sizing:border-box}
+.mpRacerAvatar.speaking{box-shadow:0 0 0 3px #3dff8e,0 0 14px #3dff8e !important}
 #mpChatLog { max-width:340px; margin:-4px auto 10px; padding:6px 10px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.1); border-radius:10px; font-size:12px; text-align:left; line-height:1.45; }
 .mpChatLine { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mpTrackBtn { display:flex; align-items:center; gap:10px; width:100%; padding:6px; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.2); border-radius:12px; color:#fff; cursor:pointer; text-align:left; font:inherit; }
@@ -1156,7 +1167,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   </div>
 
   <!-- Voice Chat Floating Button (Multiplayer) -->
-  <button id="btnVoiceToggle" style="display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:90;width:40px;height:40px;border-radius:50%;background:rgba(20,24,30,0.85);border:1.5px solid rgba(255,255,255,0.3);font-size:18px;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.4);" title="Voice Chat">🎙️</button>
+  <button id="btnVoiceToggle" style="display:none" title="Voice chat"><span id="voiceIco">🎙️</span><span id="voiceBadge"></span></button>
 
   <div id="settings" class="screen">
     <div class="panel">
@@ -5174,18 +5185,22 @@ function spawnDust(x,y){                // prah/kajenje na pesku (gostejši dim)
 // Progressive damage smoke: starts as a thin light wisp at ~15% damage and grows continuously —
 // denser, bigger and darker — until a thick black plume at 100%. src = any object (holds its own timer).
 function spawnDmgSmoke(x,y,dmg,ang,src,dt){
-  if(!animOn("smoke")||!src||dmg<0.15) return;
-  const lvl=Math.min(1,(dmg-0.15)/0.84), heavy=dmg>=0.999;
+  if(!animOn("smoke")||!src||dmg<0.1) return;
+  const lvl=Math.min(1,(dmg-0.1)/0.89), heavy=dmg>=0.999;
   src._smT=(src._smT||0)-dt; if(src._smT>0) return;
-  src._smT=heavy?0.028:(0.34-0.30*lvl*lvl-0.04*lvl);
-  const n=heavy?3:(lvl>0.75?2:1);
+  src._smT=heavy?0.025:Math.max(0.03,0.22-0.19*lvl*lvl);
+  const n=heavy?5:1+Math.floor(lvl*3);
   const bx=x-Math.cos(ang||0)*RAD*0.35, by=y-Math.sin(ang||0)*RAD*0.35;
   for(let q=0;q<n;q++){
-    const v=Math.round(200-lvl*165+Math.random()*24);          // light grey -> near black
-    particles.push({x:bx+(Math.random()-.5)*(6+lvl*8),y:by+(Math.random()-.5)*(6+lvl*8),
-      vx:(Math.random()-.5)*(14+lvl*16),vy:-12-Math.random()*(12+lvl*22),
-      life:.7+lvl*.7+Math.random()*.4,age:0,r:2.5+lvl*7+Math.random()*(2+lvl*4),
-      c:"rgb("+v+","+v+","+v+")",kind:"smoke"});
+    const v=Math.round(205-lvl*175+Math.random()*24);          // light grey -> near black
+    particles.push({x:bx+(Math.random()-.5)*(7+lvl*10),y:by+(Math.random()-.5)*(7+lvl*10),
+      vx:(Math.random()-.5)*(16+lvl*22),vy:-14-Math.random()*(14+lvl*26),
+      life:.9+lvl*.9+Math.random()*.4,age:0,r:3.5+lvl*9+Math.random()*(2.5+lvl*5),
+      a:0.5+0.3*lvl,c:"rgb("+v+","+v+","+v+")",kind:"smoke"});
+  }
+  if(lvl>0.85&&Math.random()<0.5){   // glowing embers: about to blow
+    particles.push({x:bx+(Math.random()-.5)*10,y:by+(Math.random()-.5)*10,vx:(Math.random()-.5)*50,vy:-30-Math.random()*40,
+      life:.3+Math.random()*.3,age:0,r:1.5+Math.random()*2,c:["#ffd21f","#ff8c1a","#ff5a1a"][Math.random()*3|0],kind:"fire"});
   }
 }
 function spawnCrash(x,y){
@@ -6282,7 +6297,7 @@ function draw(){
     c.beginPath(); c.arc(respawn.x,respawn.y,rr,0,6.283); c.stroke();
   }
   for(const p of particles){
-    c.globalAlpha=(1-p.age/p.life)*(p.kind?0.55:1);
+    c.globalAlpha=(1-p.age/p.life)*(p.kind?(p.a||0.55):1);
     c.fillStyle=p.kind==="dust"?"#d9b878":(p.kind==="smoke"?(p.c||"#7a7d82"):(p.kind==="fire"?p.c:(p.kind==="leaf"?p.c:p.c)));
     if(p.kind==="dust"||p.kind==="smoke") p.r+=14*0.016;
     if(p.kind==="fire") p.r*=0.965;
@@ -8688,163 +8703,393 @@ function showNameOnboarding(callback){
   }
 }
 
-/* ---------- WEBRTC VOICE CHAT MANAGER ---------- */
+/* ---------- WEBRTC VOICE CHAT MANAGER ----------
+   Full mesh, signalled over the room's MQTT topic.
+   - the player with the LOWER client id sends the offer (no offer collisions)
+   - ICE candidates are queued until the remote description is set
+   - free public TURN relay as a fallback for mobile data / strict NATs
+   - transceivers are always sendrecv, so a mic that becomes ready later is just replaceTrack()-ed (no renegotiation) */
+const MP_ICE = { iceServers: [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443", "turn:openrelay.metered.ca:443?transport=tcp", "turns:openrelay.metered.ca:443?transport=tcp"],
+    username: "openrelayproject", credential: "openrelayproject" }
+] };
 const mpVoice = {
   localStream: null,
-  peers: new Map(),
+  peers: new Map(),          // id -> { id, pc, tr, pending[], audio, ... }
+  analysers: new Map(),      // "me" | peerId -> { an, src, buf, hold }
   isMuted: false,
-  enabled: false,
+  enabled: false,            // voice is on for this room
+  micReady: false,
+  unavailable: false,        // no getUserMedia (plain http on a phone, old browser)
+  needsTap: false,           // the browser wants a tap before it lets us use the mic
+  audioBlocked: false,       // the browser blocked remote audio autoplay until a tap
+  starting: false,
+  localSpeaking: false,
+  ctx: null,
+  poll: null,
 
-  async init(asHost){
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-      console.warn("WebRTC getUserMedia not supported in this environment");
-      this.enabled = false;
+  /* ----- lifecycle ----- */
+  init(asHost){
+    if(!this.enabled) this.isMuted = false;
+    this.enabled = true;
+    if(!this.poll) this.poll = setInterval(() => this.tick(), 150);
+    this.updateBtnUI();
+    return this.startMic(false);
+  },
+
+  async startMic(fromTap){
+    if(this.micReady || this.starting || !this.enabled) return;
+    const isEn = (save.lang === "en");
+    if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      this.unavailable = true;
+      this.updateBtnUI();
+      showBanner(isEn ? "Voice needs HTTPS — open the game through its https:// link" : "Glas potrebuje HTTPS — odpri igro prek https:// povezave", 3400, true);
+      this.sayHello();      // we can still listen to the others
       return;
     }
+    this.starting = true;
     try{
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+      if(!this.enabled){ stream.getTracks().forEach(t => t.stop()); return; }   // left the room meanwhile
       this.localStream = stream;
-      this.enabled = true;
-      this.isMuted = false;
-      this.updateBtnUI();
-      const btn = $("btnVoiceToggle");
-      if(btn){
-        btn.style.display = "flex";
-        btn.onclick = () => this.toggleMute();
-      }
-      if(mp && mp.peers && asHost){
-        mp.peers.forEach((peer, peerId) => {
-          this.callPeer(peerId);
-        });
-      }
+      this.micReady = true;
+      this.needsTap = false;
+      stream.getAudioTracks().forEach(t => { t.enabled = !this.isMuted; });
+      this.attachAnalyser("me", stream);
+      this.peers.forEach(pe => this.attachLocalTrack(pe));
     }catch(err){
-      console.warn("Microphone access denied or error:", err);
-      this.enabled = false;
-      const isEn = (save.lang === "en");
-      showBanner(isEn ? "Mic not available (check permissions)" : "Mikrofon ni na voljo (preveri dovoljenja)", 2500, true);
+      console.warn("Microphone not available:", err && err.name);
+      this.needsTap = true;
+      showBanner(fromTap
+        ? (isEn ? "Mic blocked — allow it in the browser settings" : "Mikrofon blokiran — dovoli ga v nastavitvah brskalnika")
+        : (isEn ? "🎙️ Tap the mic button to join voice" : "🎙️ Tapni gumb za mikrofon in se pridruži glasu"), 2800, true);
+    }finally{
+      this.starting = false;
     }
+    this.updateBtnUI();
+    try{ mpUpdateRoomView(); }catch(e){}
+    this.sayHello();
   },
 
-  getOrCreatePC(peerId){
-    if(this.peers.has(peerId)){
-      return this.peers.get(peerId).pc;
-    }
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" }
-      ]
-    });
-    if(this.localStream){
-      this.localStream.getAudioTracks().forEach(track => {
-        pc.addTrack(track, this.localStream);
-      });
-    }
-    pc.onicecandidate = (e) => {
-      if(e.candidate){
-        mpSend({ t: "voice_ice", to: peerId, candidate: e.candidate });
-      }
-    };
-    pc.ontrack = (e) => {
-      let el = document.getElementById("voice_audio_" + peerId);
-      if(!el){
-        el = document.createElement("audio");
-        el.id = "voice_audio_" + peerId;
-        el.autoplay = true;
-        document.body.appendChild(el);
-      }
-      el.srcObject = e.streams[0];
-    };
-    this.peers.set(peerId, { pc });
-    return pc;
-  },
-
-  async callPeer(peerId){
-    if(!this.enabled || !this.localStream) return;
-    try{
-      const pc = this.getOrCreatePC(peerId);
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      mpSend({ t: "voice_offer", to: peerId, sdp: offer });
-    }catch(e){
-      console.warn("callPeer error:", e);
-    }
-  },
-
-  async handleSignaling(d){
-    if(!this.enabled && d.t === "voice_offer"){
-      await this.init(false);
-    }
+  onButton(){
+    this.unlockAudio();
     if(!this.enabled) return;
-    if(d.to && d.to !== MP_CLIENT_ID) return;
-
-    try{
-      if(d.t === "voice_offer"){
-        const pc = this.getOrCreatePC(d.sender);
-        await pc.setRemoteDescription(new RTCSessionDescription(d.sdp));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        mpSend({ t: "voice_answer", to: d.sender, sdp: answer });
-      } else if(d.t === "voice_answer"){
-        const item = this.peers.get(d.sender);
-        if(item && item.pc){
-          await item.pc.setRemoteDescription(new RTCSessionDescription(d.sdp));
-        }
-      } else if(d.t === "voice_ice"){
-        const item = this.peers.get(d.sender);
-        if(item && item.pc && d.candidate){
-          await item.pc.addIceCandidate(new RTCIceCandidate(d.candidate));
-        }
-      } else if(d.t === "voice_mute"){
-        if(mp && mp.peers && mp.peers.has(d.sender)){
-          mp.peers.get(d.sender).voiceMuted = !!d.muted;
-          mpUpdateRoomView();
-        }
-      }
-    }catch(err){
-      console.warn("handleSignaling error:", err);
-    }
+    if(!this.micReady && !this.unavailable){ this.startMic(true); return; }
+    if(this.micReady) this.toggleMute();
   },
 
   toggleMute(){
     if(!this.localStream) return;
     this.isMuted = !this.isMuted;
     this.localStream.getAudioTracks().forEach(t => { t.enabled = !this.isMuted; });
-    this.updateBtnUI();
     mpSend({ t: "voice_mute", muted: this.isMuted });
     const isEn = (save.lang === "en");
-    showBanner(this.isMuted ? (isEn ? "Microphone muted 🔇" : "Mikrofon utišan 🔇") : (isEn ? "Microphone active 🎙️" : "Mikrofon aktiven 🎙️"), 1500);
-    mpUpdateRoomView();
+    showBanner(this.isMuted ? (isEn ? "Microphone muted 🔇" : "Mikrofon utišan 🔇") : (isEn ? "Microphone active 🎙️" : "Mikrofon aktiven 🎙️"), 1300);
+    this.updateBtnUI();
+    try{ mpUpdateRoomView(); }catch(e){}
+  },
+
+  getCtx(){
+    if(!this.ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      try{ this.ctx = new AC(); }catch(e){ return null; }
+    }
+    if(this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
+    return this.ctx;
+  },
+
+  // called from a user tap: lets the browser play remote audio / measure levels
+  unlockAudio(){
+    this.getCtx();
+    let blocked = false;
+    document.querySelectorAll("audio[id^='voice_audio_']").forEach(a => { a.play().catch(() => { blocked = true; }); });
+    this.audioBlocked = blocked;
+    this.updateBtnUI();
+  },
+
+  /* ----- signalling ----- */
+  sayHello(to, re){
+    if(!this.enabled) return;
+    const o = { t: "voice_hello", mic: this.micReady, re: !!re };
+    if(to) o.to = to;
+    mpSend(o);
+    if(this.isMuted && this.micReady) mpSend({ t: "voice_mute", muted: true });
+  },
+
+  ensurePair(id){
+    if(!this.enabled || !id || id === MP_CLIENT_ID) return;
+    const peer = this.getPeer(id);
+    if(!peer.pc && MP_CLIENT_ID < id) this.makeOffer(peer, false);
+  },
+
+  getPeer(id){
+    let peer = this.peers.get(id);
+    if(!peer){ peer = { id, pc: null, tr: null, pending: [], tries: 0, makingOffer: false }; this.peers.set(id, peer); }
+    return peer;
+  },
+
+  createPC(peer){
+    const pc = new RTCPeerConnection(MP_ICE);
+    peer.pc = pc; peer.pending = []; peer.tr = null; peer.remoteSet = false;
+    pc.onicecandidate = (e) => { if(e.candidate) mpSend({ t: "voice_ice", to: peer.id, candidate: e.candidate }); };
+    pc.ontrack = (e) => this.onRemoteTrack(peer, e);
+    pc.oniceconnectionstatechange = () => this.onIceState(peer);
+    return pc;
+  },
+
+  attachLocalTrack(peer){
+    if(!peer.pc) return;
+    const tr = peer.tr || peer.pc.getTransceivers().find(t => t.receiver && t.receiver.track && t.receiver.track.kind === "audio");
+    if(!tr) return;
+    peer.tr = tr;
+    try{ tr.direction = "sendrecv"; }catch(e){}
+    const track = this.localStream && this.localStream.getAudioTracks()[0];
+    if(track) tr.sender.replaceTrack(track).catch(() => {});
+  },
+
+  async makeOffer(peer, iceRestart){
+    if(!peer.pc) this.createPC(peer);
+    const pc = peer.pc;
+    try{
+      if(!peer.tr){ peer.tr = pc.addTransceiver("audio", { direction: "sendrecv" }); this.attachLocalTrack(peer); }
+      peer.makingOffer = true;
+      const offer = await pc.createOffer(iceRestart ? { iceRestart: true } : undefined);
+      if(pc.signalingState !== "stable") return;
+      await pc.setLocalDescription(offer);
+      peer.lastOffer = { type: pc.localDescription.type, sdp: pc.localDescription.sdp };
+      mpSend({ t: "voice_offer", to: peer.id, sdp: peer.lastOffer });
+      this.armOfferRetry(peer);
+    }catch(e){
+      console.warn("voice offer error:", e);
+    }finally{
+      peer.makingOffer = false;
+    }
+  },
+
+  // QoS 0 messages can get lost: re-send the offer if no answer arrived
+  armOfferRetry(peer){
+    clearTimeout(peer.retryT);
+    peer.retryT = setTimeout(() => {
+      if(!this.peers.has(peer.id) || !peer.pc) return;
+      if(peer.pc.signalingState === "have-local-offer" && peer.lastOffer && ++peer.tries <= 4){
+        mpSend({ t: "voice_offer", to: peer.id, sdp: peer.lastOffer });
+        this.armOfferRetry(peer);
+      }
+    }, 4500);
+  },
+
+  async flushIce(peer){
+    const list = peer.pending; peer.pending = [];
+    for(const c of list){ try{ await peer.pc.addIceCandidate(c); }catch(e){} }
+  },
+
+  async onOffer(d){
+    const peer = this.getPeer(d.sender);
+    if(!peer.pc) this.createPC(peer);
+    const pc = peer.pc;
+    if(peer.lastOfferSdp === d.sdp.sdp && peer.lastAnswer){        // duplicate offer -> just repeat the answer
+      mpSend({ t: "voice_answer", to: d.sender, sdp: peer.lastAnswer });
+      return;
+    }
+    const polite = MP_CLIENT_ID > d.sender;
+    const collision = pc.signalingState !== "stable" || peer.makingOffer;
+    if(collision && !polite) return;
+    if(collision) await pc.setLocalDescription({ type: "rollback" });
+    await pc.setRemoteDescription(d.sdp);
+    peer.remoteSet = true;
+    await this.flushIce(peer);
+    this.attachLocalTrack(peer);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    peer.lastOfferSdp = d.sdp.sdp;
+    peer.lastAnswer = { type: pc.localDescription.type, sdp: pc.localDescription.sdp };
+    mpSend({ t: "voice_answer", to: d.sender, sdp: peer.lastAnswer });
+  },
+
+  async handleSignaling(d){
+    if(!this.enabled || !mp) return;
+    if(d.to && d.to !== MP_CLIENT_ID) return;
+    try{
+      if(d.t === "voice_hello"){
+        this.ensurePair(d.sender);
+        if(!d.re) this.sayHello(d.sender, true);
+      } else if(d.t === "voice_offer"){
+        await this.onOffer(d);
+      } else if(d.t === "voice_answer"){
+        const peer = this.peers.get(d.sender);
+        if(peer && peer.pc && peer.pc.signalingState === "have-local-offer"){
+          clearTimeout(peer.retryT);
+          await peer.pc.setRemoteDescription(d.sdp);
+          peer.remoteSet = true;
+          await this.flushIce(peer);
+        }
+      } else if(d.t === "voice_ice"){
+        const peer = this.getPeer(d.sender);
+        if(!d.candidate) return;
+        if(peer.pc && peer.remoteSet){ try{ await peer.pc.addIceCandidate(d.candidate); }catch(e){} }
+        else peer.pending.push(d.candidate);
+      } else if(d.t === "voice_retry"){
+        const peer = this.peers.get(d.sender);
+        if(peer && MP_CLIENT_ID < d.sender) this.makeOffer(peer, true);
+      } else if(d.t === "voice_mute"){
+        if(mp.peers && mp.peers.has(d.sender)){
+          mp.peers.get(d.sender).voiceMuted = !!d.muted;
+          mpUpdateRoomView();
+        }
+      }
+    }catch(err){
+      console.warn("voice signaling error:", d.t, err);
+    }
+  },
+
+  onIceState(peer){
+    if(!peer.pc) return;
+    const st = peer.pc.iceConnectionState;
+    this.updateBtnUI();
+    clearTimeout(peer.failT);
+    if(st === "failed" || st === "disconnected"){
+      peer.failT = setTimeout(() => {
+        if(!this.peers.has(peer.id) || !peer.pc) return;
+        const s = peer.pc.iceConnectionState;
+        if(s === "connected" || s === "completed") return;
+        if(MP_CLIENT_ID < peer.id) this.makeOffer(peer, true);
+        else mpSend({ t: "voice_retry", to: peer.id });
+      }, st === "failed" ? 300 : 4000);
+    }
+  },
+
+  /* ----- remote audio + level meters ----- */
+  onRemoteTrack(peer, e){
+    const stream = (e.streams && e.streams[0]) || new MediaStream([e.track]);
+    let el = document.getElementById("voice_audio_" + peer.id);
+    if(!el){
+      el = document.createElement("audio");
+      el.id = "voice_audio_" + peer.id;
+      el.autoplay = true;
+      el.playsInline = true;
+      document.body.appendChild(el);
+    }
+    el.srcObject = stream;
+    peer.audio = el;
+    const pr = el.play();
+    if(pr && pr.catch) pr.catch(() => { this.audioBlocked = true; this.updateBtnUI(); });
+    this.attachAnalyser(peer.id, stream);
+  },
+
+  attachAnalyser(id, stream){
+    const ctx = this.getCtx();
+    if(!ctx) return;
+    try{
+      const old = this.analysers.get(id);
+      if(old){ try{ old.src.disconnect(); }catch(e){} }
+      const src = ctx.createMediaStreamSource(stream);
+      const an = ctx.createAnalyser();
+      an.fftSize = 512;
+      src.connect(an);
+      this.analysers.set(id, { an, src, buf: new Uint8Array(an.fftSize), hold: 0 });
+    }catch(e){ console.warn("analyser:", e); }
+  },
+
+  tick(){
+    if(!this.enabled){ return; }
+    const now = performance.now();
+    this.analysers.forEach((a, id) => {
+      a.an.getByteTimeDomainData(a.buf);
+      let sum = 0;
+      for(let i = 0; i < a.buf.length; i++){ const v = (a.buf[i] - 128) / 128; sum += v * v; }
+      const rms = Math.sqrt(sum / a.buf.length);
+      if(rms > 0.02) a.hold = now + 300;
+      const speaking = now < a.hold;
+      if(id === "me"){
+        this.localSpeaking = speaking && !this.isMuted;
+        const av = document.getElementById("mpAvatar_" + MP_CLIENT_ID);
+        if(av) av.classList.toggle("speaking", this.localSpeaking);
+      } else if(mp && mp.peers && mp.peers.has(id)){
+        const pe = mp.peers.get(id);
+        pe.speaking = speaking && !pe.voiceMuted;
+        const av = document.getElementById("mpAvatar_" + id);
+        if(av) av.classList.toggle("speaking", !!pe.speaking);
+      }
+    });
+    this.updateBtnUI();
+  },
+
+  connectedCount(){
+    let n = 0;
+    this.peers.forEach(pe => { if(pe.pc && (pe.pc.iceConnectionState === "connected" || pe.pc.iceConnectionState === "completed")) n++; });
+    return n;
   },
 
   updateBtnUI(){
     const btn = $("btnVoiceToggle");
     if(!btn) return;
-    if(this.isMuted){
-      btn.textContent = "🔇";
-      btn.style.background = "rgba(255, 71, 71, 0.85)";
-      btn.style.borderColor = "#ff6b6b";
-    } else {
-      btn.textContent = "🎙️";
-      btn.style.background = "rgba(61, 255, 142, 0.25)";
-      btn.style.borderColor = "var(--green, #3dff8e)";
+    const show = !!(mp && mp.voiceEnabled && this.enabled);
+    btn.style.display = show ? "flex" : "none";
+    if(!show) return;
+    const isEn = (save.lang === "en");
+    const racing = (state === "racing" || state === "countdown" || state === "crashed" || state === "finished" || state === "prestart");
+    btn.style.bottom = "calc(env(safe-area-inset-bottom,0px) + " + (racing ? 64 : 14) + "px)";
+    let cls, icon, title;
+    if(this.unavailable){ cls = "off"; icon = "🚫"; title = isEn ? "Voice needs HTTPS" : "Glas potrebuje HTTPS"; }
+    else if(!this.micReady){ cls = "needsTap"; icon = "🎙️"; title = isEn ? "Tap to enable the microphone" : "Tapni za vklop mikrofona"; }
+    else if(this.isMuted){ cls = "muted"; icon = "🔇"; title = isEn ? "Muted — tap to unmute" : "Utišan — tapni za vklop"; }
+    else { cls = this.localSpeaking ? "live speaking" : "live"; icon = "🎙️"; title = isEn ? "Mic on — tap to mute" : "Mikrofon vklopljen — tapni za utišanje"; }
+    if(this.audioBlocked && this.micReady && !this.isMuted){ cls += " needsTap"; title = isEn ? "Tap to hear the other players" : "Tapni, da slišiš ostale"; }
+    const ico = $("voiceIco"), badge = $("voiceBadge");
+    if(btn._cls !== cls){ btn.className = cls; btn._cls = cls; }
+    if(ico && ico.textContent !== icon) ico.textContent = icon;
+    btn.title = title;
+    if(badge){
+      const n = this.connectedCount();
+      badge.style.display = n > 0 ? "block" : "none";
+      badge.textContent = n;
+    }
+  },
+
+  /* ----- teardown ----- */
+  removePeer(id){
+    const peer = this.peers.get(id);
+    if(peer) this.closePeer(peer);
+    this.peers.delete(id);
+    const an = this.analysers.get(id);
+    if(an){ try{ an.src.disconnect(); }catch(e){} this.analysers.delete(id); }
+    const el = document.getElementById("voice_audio_" + id);
+    if(el) el.remove();
+    this.updateBtnUI();
+  },
+
+  closePeer(peer){
+    clearTimeout(peer.retryT); clearTimeout(peer.failT);
+    if(peer.pc){
+      peer.pc.onicecandidate = null; peer.pc.ontrack = null; peer.pc.oniceconnectionstatechange = null;
+      try{ peer.pc.close(); }catch(e){}
+      peer.pc = null;
     }
   },
 
   cleanup(){
-    if(this.localStream){
-      this.localStream.getTracks().forEach(t => t.stop());
-      this.localStream = null;
-    }
-    this.peers.forEach(item => {
-      try{ item.pc.close(); }catch(_){}
-    });
-    this.peers.clear();
     this.enabled = false;
+    this.micReady = false;
+    this.unavailable = false;
+    this.needsTap = false;
+    this.audioBlocked = false;
     this.isMuted = false;
+    this.localSpeaking = false;
+    if(this.poll){ clearInterval(this.poll); this.poll = null; }
+    this.peers.forEach(pe => this.closePeer(pe));
+    this.peers.clear();
+    this.analysers.forEach(a => { try{ a.src.disconnect(); }catch(e){} });
+    this.analysers.clear();
+    if(this.localStream){ this.localStream.getTracks().forEach(t => t.stop()); this.localStream = null; }
+    if(this.ctx){ try{ this.ctx.close(); }catch(e){} this.ctx = null; }
     const btn = $("btnVoiceToggle");
-    if(btn) btn.style.display = "none";
+    if(btn){ btn.style.display = "none"; btn._cls = null; }
     document.querySelectorAll("audio[id^='voice_audio_']").forEach(a => a.remove());
+    document.querySelectorAll(".mpRacerAvatar.speaking").forEach(a => a.classList.remove("speaking"));
   }
 };
 
@@ -9420,7 +9665,7 @@ function mpOnData(d){
       });
 
       if(isNew && mp.voiceEnabled && mpVoice.enabled){
-        mpVoice.callPeer(d.sender);
+        mpVoice.sayHello(d.sender);
       }
     }
   } else if(d.t === "welcome"){
@@ -9614,6 +9859,7 @@ function mpOnData(d){
     if(typeof mpCheckVotes !== "undefined") mpCheckVotes();
   } else if(d.t === "bye"){
     const peerName = (mp.peers && mp.peers.get(d.sender)) ? mp.peers.get(d.sender).name : mp.oppName;
+    mpVoice.removePeer(d.sender);
     const wasKnown = !!(mp.peers && mp.peers.has(d.sender));
     if(mp.peers) mp.peers.delete(d.sender);
     if(!wasKnown) return;
@@ -10089,9 +10335,7 @@ function mpStartRace(isHost){
   const isEn = (save.lang === "en");
   showBanner(isEn ? "Get ready! 🏁" : "Pripravi se! 🏁", 2000, true);
 
-  if(mp.voiceEnabled && $("btnVoiceToggle")){
-    $("btnVoiceToggle").style.display = "flex";
-  }
+  mpVoice.updateBtnUI();
 
   finishOrder.length = 0;
   ghostPlay = null;
@@ -10715,7 +10959,7 @@ function drawMpOpp(c){
     c.textAlign = "center";
     c.strokeStyle = "rgba(0,0,0,.65)";
     c.lineWidth = 3 / scale;
-    const micIcon = mp.voiceEnabled ? (p.voiceMuted ? " 🔇" : " 🎙️") : "";
+    const micIcon = mp.voiceEnabled ? (p.voiceMuted ? " 🔇" : (p.speaking ? " 🔊" : " 🎙️")) : "";
     const nm = (p.name || "Dirkač") + micIcon;
     c.strokeText(nm, x, y - RAD * 1.3 / scale * scale);
     c.fillText(nm, x, y - RAD * 1.3 / scale * scale);
@@ -11135,7 +11379,7 @@ function bindUI(){
     mpSwitchTab("rooms");
   });
   if($("btnVoiceToggle")) $("btnVoiceToggle").addEventListener("click", () => {
-    if(typeof mpVoice !== "undefined") mpVoice.toggleMute();
+    if(typeof mpVoice !== "undefined") mpVoice.onButton();
   });
   if($("btnToggleFreemium")) $("btnToggleFreemium").addEventListener("click",()=>setFreemiumMode(true));
   if($("btnToggleFull")) $("btnToggleFull").addEventListener("click",()=>setFreemiumMode(false));
