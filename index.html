@@ -249,8 +249,15 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .lbArrow{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid rgba(244,239,227,.25);background:rgba(244,239,227,.08);
   color:var(--paper);font-size:15px;cursor:pointer}
 .lbArrow:active{transform:translateY(2px)}
-.lbTrackMid{flex:1;min-width:0}
-.lbTrackTitle{font-weight:900;font-size:16px;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbTrackMid{flex:1;min-width:0;text-align:left}
+.lbThumb{width:64px;height:40px;flex:none;border-radius:7px;background:rgba(244,239,227,.08) center/cover no-repeat;
+  border:1px solid rgba(244,239,227,.2);display:flex;align-items:center;justify-content:center;font-size:18px}
+.lbCard{touch-action:pan-y}
+#lbList.lbSlideL{animation:lbInL .22s ease-out}
+#lbList.lbSlideR{animation:lbInR .22s ease-out}
+@keyframes lbInL{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes lbInR{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+#lbMine .lbMyRk{color:var(--yellow);font-size:13px;margin-left:8px}.lbTrackTitle{font-weight:900;font-size:15px;line-height:1.15;color:var(--yellow);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lbTrackSub{font-size:11px;font-weight:700;color:#9aa887;margin-top:1px}
 .lbHintBar{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9aa887;padding:8px 12px 4px;text-align:left}
 #lbList{flex:1 1 auto;min-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 8px 8px}
@@ -274,6 +281,25 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 #lbMine b{color:var(--green);font-size:15px;font-variant-numeric:tabular-nums}
 .lbFoot{display:flex;gap:10px;margin-top:10px}
 .lbFoot .btn{margin:4px 0;white-space:nowrap}
+.lbRow.flash{animation:lbFlash 1.4s ease-out 2}
+@keyframes lbFlash{0%,100%{box-shadow:none}40%{box-shadow:0 0 0 3px rgba(61,255,142,.55),0 0 18px rgba(61,255,142,.45)}}
+/* Global rank card (results screen) */
+.rgCard{margin:0 auto 12px;width:min(340px,90vw);text-align:left;background:rgba(10,12,9,.8);
+  border:1px solid rgba(244,239,227,.18);border-radius:14px;padding:10px 12px 12px;animation:scrIn .3s ease-out}
+.rgCard.wr{border-color:rgba(255,204,38,.7);box-shadow:0 0 22px rgba(255,204,38,.3);background:linear-gradient(160deg,rgba(255,204,38,.18),rgba(10,12,9,.85) 60%)}
+.rgHead{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#9aa887;margin-bottom:6px}
+.rgWait{font-size:13px;font-weight:700;color:#cfd8bd;padding:10px 0}
+.rgMain{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.rgRank{font-size:34px;font-weight:900;font-style:italic;color:var(--yellow);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 3px 0 rgba(0,0,0,.45)}
+.rgL1{font-size:14px;font-weight:900;color:var(--paper)}
+.rgL1.up{color:var(--green)}
+.rgL2{font-size:12px;font-weight:700;color:#b8c49f;margin-top:2px}
+.rgLine{font-size:12.5px;font-weight:700;color:#cfd8bd;margin-top:4px}
+.rgLine b{color:var(--paper);font-variant-numeric:tabular-nums}
+.rgLine.gold{color:var(--yellow);font-size:14px;font-weight:900}
+.rgBtn{display:block;width:100%;margin-top:10px;padding:9px;border-radius:9px;border:1px solid rgba(244,239,227,.3);
+  background:rgba(244,239,227,.1);color:var(--paper);font-weight:900;font-size:14px;cursor:pointer}
+.rgBtn:active{transform:translateY(2px)}
 #resStats{font-size:12.5px;color:#b8c49f;margin-bottom:10px}
 #loading{z-index:60}
 .spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(244,239,227,.2);border-top-color:var(--yellow);
@@ -1283,6 +1309,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <div class="lbCard">
         <div id="lbTrackBar" class="lbTrackBar">
           <button class="lbArrow" id="btnLbTrackPrev" aria-label="Previous track">◀</button>
+          <div class="lbThumb" id="lbTrackImg"></div>
           <div class="lbTrackMid">
             <div id="lbTrackTitle" class="lbTrackTitle">Track 1</div>
             <div id="lbTrackSub" class="lbTrackSub">1 / 20</div>
@@ -1303,7 +1330,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <!-- Onboarding modal for player name -->
   <div id="nameOnboardModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:16px;">
     <div style="background:var(--asphalt,#14171a);border:2px solid var(--yellow,#ffcc26);border-radius:18px;max-width:380px;width:100%;padding:22px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.8);">
-      <div style="font-size:36px;margin-bottom:8px">🏎️💨</div>
+      <div id="onboardIcon" style="font-size:36px;margin-bottom:8px">🏎️💨</div>
       <h2 class="disp" id="onboardTitle" style="font-size:22px;color:var(--yellow,#ffcc26);margin-bottom:8px">DOBRODOŠEL V MULTIPLAYERJU!</h2>
       <p id="onboardDesc" style="font-size:13px;opacity:0.85;margin-bottom:18px;line-height:1.4">Preden zapelješ na štartno črto, si izberi svoje dirkaško ime:</p>
       <input type="text" id="onboardNameInput" maxlength="12" placeholder="Tvoje ime (do 12 znakov)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.25);border-radius:10px;padding:12px;color:#fff;font-size:16px;font-weight:800;text-align:center;margin-bottom:14px;outline:none" />
@@ -1566,6 +1593,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <div id="resPlace" class="disp">1. mesto</div>
       <div id="resSub" class="sub">Zmaga!</div>
       <div class="checker"></div>
+      <div id="resGlobal" class="rgCard" style="display:none"></div>
       <div id="resList"></div>
       <div id="resStats"></div>
       <button class="btn primary disp" id="btnNext"><span>Naslednji level</span></button>
@@ -2480,6 +2508,8 @@ let W=0,H=0,dpr=1,scale=1,offX=0,offY=0,followCam=false,camScaleFixed=null,camZo
 let trackImg=null;
 
 function setScreen(id){
+  // The global rank card belongs to the current results screen only (it survives a trip to the leaderboard)
+  if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; }
   ["menu","levels","help","intro","wcName","wcPreview","singlePick","ttOpp","tutorial","career","leaderboard","wcRaceIntro","wcStand","settings","pause","results","loading","training","trainInfo","clevels","cinfo","repairQ","garage","achScreen","mpHome","mpLobby","langPicker"].forEach(s=>$(s)&&$(s).classList.toggle("on",s===id));
 }
 
@@ -3595,7 +3625,7 @@ function gridSlot(k){
   return {s,x:p.x,y:p.y,lat,i,ang:Math.atan2(p.ty,p.tx)};
 }
 function startLevel(lv){ training=0; careerOff();
-  level=lv; finishOrder=[]; particles=[]; coneHunt=false;
+  level=lv; finishOrder=[]; particles=[]; coneHunt=false; singleMode=false; timeTrial=false;
   const tIdx=wc?wc.order[wc.race]:((lv-1)%TRACKS.length);
   loadTrack(tIdx);
   if(wc){ LAPS=Math.max(6,Math.min(9,Math.round(32000/L))); NRACERS=6; }   // 6-9 krogov: krajša proga = več krogov
@@ -4975,6 +5005,11 @@ function finishRace(){
     if((player.dmgTaken||0)>=0 && !(player.everPenalty)) unlockAch("noPen","🧼 Čista dirka (brez kazni)");
   }catch(e){}
   const t=raceTime;
+  // Global records: only plain Single Races (fixed laps/field) count, keyed by the track actually driven
+  const recTrack=curTrack+1;
+  const globalRun=singleMode && !timeTrial && !coneHunt && !wc && !careerLv && !training && !testDrive && !mp && !mpMode && !player.dnf;
+  if(!save.trackBest) save.trackBest={};
+  const prevBest=save.trackBest[recTrack]||null;   // before this race updates it (for the global rank card)
   if(adv){ Snd.finishWin(); spawnConfetti(player.x,player.y);
     if(navigator.vibrate&&save.haptics!==false){ try{ navigator.vibrate(win?[120,60,120,60,220]:[120,60,120]); }catch(e){} }
     if(win) setTimeout(()=>{ if(state==="finished"){ spawnConfetti(player.x,player.y); spawnFireworks(); } },350);
@@ -4989,9 +5024,12 @@ function finishRace(){
     if(save.best[level] && !player.dnf) recordBeat=true;                                                                     // premagan osebni rekord
     save.best[level]=Math.round(t*1000)/1000;
   }
+  if(globalRun && (!prevBest || t<prevBest)) save.trackBest[recTrack]=Math.round(t*1000)/1000;
   persist();
-  if(!player.dnf && !wc && !timeTrial && level){
-    try { submitGlobalRecord(level, t); } catch(e){}
+  if($("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; }
+  if(globalRun){
+    try { submitGlobalRecord(recTrack, t); } catch(e){}
+    try { showGlobalRankCard(recTrack, t, prevBest); } catch(e){}
   }
   $("count").style.display="none";
   pendingResults=()=>{
@@ -5110,7 +5148,13 @@ function finishRace(){
       $("resStats").innerHTML="Čas: "+fmt(t)+"  ·  Nesreče: "+player.crashes+(fastestLap.name?"<br>⚡ Najhitrejši krog: <b style=\"color:#c39bff\">"+fastestLap.name+"</b> "+fmt(fastestLap.time):"")+dmgStatsHTML();
       $("btnNext").style.display="block"; $("btnRetry").style.display="none"; $("btnMenu2").style.display="none";
       $("hud").style.display="none"; $("standings").style.display="none"; if($("penBadge"))$("penBadge").style.display="none"; if($("dmgBar"))$("dmgBar").style.display="none"; if($("fuelBar"))$("fuelBar").style.display="none"; if($("commentBar"))$("commentBar").style.display="none"; if($("ghostDelta"))$("ghostDelta").style.display="none";
-      setScreen("results"); return;
+      setScreen("results");
+      if(typeof hasCustomPlayerName === "function" && !hasCustomPlayerName() && globalRun && !player.dnf){
+        setTimeout(() => {
+          if(typeof showRecordNamePrompt === "function") showRecordNamePrompt(recTrack, t, prevBest);
+        }, 650);
+      }
+      return;
     }
     $("resPlace").textContent=pos+". mesto";
     $("resPlace").classList.toggle("win",adv);
@@ -7288,11 +7332,102 @@ function tryLoadChallenge(){
   const m=h.match(/[#&]c=([^&]+)/);
   if(m){ const ch=parseChallengeCode(decodeURIComponent(m[1])); if(ch){ importChallenge(ch); try{history.replaceState(null,"",location.href.split("#")[0]);}catch(e){} } }
 }
+function hasCustomPlayerName() {
+  if (!save || !save.playerName) return false;
+  const n = String(save.playerName).trim();
+  return n.length > 0 && n !== "TI" && n !== "Racer" && n !== "Dirkač" && n !== "you" && !n.startsWith("Racer_") && !n.startsWith("Dirkač_");
+}
+
+function showNameOnboarding(opts, callback){
+  if (typeof opts === "function") {
+    callback = opts;
+    opts = {};
+  }
+  opts = opts || {};
+  const modal = $("nameOnboardModal");
+  if(!modal){
+    if(callback) callback(save.playerName || "");
+    return;
+  }
+  const isEn = (save.lang === "en");
+  modal.style.display = "flex";
+  if($("onboardIcon")) $("onboardIcon").textContent = opts.icon || "🏎️💨";
+  if($("onboardTitle")) $("onboardTitle").textContent = opts.title || (isEn ? "WELCOME TO MULTIPLAYER!" : "DOBRODOŠEL V MULTIPLAYERJU!");
+  if($("onboardDesc")) $("onboardDesc").textContent = opts.desc || (isEn ? "Before you hit the starting line, choose your racer name:" : "Preden zapelješ na štartno črto, si izberi svoje dirkaško ime:");
+
+  const inp = $("onboardNameInput");
+  if(inp){
+    inp.value = opts.value !== undefined ? opts.value : (hasCustomPlayerName() ? save.playerName : "");
+    inp.placeholder = opts.placeholder || (isEn ? "Your name (max 12)" : "Tvoje ime (do 12 znakov)");
+    setTimeout(() => { try { inp.focus(); } catch(e){} }, 200);
+  }
+
+  const btnSave = $("btnOnboardSave");
+  const btnSkip = $("btnOnboardSkip");
+  if(btnSave && btnSave.querySelector("span")) {
+    btnSave.querySelector("span").textContent = opts.saveBtn || (isEn ? "SAVE & CONTINUE 🏁" : "SHRANI & VSTOP 🏁");
+  }
+  if(btnSkip && btnSkip.querySelector("span")) {
+    btnSkip.querySelector("span").textContent = opts.skipBtn || (isEn ? "SKIP" : "PRESKOČI");
+  }
+
+  const finish = (chosenName) => {
+    let finalName = (chosenName || "").trim().slice(0, 12);
+    if(!finalName){
+      if (opts.keepExisting && hasCustomPlayerName()) {
+        finalName = save.playerName;
+      } else {
+        finalName = (isEn ? "Racer_" : "Dirkač_") + Math.floor(100 + Math.random() * 900);
+      }
+    }
+    save.playerName = finalName;
+    persist();
+    modal.style.display = "none";
+    if(callback) callback(finalName);
+  };
+
+  if(btnSave){
+    btnSave.onclick = () => finish(inp ? inp.value : "");
+  }
+  if(btnSkip){
+    btnSkip.onclick = () => finish(opts.keepExisting && hasCustomPlayerName() ? save.playerName : "");
+  }
+  if(inp){
+    inp.onkeydown = (e) => {
+      if(e.key === "Enter") finish(inp.value);
+    };
+  }
+}
+
+function showRecordNamePrompt(trackNum, t, prevBest) {
+  const isEn = (save.lang === "en");
+  showNameOnboarding({
+    icon: "⏱️🏆",
+    title: isEn ? "NEW TRACK RECORD!" : "NOV REKORD PROGE!",
+    desc: isEn 
+      ? `Great drive (${fmt(t)})! Enter your racer name to appear on the global leaderboard:`
+      : `Odlična vožnja (${fmt(t)})! Vpiši svoje dirkaško ime za vpis na svetovno lestvico:`,
+    saveBtn: isEn ? "SAVE TO LEADERBOARD 🏁" : "SHRANI NA LESTVICO 🏁",
+    skipBtn: isEn ? "SKIP" : "PRESKOČI",
+    placeholder: isEn ? "Your racer name (max 12)" : "Tvoje dirkaško ime (do 12 znakov)"
+  }, (chosenName) => {
+    try { submitGlobalRecord(trackNum, t); } catch(e){}
+    try { showGlobalRankCard(trackNum, t, prevBest); } catch(e){}
+    try { syncLocalRecordsToGlobal(); } catch(e){}
+  });
+}
+
 function askPlayerName(after){
-  const nm=prompt("Vpiši svoje dirkaško ime:", save.playerName||"");
-  if(nm && nm.trim()){ save.playerName=nm.trim().slice(0,16); persist(); }
-  else if(!save.playerName){ save.playerName="TI"; persist(); }
-  if(after) after();
+  const isEn = (save.lang === "en");
+  showNameOnboarding({
+    icon: "🏁🏎️",
+    title: isEn ? "CHOOSE RACER NAME" : "IZBERI DIRKAŠKO IME",
+    desc: isEn ? "Enter your name for your career and leaderboards:" : "Vpiši svoje ime za kariero in lestvice:",
+    value: hasCustomPlayerName() ? save.playerName : "",
+    saveBtn: isEn ? "CONTINUE 🏁" : "NADALJUJ 🏁"
+  }, () => {
+    if(after) after();
+  });
 }
 let achBackScreen = "leaderboard";
 function openAch(from = "leaderboard"){
@@ -7368,30 +7503,27 @@ async function submitGlobalRecord(trackId, timeSeconds) {
       flag: flag,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-
-    // Clean up any legacy single-doc record keyed by `save.uid` if present
-    try {
-      const legacyRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(save.uid);
-      const legacySnap = await legacyRef.get();
-      if (legacySnap.exists) {
-        await legacyRef.delete();
-      }
-    } catch(e) {}
   } catch(err) {
     console.warn("Global record submit error:", err);
   }
 }
 
-async function syncLocalRecordsToGlobal() {
-  if (!db || !save.best) return;
+const LB_TRACKS = PREVIEWS.length;   // global leaderboards exist per real track (not per level)
+
+// Push Single Race track bests that never reached Firestore (e.g. raced offline).
+// Uses save.trackBest only — save.best is keyed by level/mode and must not be uploaded.
+async function syncLocalRecordsToGlobal(force = false) {
+  if (!db || !save.trackBest) return;
   try {
-    if (!save._syncedBests) save._syncedBests = {};
-    for (let i = 1; i <= MAXLVL; i++) {
-      if (save.best[i] && !isNaN(save.best[i])) {
-        const bestTime = Math.round(save.best[i] * 1000) / 1000;
-        if (save._syncedBests[i] !== bestTime) {
+    if (!save._syncedTrackBests) save._syncedTrackBests = {};
+    for (let i = 1; i <= LB_TRACKS; i++) {
+      const b = save.trackBest[i];
+      if (b && !isNaN(b)) {
+        const bestTime = Math.round(b * 1000) / 1000;
+        if (force || save._syncedTrackBests[i] !== bestTime) {
           await submitGlobalRecord(i, bestTime);
-          save._syncedBests[i] = bestTime;
+          save._syncedTrackBests[i] = bestTime;
+          persist();
         }
       }
     }
@@ -7410,7 +7542,27 @@ function updateTrackTitle() {
     }
     $("lbTrackTitle").textContent = (isEn ? "Track " : "Proga ") + currentLbTrack + extra;
   }
-  if ($("lbTrackSub")) $("lbTrackSub").textContent = currentLbTrack + " / " + MAXLVL;
+  if ($("lbTrackSub")) $("lbTrackSub").textContent = currentLbTrack + " / " + LB_TRACKS + "  ·  " + (isEn ? "swipe ⇆" : "podrsaj ⇆");
+  const th = $("lbTrackImg");
+  if (th) {
+    const p = (typeof PREVIEWS !== "undefined") ? PREVIEWS[currentLbTrack - 1] : null;
+    th.style.backgroundImage = (p && p.img) ? 'url("' + p.img + '")' : "";
+    th.textContent = (p && p.img) ? "" : "🏁";
+  }
+}
+
+// Step the Single Race track picker (dir = -1 / +1), with a slide-in animation
+function lbStepTrack(dir) {
+  Snd.click && Snd.click();
+  currentLbTrack = ((currentLbTrack - 1 + dir + LB_TRACKS) % LB_TRACKS) + 1;
+  updateTrackTitle();
+  const l = $("lbList");
+  if (l) {
+    l.classList.remove("lbSlideL", "lbSlideR");
+    void l.offsetWidth;
+    l.classList.add(dir > 0 ? "lbSlideL" : "lbSlideR");
+  }
+  loadGlobalTrackLeaderboard(currentLbTrack);
 }
 
 function lbEsc(s) {
@@ -7429,18 +7581,129 @@ function lbRow(i, name, sub, value, isMe) {
   return row;
 }
 
-function lbSetMine(label, value) {
+function promptEditLeaderboardName(trackNum){
+  const isEn = (save.lang === "en");
+  showNameOnboarding({
+    icon: "👤✏️",
+    title: isEn ? "RACER NAME" : "DIRKAŠKO IME",
+    desc: isEn ? "Enter your name to appear on global leaderboards:" : "Vpiši svoje ime za prikaz na svetovnih lestvicah:",
+    value: hasCustomPlayerName() ? save.playerName : "",
+    saveBtn: isEn ? "SAVE NAME 🏁" : "SHRANI IME 🏁",
+    skipBtn: isEn ? "CANCEL" : "PREKLIČI",
+    keepExisting: true
+  }, async (newName) => {
+    const tNum = trackNum || currentLbTrack;
+    if (tNum && save.trackBest && save.trackBest[tNum]) {
+      try { await submitGlobalRecord(tNum, save.trackBest[tNum]); } catch(e){}
+    }
+    try { await syncLocalRecordsToGlobal(true); } catch(e){}
+    if (currentLbTab === "single") {
+      loadGlobalTrackLeaderboard(tNum || 1);
+    }
+  });
+}
+
+function lbSetMine(label, value, rank, trackNum) {
   const m = $("lbMine");
   if (!m) return;
-  m.innerHTML = value ? '<span>' + label + '</span><b>' + value + '</b>' : "";
+  if (!label && !value) {
+    m.innerHTML = "";
+    return;
+  }
+  const isEn = (save.lang === "en");
+  const pName = hasCustomPlayerName() ? save.playerName : (isEn ? "Set Name" : "Vpiši ime");
+  const tArg = (trackNum || (typeof currentLbTrack !== "undefined" ? currentLbTrack : 1));
+  const nameBadge = '<button type="button" class="lbNameEditBtn" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.22);color:var(--paper);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-left:6px;" onclick="promptEditLeaderboardName(' + tArg + ')" title="' + (isEn ? 'Edit racer name' : 'Uredi dirkaško ime') + '">👤 ' + lbEsc(pName) + ' ✏️</button>';
+
+  if (!value) {
+    m.innerHTML = '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span>' + label + '</span>' + nameBadge + '</div><b style="color:#9aa887;font-size:13px;">--:--.---</b>';
+    return;
+  }
+  m.innerHTML = '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span>' + label + '</span>' + nameBadge + '</div><b>' + value + (rank ? '<span class="lbMyRk">#' + rank + '</span>' : '') + '</b>';
+}
+
+let lbFrom = "menu", lbScrollMe = false;
+
+// Global ranking card on the results screen: rank, places gained, gap to the next place, world record
+async function showGlobalRankCard(trackNum, t, prevBest) {
+  const c = $("resGlobal");
+  if (!c) return;
+  if (!db) { c.style.display = "none"; return; }
+  const isEn = (save.lang === "en");
+  const r3 = x => Math.round(x * 1000) / 1000;
+  t = r3(t);
+  if (prevBest) prevBest = r3(prevBest);
+  const isPB = !prevBest || t < prevBest;
+  const myTime = isPB ? t : prevBest;
+  const tok = c._tok = {};
+
+  const p = (typeof getPreview === "function") ? getPreview(trackNum - 1) : null;
+  const tName = (p && p.name && PREVIEWS[trackNum - 1]) ? p.name.split(" · ").slice(1).join(" · ") : "";
+  const head = '<div class="rgHead">🌍 ' + (isEn ? "GLOBAL" : "SVETOVNO") + ' · ' + (isEn ? "Track " : "Proga ") + trackNum + (tName ? " · " + lbEsc(tName) : "") + '</div>';
+  c.classList.remove("wr");
+  c.innerHTML = head + '<div class="rgWait">' + (isEn ? "Checking global rank… ⏳" : "Preverjam svetovno uvrstitev… ⏳") + '</div>';
+  c.style.display = "block";
+
+  try {
+    // All records faster than max(this run, previous best) — enough to rank both times. Capped like the leaderboard.
+    const CAP = 1000;
+    const runId = save.uid + "_" + Math.round(t * 1000);
+    const snap = await db.collection("tracks").doc(String(trackNum)).collection("records")
+      .where("time", "<", Math.max(t, prevBest || 0)).orderBy("time", "asc").limit(CAP).get();
+    if (c._tok !== tok) return;   // player already left the results screen
+
+    const capped = snap.size >= CAP;
+    const docs = snap.docs.filter(d => d.id !== runId).map(d => d.data());
+    const faster = docs.filter(d => d.time < myTime);
+    const rank = faster.length + 1;
+    const prevRank = (isPB && prevBest) ? docs.filter(d => d.time < prevBest).length + 1 : 0;
+    const moved = (prevRank && !capped) ? prevRank - rank : 0;
+    const who = d => (d.flag ? lbEsc(d.flag) + " " : "") + lbEsc(d.name || "Racer");
+
+    let line1, line2;
+    if (!prevBest) { line1 = isEn ? "First time on this track!" : "Prvič na tej progi!"; line2 = isEn ? "Your time is on the board" : "Tvoj čas je na lestvici"; }
+    else if (isPB) {
+      line1 = moved > 0 ? "▲ " + moved + (isEn ? (moved === 1 ? " place" : " places") : (moved === 1 ? " mesto" : " mest")) : (isEn ? "Rank held" : "Uvrstitev ohranjena");
+      line2 = isEn ? "New personal best!" : "Nov osebni rekord!";
+    } else {
+      line1 = isEn ? "Your best on this track" : "Tvoj rekord na tej progi";
+      line2 = "+" + (t - prevBest).toFixed(3) + "s " + (isEn ? "off your best" : "za rekordom");
+    }
+
+    let h = head + '<div class="rgMain"><div class="rgRank">' + (capped ? "#" + CAP + "+" : "#" + rank) + '</div>' +
+      '<div class="rgInfo"><div class="rgL1' + (moved > 0 ? ' up' : '') + '">' + line1 + '</div><div class="rgL2">' + line2 + '</div></div></div>';
+    if (rank === 1 && !capped) {
+      h += '<div class="rgLine gold">' + (isPB ? (isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!") : (isEn ? "🥇 You hold the world record" : "🥇 Svetovni rekord je tvoj")) + '</div>';
+    } else if (!capped) {
+      const next = faster[faster.length - 1];
+      h += '<div class="rgLine"><b>' + (myTime - next.time).toFixed(3) + 's</b> ' + (isEn ? "behind" : "za") + ' #' + (rank - 1) + ' (' + who(next) + ')</div>';
+      h += '<div class="rgLine">🥇 ' + (isEn ? "World record" : "Svetovni rekord") + ': <b>' + fmt(faster[0].time) + '</b> (' + who(faster[0]) + ')</div>';
+    }
+    h += '<button class="rgBtn" id="btnResLb">' + (isEn ? "View leaderboard →" : "Poglej lestvico →") + '</button>';
+    c.innerHTML = h;
+    $("btnResLb").addEventListener("click", () => {
+      Snd.click && Snd.click();
+      currentLbTrack = trackNum; lbFrom = "results"; lbScrollMe = true;
+      openLeaderboard("single");
+    });
+
+    if (rank === 1 && isPB && !capped) {
+      c.classList.add("wr");
+      showBanner(isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!", 3000, true);
+      try { spawnFireworks(); } catch(e) {}
+    }
+  } catch(err) {
+    console.warn("Global rank card error:", err);
+    if (c._tok === tok) c.style.display = "none";
+  }
 }
 
 async function loadGlobalTrackLeaderboard(trackNum) {
   const l = $("lbList");
   if (!l) return;
   const isEn = (save.lang === "en");
-  const myBest = save.best && save.best[trackNum];
-  lbSetMine(isEn ? "Your best on this track" : "Tvoj rekord na tej progi", myBest ? fmt(myBest) + " ⏱️" : "");
+  const myBest = save.trackBest && save.trackBest[trackNum];
+  lbSetMine(isEn ? "Your best on this track" : "Tvoj rekord na tej progi", myBest ? fmt(myBest) + " ⏱️" : "", null, trackNum);
   l.innerHTML = '<div class="lbEmpty">' + (isEn ? "Loading global records... ⏳" : "Nalaganje globalnih rekordov... ⏳") + '</div>';
 
   if (!db) {
@@ -7459,15 +7722,35 @@ async function loadGlobalTrackLeaderboard(trackNum) {
         (isEn ? "No global records for this track yet.<br>Be the first! 🏁" : "Še ni globalnih rekordov za to progo.<br>Bodi prvi! 🏁") +
         '</div>';
     } else {
-      let idx = 0;
+      let idx = 0, myRank = 0;
       snap.forEach(doc => {
         const d = doc.data();
-        const isMe = (d.uid === save.uid || doc.id === save.uid || doc.id.startsWith(save.uid + '_'));
+        const isMe = !!save.uid && (d.uid === save.uid || doc.id === save.uid || doc.id.startsWith(save.uid + '_'));
+        if (isMe && !myRank) myRank = idx + 1;
         const displayTime = (typeof fmt === "function") ? fmt(d.time) : (d.time.toFixed(3) + "s");
         const flagStr = d.flag ? (lbEsc(d.flag) + " ") : "";
         l.appendChild(lbRow(idx, flagStr + lbEsc(d.name || "Racer"), "", displayTime, isMe));
         idx++;
       });
+      if (myBest && myRank) lbSetMine(isEn ? "Your best on this track" : "Tvoj rekord na tej progi", fmt(myBest) + " ⏱️", myRank, trackNum);
+      if (lbScrollMe) {
+        const me = l.querySelector(".lbRow.me");
+        if (me) { me.scrollIntoView({ block: "center" }); me.classList.add("flash"); }
+      }
+    }
+    lbScrollMe = false;
+
+    // Outside the visible list: ask Firestore how many records are faster than ours
+    if (myBest && !l.querySelector(".lbRow.me")) {
+      try {
+        // Compat SDK has no count() aggregation, so read the faster records (capped) and use the size
+        const CAP = 1000;
+        const faster = await db.collection("tracks").doc(String(trackNum)).collection("records")
+          .where("time", "<", Math.round(myBest * 1000) / 1000).orderBy("time", "asc").limit(CAP).get();
+        if (currentLbTab !== "single" || currentLbTrack !== trackNum) return;
+        lbSetMine(isEn ? "Your best on this track" : "Tvoj rekord na tej progi", fmt(myBest) + " ⏱️",
+          faster.size >= CAP ? CAP + "+" : faster.size + 1, trackNum);
+      } catch(e) { console.warn("Rank count error:", e); }
     }
   } catch(err) {
     console.error("Leaderboard load error:", err);
@@ -9389,50 +9672,6 @@ function mpRenderLobbyUI(){
       }
       pList.appendChild(item);
     });
-  }
-}
-
-function showNameOnboarding(callback){
-  const modal = $("nameOnboardModal");
-  if(!modal){
-    if(callback) callback();
-    return;
-  }
-  const isEn = (save.lang === "en");
-  modal.style.display = "flex";
-  if($("onboardTitle")) $("onboardTitle").textContent = isEn ? "WELCOME TO MULTIPLAYER!" : "DOBRODOŠEL V MULTIPLAYERJU!";
-  if($("onboardDesc")) $("onboardDesc").textContent = isEn ? "Before you hit the starting line, choose your racer name:" : "Preden zapelješ na štartno črto, si izberi svoje dirkaško ime:";
-  
-  const inp = $("onboardNameInput");
-  if(inp){
-    inp.value = "";
-    inp.placeholder = isEn ? "Your name (max 12)" : "Tvoje ime (do 12 znakov)";
-    setTimeout(() => inp.focus(), 200);
-  }
-  
-  const finish = (chosenName) => {
-    let finalName = (chosenName || "").trim().slice(0, 12);
-    if(!finalName){
-      finalName = (isEn ? "Racer_" : "Dirkač_") + Math.floor(100 + Math.random() * 900);
-    }
-    save.playerName = finalName;
-    persist();
-    modal.style.display = "none";
-    if(callback) callback();
-  };
-  
-  const btnSave = $("btnOnboardSave");
-  const btnSkip = $("btnOnboardSkip");
-  if(btnSave){
-    btnSave.onclick = () => finish(inp ? inp.value : "");
-  }
-  if(btnSkip){
-    btnSkip.onclick = () => finish("");
-  }
-  if(inp){
-    inp.onkeydown = (e) => {
-      if(e.key === "Enter") finish(inp.value);
-    };
   }
 }
 
@@ -11994,22 +12233,24 @@ function bindUI(){
     openTraining("singlePick");
   });
 
-  $("btnLeaderboard").addEventListener("click", () => openLeaderboard("single"));
+  $("btnLeaderboard").addEventListener("click", () => { lbFrom = "menu"; openLeaderboard("single"); });
   if($("btnLbTabSingle")) $("btnLbTabSingle").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("single"); });
   if($("btnLbTabWC")) $("btnLbTabWC").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("wc"); });
-  if($("btnLbTrackPrev")) $("btnLbTrackPrev").addEventListener("click", () => {
-    Snd.click&&Snd.click();
-    currentLbTrack = (currentLbTrack > 1) ? currentLbTrack - 1 : MAXLVL;
-    updateTrackTitle();
-    loadGlobalTrackLeaderboard(currentLbTrack);
-  });
-  if($("btnLbTrackNext")) $("btnLbTrackNext").addEventListener("click", () => {
-    Snd.click&&Snd.click();
-    currentLbTrack = (currentLbTrack < MAXLVL) ? currentLbTrack + 1 : 1;
-    updateTrackTitle();
-    loadGlobalTrackLeaderboard(currentLbTrack);
-  });
-  $("btnLbBack").addEventListener("click",()=>setScreen("menu"));
+  if($("btnLbTrackPrev")) $("btnLbTrackPrev").addEventListener("click", () => lbStepTrack(-1));
+  if($("btnLbTrackNext")) $("btnLbTrackNext").addEventListener("click", () => lbStepTrack(1));
+  // Swipe left/right on the records card to change track (Single Race only)
+  if($("leaderboard")) {
+    const card = $("leaderboard").querySelector(".lbCard");
+    let sx = null, sy = 0;
+    card.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") { sx = e.clientX; sy = e.clientY; } });
+    card.addEventListener("pointercancel", () => { sx = null; });
+    card.addEventListener("pointerup", e => {
+      if (sx === null) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
+      if (currentLbTab === "single" && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbStepTrack(dx < 0 ? 1 : -1);
+    });
+  }
+  $("btnLbBack").addEventListener("click",()=>{ const to=lbFrom||"menu"; lbFrom="menu"; setScreen(to); });
   if($("btnCareerLb")) $("btnCareerLb").addEventListener("click",()=>{ Snd.click&&Snd.click(); openCareerStats("leaderboard"); });
   if($("btnCareerStatsBack")) $("btnCareerStatsBack").addEventListener("click",()=>setScreen(careerStatsFrom||"leaderboard"));
   if($("btnLbAch")) $("btnLbAch").addEventListener("click",()=>{ Snd.click&&Snd.click(); openAch("leaderboard"); });
@@ -12049,7 +12290,7 @@ function bindUI(){
   $("btnLbShare").addEventListener("click",()=>{
     const isEn = (save.lang === "en");
     if (typeof currentLbTab !== "undefined" && currentLbTab === "single") {
-      const myTime = (save.best && save.best[currentLbTrack]);
+      const myTime = (save.trackBest && save.trackBest[currentLbTrack]);
       const tIdx = (currentLbTrack - 1);
       const tName = (typeof PREVIEWS !== "undefined" && PREVIEWS[tIdx] && PREVIEWS[tIdx].name) ? PREVIEWS[tIdx].name : ("Track " + currentLbTrack);
       let txt = "🏎️ FINGER RACER — " + tName + "\n";
@@ -12187,17 +12428,22 @@ function bindUI(){
   });
   $("btnPause").addEventListener("click",pauseGame);
   $("btnResume").addEventListener("click",resumeGame);
-  $("btnRestart1").addEventListener("click",()=>startLevel(level));
-  $("btnMenu1").addEventListener("click",toMenu);
-  $("btnMenu2").addEventListener("click",toMenu);
-  $("btnRetry").addEventListener("click",()=>{
-    $("btnRetry")._crash=false;
+  // Restart the current race in the same mode and on the same track (used by pause → Restart and results → Retry)
+  const retryRace=()=>{
+    if(wc){ startLevel(level); return; }   // World Cup: replay the current round (singleMode may be stale here)
     if(careerLv){ startCareer(careerLv); return; }
     if(training){ startTraining(training); return; }
     if(coneHunt){ startConeHunt(ttTrack); return; }
     if(timeTrial){ startTimeTrial(ttTrack,ttNumOpp); return; }
     if(singleMode){ startSingle(curTrack); return; }
     startLevel(level);
+  };
+  $("btnRestart1").addEventListener("click",retryRace);
+  $("btnMenu1").addEventListener("click",toMenu);
+  $("btnMenu2").addEventListener("click",toMenu);
+  $("btnRetry").addEventListener("click",()=>{
+    $("btnRetry")._crash=false;
+    retryRace();
   });
   $("btnNext").addEventListener("click",()=>{
     { const cr=$("btnNext")._career; if(cr){ $("btnNext")._career=null; openRepairQ(cr.dmg); return; } }

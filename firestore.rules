@@ -1,8 +1,35 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /tracks/{trackId}/records/{userId} {
-      allow read, write: if true;
+    // Global Single Race records: tracks/{1..8}/records/{uid}_{timeMs}
+    // Anonymous players (no auth), so rules can't prove ownership — they only
+    // enforce a sane shape and forbid deleting or rewriting existing times.
+    match /tracks/{trackId}/records/{recId} {
+      allow read: if true;
+
+      allow create: if validTrack() && validRecord(request.resource.data);
+
+      // submitGlobalRecord uses set(..., {merge:true}); a re-sync may refresh name/flag, never the time or owner
+      allow update: if validTrack() && validRecord(request.resource.data)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.time == resource.data.time;
+
+      allow delete: if false;
+
+      function validTrack() {
+        return trackId in ['1', '2', '3', '4', '5', '6', '7', '8'];
+      }
+
+      function validRecord(d) {
+        return d.keys().hasOnly(['uid', 'name', 'time', 'flag', 'updatedAt'])
+          && d.keys().hasAll(['uid', 'name', 'time', 'updatedAt'])
+          && d.uid is string && d.uid.matches('^[A-Za-z0-9_]{3,40}$')
+          && recId.matches('^' + d.uid + '_[0-9]{1,7}$')
+          && d.name is string && d.name.size() >= 1 && d.name.size() <= 14
+          && d.time is number && d.time >= 8 && d.time <= 900
+          && (!('flag' in d) || (d.flag is string && d.flag.size() <= 16))
+          && d.updatedAt == request.time;
+      }
     }
   }
 }
