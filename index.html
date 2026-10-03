@@ -37,6 +37,7 @@ canvas.tIll{position:static;inset:auto;touch-action:auto}
 .chip{background:rgba(10,12,9,.78);border:1px solid rgba(244,239,227,.16);border-radius:8px;
   padding:5px 9px;font-size:12px;font-weight:800;letter-spacing:.03em;white-space:nowrap;font-variant-numeric:tabular-nums}
 .chip b{color:var(--yellow)}
+#hFps{margin-right:auto;color:#7fe08a;font-weight:900;letter-spacing:.04em}
 #hGauge{position:absolute;left:10px;top:calc(env(safe-area-inset-top,0px) + 6px);width:40px;height:40px;
   border-radius:50%;background:conic-gradient(var(--green) 0%,rgba(244,239,227,.13) 0);
   display:flex;align-items:center;justify-content:center;border:2px solid rgba(10,12,9,.85);
@@ -77,7 +78,7 @@ canvas.tIll{position:static;inset:auto;touch-action:auto}
 #repairQ .bigBtn,#cinfo .bigBtn,#garage .bigBtn{display:block;width:100%;max-width:340px;margin:8px auto 0;box-sizing:border-box}
 
 /* ===== PRENOVLJEN INFO ZASLON LEVELA ===== */
-#cinfo .panel{width:min(440px,96vw);position:relative}
+#cinfo .panel{width:min(440px,100%);max-width:100%;position:relative}
 .ciBackBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;left:auto;width:56px;height:56px;border-radius:16px;
   background:rgba(120,124,128,.92);border:2px solid rgba(255,255,255,.25);color:#fff;
   font-size:28px;font-weight:900;line-height:1;cursor:pointer;z-index:30;
@@ -148,11 +149,13 @@ canvas.tIll{position:static;inset:auto;touch-action:auto}
 
 /* ---------- Screens ---------- */
 .screen{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;
-  justify-content:flex-start;padding:20px;background:rgba(7,10,4,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  justify-content:flex-start;padding:20px 14px;background:rgba(7,10,4,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  overflow-y:auto;overflow-x:hidden !important;overscroll-behavior-x:none;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+  width:100%;max-width:100vw;box-sizing:border-box}
 .screen.on{display:flex}
 .screen.on>.panel,.screen.on>#menuWrap{animation:scrIn .26s ease-out}
 @keyframes scrIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.panel{width:min(430px,94vw);text-align:center;margin:auto}
+.panel{width:min(430px,100%);max-width:100%;text-align:center;margin:auto;box-sizing:border-box;overflow-x:hidden;padding:0 6px}
 .checker{height:12px;width:100%;margin:10px 0 18px;
   background:repeating-conic-gradient(#e9e4d6 0% 25%, #101310 0% 50%) 0 0/12px 12px;border-radius:3px;
   box-shadow:0 3px 0 rgba(0,0,0,.4)}
@@ -161,7 +164,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .sub{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b8c49f;margin-top:8px}
 .btn{display:block;width:100%;margin:9px 0;padding:13px 14px;border:none;border-radius:8px;
   background:var(--paper);color:var(--ink);font-size:17px;transform:skew(-6deg);
-  box-shadow:0 5px 0 rgba(0,0,0,.5);cursor:pointer}
+  box-shadow:0 5px 0 rgba(0,0,0,.5);cursor:pointer;box-sizing:border-box}
 .btn>span{display:inline-block;transform:skew(6deg)}
 .btn:active{transform:skew(-6deg) translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.5)}
 .btn.primary{background:var(--red);color:#fff}
@@ -174,7 +177,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .lvl small{display:block;font-size:9px;font-weight:700;font-style:normal;color:#aebf98;margin-top:2px}
 .lvl.lock{opacity:.35}
 .lvl.done{border-color:var(--green)}
-.panel.wide{max-width:min(440px,94vw)}
+.panel.wide{max-width:min(440px,100%)}
 #wcNameInput{width:min(300px,80vw);padding:12px 14px;margin:0 auto 14px;display:block;
   background:rgba(10,12,9,.85);border:2px solid rgba(244,239,227,.25);border-radius:10px;
   color:var(--paper);font-size:18px;font-weight:800;text-align:center;font-family:inherit}
@@ -205,23 +208,41 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   padding:10px 6px;text-align:center;cursor:pointer;pointer-events:auto;transition:.15s;font-weight:800;font-size:13px;color:var(--paper)}
 .setOpt.sel{border-color:var(--green);background:rgba(61,255,142,.14);color:var(--green)}
 .setOpt svg{display:block;margin:0 auto 4px}
-.helpTxt{text-align:left;font-size:13.5px;line-height:1.65;color:#dfe6cf;margin-bottom:6px}
+.helpTxt{text-align:left;font-size:13.5px;line-height:1.65;color:#dfe6cf;margin-bottom:6px;max-width:100%;box-sizing:border-box;word-wrap:break-word;overflow-wrap:break-word}
+/* ---------- Animated Intro ---------- */
 .islide{display:none;flex-direction:column;align-items:center;text-align:center;
-  min-height:290px;justify-content:center;animation:ifade .35s ease}
+  min-height:290px;justify-content:center;animation:ifade .35s ease;width:100%;max-width:100%;box-sizing:border-box}
 .islide.on{display:flex}
 @keyframes ifade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .iicon{font-size:58px;line-height:1;margin-bottom:16px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.4))}
 .ititle{font-size:27px;font-weight:900;font-style:italic;text-transform:uppercase;
-  letter-spacing:.03em;color:var(--yellow);margin-bottom:12px;text-shadow:0 4px 0 rgba(0,0,0,.4)}
-.itext{font-size:15px;line-height:1.62;color:#dfe6cf;max-width:360px}
+  letter-spacing:.03em;color:var(--yellow);margin-bottom:12px;text-shadow:0 4px 0 rgba(0,0,0,.4);max-width:100%;box-sizing:border-box;word-wrap:break-word;overflow-wrap:break-word}
+.itext{font-size:15px;line-height:1.62;color:#dfe6cf;max-width:360px;box-sizing:border-box;word-wrap:break-word;overflow-wrap:break-word}
 .itext b{color:var(--green);font-weight:800}
 .introDots{display:flex;gap:8px;justify-content:center;margin:20px 0 16px}
 .idot{width:9px;height:9px;border-radius:50%;background:rgba(244,239,227,.25);transition:.2s}
 .idot.on{background:var(--yellow);width:24px;border-radius:5px}
-.introNav{display:flex;gap:10px}
-.introNav .btn{margin:0;flex:1}
+.introNav{display:flex;gap:10px;padding:0 4px;box-sizing:border-box}
 .helpTxt b{color:var(--yellow)}
 .helpTxt .k{color:var(--green);font-weight:800}
+
+/* Explicit anti-horizontal overflow protection for intro, help, tutorial, and cinfo */
+#intro, #help, #tutorial, #cinfo {
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+  touch-action: pan-y !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+}
+#intro .panel, #help .panel, #tutorial .panel, #cinfo .panel {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: min(430px, 100%) !important;
+  box-sizing: border-box !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
 #resPlace{font-size:clamp(40px,14vw,70px);color:var(--yellow);text-shadow:0 5px 0 rgba(0,0,0,.5)}
 #resPlace.win{color:var(--green)}
 #resList{margin:12px auto;width:min(300px,86vw);text-align:left}
@@ -284,6 +305,19 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .lbRow.flash{animation:lbFlash 1.4s ease-out 2}
 @keyframes lbFlash{0%,100%{box-shadow:none}40%{box-shadow:0 0 0 3px rgba(61,255,142,.55),0 0 18px rgba(61,255,142,.45)}}
 /* Global rank card (results screen) */
+.resWorld{margin:8px auto 0;font-size:15px;font-weight:800;color:#dfe6cf;animation:scrIn .3s ease-out}
+.resWorld b{color:var(--paper);font-size:17px;font-variant-numeric:tabular-nums}
+.resWorld .gold{color:var(--yellow);font-weight:900}
+.resWorld .up{color:var(--green);font-weight:900}
+.rgRows{margin:2px 0 4px}
+.rgRow{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid rgba(244,239,227,.08)}
+.rgRow:last-child{border-bottom:none}
+.rgRowL{flex:1;font-size:13px;font-weight:700;color:#b8c49f}
+.rgRowR{font-size:20px;font-weight:900;font-style:italic;color:var(--yellow);min-width:64px;text-align:right}
+.rgRowT{font-size:14px;font-weight:800;color:var(--paper);font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
+.rgRow.pb .rgRowL{color:var(--green)}
+.resRaceHead{margin:4px auto 6px;width:min(300px,86vw);text-align:left;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#9aa887}
+.resRaceHead b{color:var(--paper)}
 .rgCard{margin:0 auto 12px;width:min(340px,90vw);text-align:left;background:rgba(10,12,9,.8);
   border:1px solid rgba(244,239,227,.18);border-radius:14px;padding:10px 12px 12px;animation:scrIn .3s ease-out}
 .rgCard.wr{border-color:rgba(255,204,38,.7);box-shadow:0 0 22px rgba(255,204,38,.3);background:linear-gradient(160deg,rgba(255,204,38,.18),rgba(10,12,9,.85) 60%)}
@@ -305,7 +339,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(244,239,227,.2);border-top-color:var(--yellow);
   animation:sp 1s linear infinite;margin:0 auto 14px}
 @keyframes sp{to{transform:rotate(360deg)}}
-.btn,.modeBtn,.gearBtn,.lbBtn,.setOpt,.wcCard{transition:transform .1s ease, filter .1s ease}
+.btn,.modeBtn,.gearBtn,.helpBtn,.modeToggleBtn,.lbBtn,.setOpt,.wcCard{transition:transform .1s ease, filter .1s ease}
 .pressed{transform:scale(.94)!important;filter:brightness(1.25)}
 #achToast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);right:10px;z-index:60;
   background:linear-gradient(180deg,#2a2f3a,#171a22);color:#fff;font-size:12.5px;text-align:left;
@@ -328,6 +362,129 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   color:#fff;font-size:12px;font-weight:600;line-height:1.25;text-align:center;padding:6px 12px;
   min-height:16px;box-shadow:0 -2px 8px rgba(0,0,0,.4);letter-spacing:.2px}
 #commentBar b{color:#c9ffd8}
+
+/* ---------- Stuck / Breakdown Pop-out Alert ---------- */
+.stuckAlert {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 52px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(390px, 92vw);
+  z-index: 55;
+  pointer-events: auto;
+  box-sizing: border-box;
+  animation: stuckAlertPop 0.28s cubic-bezier(0.18, 1.25, 0.4, 1) forwards;
+}
+@keyframes stuckAlertPop {
+  0% { opacity: 0; transform: translate(-50%, -18px) scale(0.92); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+.stuckAlertBox {
+  background: rgba(14, 18, 14, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid var(--yellow);
+  border-radius: 14px;
+  padding: 11px 14px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 204, 38, 0.35);
+  color: var(--paper);
+  text-align: left;
+  position: relative;
+}
+.stuckAlert.damage .stuckAlertBox {
+  border-color: #ff4747;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8), 0 0 22px rgba(255, 71, 71, 0.45);
+}
+.stuckAlert.rival .stuckAlertBox {
+  border-color: #ff9f1c;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 159, 28, 0.35);
+}
+.stuckAlertHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.stuckAlertIcon {
+  font-size: 26px;
+  line-height: 1;
+  flex: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.stuckAlertTitleGroup {
+  flex: 1;
+  min-width: 0;
+}
+.stuckAlertTitle {
+  font-size: 15.5px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--yellow);
+  line-height: 1.15;
+}
+.stuckAlert.damage .stuckAlertTitle {
+  color: #ff5c5c;
+}
+.stuckAlert.rival .stuckAlertTitle {
+  color: #ffb74d;
+}
+.stuckAlertSub {
+  font-size: 11px;
+  color: #b8c49f;
+  font-weight: 700;
+  margin-top: 1px;
+}
+.stuckAlertClose {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.stuckAlertClose:active {
+  transform: scale(0.92);
+}
+.stuckAlertBody {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #e5ecd6;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.stuckAlertStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(244, 239, 227, 0.18);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #3dff8e;
+}
+.stuckAlertPulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3dff8e;
+  box-shadow: 0 0 8px #3dff8e;
+  animation: pulseDot 0.9s infinite alternate;
+}
+@keyframes pulseDot {
+  from { opacity: 0.4; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
+}
 #ghostDelta{position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:44;display:none;
   padding:3px 12px;border-radius:0 0 10px 10px;font-size:14px;font-weight:900;letter-spacing:.3px;
   background:rgba(10,12,16,.82);text-shadow:0 1px 2px rgba(0,0,0,.7)}
@@ -521,6 +678,26 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   width:34px;height:34px;background:none;border:none;border-radius:0;box-shadow:none;
   color:#fff;font-size:22px;line-height:1;pointer-events:auto;cursor:pointer;
   text-shadow:0 2px 7px rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center}
+#menu .helpBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:50px;z-index:5;
+  width:34px;height:34px;background:none;border:none;border-radius:0;box-shadow:none;
+  color:#fff;pointer-events:auto;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.helpBtnInner{display:inline-flex;width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+  align-items:center;justify-content:center;font-size:15px;font-weight:900;line-height:1;
+  color:#fff;background:rgba(255,255,255,.08);text-shadow:0 1px 3px rgba(0,0,0,.8);
+  box-shadow:0 2px 7px rgba(0,0,0,.6)}
+#menu .helpBtn:hover .helpBtnInner{border-color:#3dff8e;color:#3dff8e;background:rgba(61,255,142,.15)}
+#menu .modeToggleBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:88px;z-index:5;
+  width:34px;height:34px;background:none;border:none;border-radius:0;box-shadow:none;
+  color:#fff;pointer-events:auto;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.modeToggleBtnInner{display:inline-flex;width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+  align-items:center;justify-content:center;font-size:13px;line-height:1;
+  background:rgba(255,255,255,.08);text-shadow:0 1px 3px rgba(0,0,0,.8);
+  box-shadow:0 2px 7px rgba(0,0,0,.6);transition:border-color .15s, background .15s, transform .15s}
+#menu .modeToggleBtn.isFree .modeToggleBtnInner{border-color:rgba(255,204,38,.85);background:rgba(255,204,38,.18)}
+#menu .modeToggleBtn.isFull .modeToggleBtnInner{border-color:rgba(61,255,142,.85);background:rgba(61,255,142,.18)}
+#menu .modeToggleBtn:hover .modeToggleBtnInner{transform:scale(1.1)}
 #menu .lbBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;z-index:5;
   width:44px;height:44px;background:none;border:none;border-radius:0;box-shadow:none;
   color:#ffd21f;font-size:30px;line-height:1;pointer-events:auto;cursor:pointer;
@@ -957,6 +1134,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <canvas id="fg"></canvas>
 
   <div id="hud">
+    <div class="chip" id="hFps" style="display:inline-block">60 FPS</div>
     <div class="chip" id="hTime">0:00.000</div>
     <div class="chip" id="mpEndTimerChip" style="display:none;background:#d6402b;color:#fff;border-color:#ff8a80;font-size:13px;animation:gpulse .45s infinite alternate">⏱️ 30s</div>
     <button id="btnRaceSettings">⚙</button>
@@ -972,12 +1150,33 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <div id="achToast"></div>
   <button id="btnSkip">Preskoči ▶</button>
   <div id="standings"><div id="stInner"></div></div>
+  <div id="stuckAlert" class="stuckAlert" style="display:none">
+    <div class="stuckAlertBox">
+      <div class="stuckAlertHeader">
+        <span class="stuckAlertIcon" id="stuckAlertIcon">⛽</span>
+        <div class="stuckAlertTitleGroup">
+          <div class="stuckAlertTitle" id="stuckAlertTitle">ZMANJKALO GORIVA!</div>
+          <div class="stuckAlertSub" id="stuckAlertSub">Vozilo je obstalo na progi</div>
+        </div>
+        <button class="stuckAlertClose" id="btnStuckAlertClose" aria-label="Zapri">✕</button>
+      </div>
+      <div class="stuckAlertBody" id="stuckAlertBody">
+        Vozilo se je ustavilo. Mehanik teče iz boksov s kanistrom za zasilno dolitje (20%).
+      </div>
+      <div class="stuckAlertStatus">
+        <span class="stuckAlertPulse"></span>
+        <span id="stuckAlertStatusText">🏃 Mehanik teče proti tebi...</span>
+      </div>
+    </div>
+  </div>
   <div id="banner" class="disp"></div>
   <div id="count" class="disp"></div>
 
   <div id="menu" class="screen on">
     <div id="menuWrap">
       <button id="btnLeaderboard" class="lbBtn" aria-label="Leaderboard">🏆</button>
+      <button id="btnMenuModeToggle" class="modeToggleBtn" aria-label="Toggle Free/Paid Mode" title="Freemium / Full Mode"><span class="modeToggleBtnInner" id="menuModeToggleIcon">💎</span></button>
+      <button id="btnMenuHelp" class="helpBtn" aria-label="Help"><span class="helpBtnInner">?</span></button>
       <button id="btnSettingsGear" class="gearBtn" aria-label="Settings">⚙️</button>
       <div id="menuTitle">
         <div class="mt1">FINGER</div>
@@ -1252,9 +1451,9 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   </div>
 
   <div id="tutorial" class="screen">
-    <div class="panel" style="max-width:440px;">
+    <div class="panel" style="max-width:min(440px, 100%);">
       <!-- Language Picker: Two flags to pick and switch between -->
-      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;padding:0 4px;box-sizing:border-box;">
         <button id="tutFlagEn" class="flagBtn" title="English" style="padding:7px 16px;border-radius:12px;border:2px solid #3dff8e;background:rgba(61,255,142,.18);cursor:pointer;pointer-events:auto;transition:all .15s;display:flex;align-items:center;gap:8px;">
           <span class="flagSvgWrap">
             <svg viewBox="0 0 60 36" class="flagSvgIcon" style="width:26px;height:16px"><rect width="60" height="36" fill="#012169"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#ffffff" stroke-width="7"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#C8102E" stroke-width="4"/><path d="M30 0 v36 M0 18 h60" stroke="#ffffff" stroke-width="11"/><path d="M30 0 v36 M0 18 h60" stroke="#C8102E" stroke-width="7"/></svg>
@@ -1444,23 +1643,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         </div>
       </div>
 
-      <!-- Freemium / Full Unlock Mode Switcher -->
-      <div id="freemiumToggleBox" style="background:linear-gradient(135deg,rgba(255,204,38,.12),rgba(20,24,30,.8));border:1.5px solid rgba(255,204,38,.35);border-radius:14px;padding:10px 12px;margin:8px 0 12px;text-align:left">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-weight:900;font-size:12.5px;color:var(--yellow);display:flex;align-items:center;gap:6px">
-            <span>💎 NAČIN APLIKACIJE / APP MODE</span>
-          </div>
-          <span id="freemiumStatusTag" style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:10px;background:rgba(61,255,142,.2);color:var(--green)">FULL UNLOCK</span>
-        </div>
-        <div id="freemiumDescTxt" style="font-size:11px;color:#c9cfbd;line-height:1.35;margin-bottom:8px">
-          Preklopi med <b>Brezplačno (Freemium - 1 proga)</b> in <b>Polno verzijo (Full Unlock - 4,99 €)</b> za simulacijo nakupa in preizkus zaslona za plačilo.
-        </div>
-        <div style="display:flex;gap:6px">
-          <button id="btnToggleFreemium" class="setOpt" style="flex:1;padding:8px 4px;font-size:11.5px;font-weight:800;border-radius:10px">🔒 Freemium (1 proga)</button>
-          <button id="btnToggleFull" class="setOpt sel" style="flex:1;padding:8px 4px;font-size:11.5px;font-weight:800;border-radius:10px">🔓 Polna verzija (4,99 €)</button>
-        </div>
-        <button id="btnPreviewPaywall" class="btn ghost small" style="margin:8px 0 0;width:100%;font-size:11.5px;padding:7px;border-color:rgba(255,204,38,.3);color:#ffe08a;transform:none">👁️ Pokaži zaslon za nakup (Paywall Preview)</button>
-      </div>
       <div id="setTabs">
         <div class="setTab sel" data-tab="drive">🏎️ Vožnja</div>
         <div class="setTab" data-tab="look">🎨 Videz</div>
@@ -1485,6 +1667,9 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <div class="setLbl" id="lblSetGhost" style="margin-top:14px">Duh dirkača 👻</div>
         <div class="hint" id="hintSetGhost" style="margin:-2px 0 6px">Prikaz prozornega vozila za primerjavo časa med dirko.</div>
         <div id="ghostOpts" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+        <div class="setLbl" id="lblSetFps" style="margin-top:14px">Prikaz FPS ⚡</div>
+        <div class="hint" id="hintSetFps" style="margin:-2px 0 6px">Prikaz števila sličic na sekundo (FPS) med dirko.</div>
+        <div id="fpsOpts" style="display:flex;gap:8px;justify-content:center"></div>
       </div>
       <div class="setPage" data-page="look" style="display:none">
         <div class="setLbl">Vrsta vozila</div>
@@ -1492,8 +1677,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <div class="setLbl" style="margin-top:14px">Barva krožnika</div>
         <div class="hint" id="skinHint" style="margin:-2px 0 6px"></div>
         <div id="skinOpts" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
-        <div class="setLbl" style="margin-top:14px">Velikost krožnika</div>
-        <div id="sizeOpts" style="display:flex;gap:8px;justify-content:center"></div>
         <div class="setLbl" style="margin-top:14px">Vreme</div>
         <div id="weatherOpts" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
         <div class="setLbl" style="margin-top:14px">Animacije 🎬</div>
@@ -1514,6 +1697,25 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <div class="setLbl" style="margin-top:14px">Zvok</div>
         <button class="btn ghost small disp" id="btnSound" style="margin:0 auto"><span>Zvok: vklop</span></button>
       </div>
+
+      <!-- Freemium / Full Unlock Mode Switcher (at bottom of Settings) -->
+      <div id="freemiumToggleBox" style="background:linear-gradient(135deg,rgba(255,204,38,.12),rgba(20,24,30,.8));border:1.5px solid rgba(255,204,38,.35);border-radius:14px;padding:10px 12px;margin:16px 0 6px;text-align:left">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-weight:900;font-size:12.5px;color:var(--yellow);display:flex;align-items:center;gap:6px">
+            <span>💎 NAČIN APLIKACIJE / APP MODE</span>
+          </div>
+          <span id="freemiumStatusTag" style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:10px;background:rgba(61,255,142,.2);color:var(--green)">FULL UNLOCK</span>
+        </div>
+        <div id="freemiumDescTxt" style="font-size:11px;color:#c9cfbd;line-height:1.35;margin-bottom:8px">
+          Preklopi med <b>Brezplačno (Freemium - 1 proga)</b> in <b>Polno verzijo (Full Unlock - 4,99 €)</b> za simulacijo nakupa in preizkus zaslona za plačilo.
+        </div>
+        <div style="display:flex;gap:6px">
+          <button id="btnToggleFreemium" class="setOpt" style="flex:1;padding:8px 4px;font-size:11.5px;font-weight:800;border-radius:10px">🔒 Freemium (1 proga)</button>
+          <button id="btnToggleFull" class="setOpt sel" style="flex:1;padding:8px 4px;font-size:11.5px;font-weight:800;border-radius:10px">🔓 Polna verzija (4,99 €)</button>
+        </div>
+        <button id="btnPreviewPaywall" class="btn ghost small" style="margin:8px 0 0;width:100%;font-size:11.5px;padding:7px;border-color:rgba(255,204,38,.3);color:#ffe08a;transform:none">👁️ Pokaži zaslon za nakup (Paywall Preview)</button>
+      </div>
+
       <button class="btn primary disp" id="btnSetBack" style="margin-top:14px"><span>Back</span></button>
     </div>
   </div>
@@ -1589,7 +1791,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     <div class="panel">
       <h1 class="disp" id="helpTitleH" style="font-size:34px">Instructions</h1>
       <div class="checker"></div>
-      <div class="helpTxt">
+      <div class="helpTxt" id="helpBody">
         <b>1.</b> Postavi prst na označeni krog <span class="k">za ciljno črto</span>. Sledi odštevanje <b>3&nbsp;&middot;&nbsp;2&nbsp;&middot;&nbsp;1</b> — ob <span class="k">START</span> začni voziti.<br>
         <b>2.</b> S prstom drsi <span class="k">po cesti</span> čim hitreje. Tvoj avto je barvni krogec pod prstom.<br>
         <b>3.</b> Vozilo se z vožnjo počasi <b>obrablja</b> (≈20&nbsp;% na krog). Ob <b>ograji/robniku</b> in na <b>travi</b> pa telefon vibrira in krogec z vsakim pulzom hitro <b>zraste</b> — ograja je hujša od trave, globlje ko zaideš, hitreje raste. Velikost kaže <b>okrogli merilnik zgoraj levo</b>.<br>
@@ -1598,7 +1800,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <b>6.</b> <span class="k" style="color:#4da3ff">BOKSI 🔧</span> — moder pas ob <b>eni strani</b> ceste pred ciljem: dokler si na njem, se vozilo počasi <b>popravlja</b>. Za polno popravilo upočasni ali se ustavi — a pazi, tekmeci medtem vozijo!<br>
         <b>7.</b> Prevozi <b>6 krogov</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Tekmeci so različno dobri — najboljši je hud oreh že na prvem levelu, zmaga pa je stvar prestiža. 🏆
       </div>
-      <button class="btn ghost small disp" id="btnBack2"><span>Back</span></button>
+      <div style="display:flex;gap:10px;margin-top:10px;width:100%;padding:0 4px;box-sizing:border-box;">
+        <button class="btn primary small disp" id="btnHelpReplayIntro" style="flex:1"><span>🎬 Interactive Intro</span></button>
+        <button class="btn ghost small disp" id="btnBack2" style="flex:1"><span>Back</span></button>
+      </div>
     </div>
   </div>
 
@@ -1618,8 +1823,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     <div class="panel">
       <div id="resPlace" class="disp">1. mesto</div>
       <div id="resSub" class="sub">Zmaga!</div>
+      <div id="resWorld" class="resWorld" style="display:none"></div>
       <div class="checker"></div>
       <div id="resGlobal" class="rgCard" style="display:none"></div>
+      <div id="resRaceHead" class="resRaceHead" style="display:none"></div>
       <div id="resList"></div>
       <div id="resStats"></div>
       <button class="btn primary disp" id="btnNext"><span>Naslednji level</span></button>
@@ -1645,27 +1852,31 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <div class="paywallFeatures">
         <div class="paywallFeatureItem">
           <div class="paywallFeatureIcon">🏁</div>
-          <div><b>Vseh 7 prog odklenjenih</b> · Igraj kjerkoli brez omejitev</div>
+          <div id="pwFeatTracks"><b>Vseh 7 prog odklenjenih</b> · Igraj kjerkoli brez omejitev</div>
+        </div>
+        <div class="paywallFeatureItem">
+          <div class="paywallFeatureIcon">⭐</div>
+          <div id="pwFeatCareer"><b>Način Kariera (50 stopenj)</b> · Zgodba, izzivi in nadgradnje</div>
         </div>
         <div class="paywallFeatureItem">
           <div class="paywallFeatureIcon">🏆</div>
-          <div><b>World Cup prvenstvo</b> · Celotno prvenstvo & boj za pokal</div>
+          <div id="pwFeatWC"><b>World Cup prvenstvo</b> · Celotno prvenstvo & boj za pokal</div>
         </div>
         <div class="paywallFeatureItem">
           <div class="paywallFeatureIcon">⏱️</div>
-          <div><b>Time Trial & duhovi</b> · Tekmuj proti lastnemu ali prijateljevemu duhu</div>
+          <div id="pwFeatTT"><b>Time Trial & duhovi</b> · Tekmuj proti lastnemu ali prijateljevemu duhu</div>
         </div>
         <div class="paywallFeatureItem">
           <div class="paywallFeatureIcon">🌐</div>
-          <div><b>Polni večigralski način</b> · Izbira vseh prog v sobah s prijatelji</div>
+          <div id="pwFeatMulti"><b>Polni večigralski način</b> · Izbira vseh prog v sobah s prijatelji</div>
         </div>
         <div class="paywallFeatureItem">
           <div class="paywallFeatureIcon">🏎️</div>
-          <div><b>Vsa vozila & preobleke</b> · Športni avto, barve in efekti</div>
+          <div id="pwFeatVeh"><b>Vsa vozila & preobleke</b> · Športni avto, barve in efekti</div>
         </div>
         <div class="paywallFeatureItem">
           <div class="paywallFeatureIcon">🚫</div>
-          <div><b>100% Brez oglasov</b> · Enkratno plačilo za vedno</div>
+          <div id="pwFeatAds"><b>100% Brez oglasov</b> · Enkratno plačilo za vedno</div>
         </div>
       </div>
 
@@ -1714,6 +1925,8 @@ function openPaywall(reason, extra){
   if(sub){
     if(reason === "wc"){
       sub.textContent = isEn ? "World Cup mode is exclusive to the Full Version for $4.99!" : "World Cup prvenstvo je na voljo v polni različici Finger Racer za 4,99 €!";
+    } else if(reason === "career"){
+      sub.textContent = isEn ? "Career mode (50 campaign levels) is unlocked in the Full Version for $4.99!" : "Način Kariera (50 stopenj z zgodbo) je na voljo v polni različici za 4,99 €!";
     } else if(reason === "time_trial"){
       sub.textContent = isEn ? "Time Trial mode against ghosts is unlocked in the Full Version for $4.99!" : "Time Trial način z dirkanjem proti duhovom je na voljo v polni različici za 4,99 €!";
     } else if(reason === "track"){
@@ -1722,10 +1935,22 @@ function openPaywall(reason, extra){
       sub.textContent = isEn ? "All 7 tracks in Multiplayer are unlocked in the Full Version for $4.99!" : "Vse proge v Večigralskem načinu so na voljo v polni različici za 4,99 €!";
     } else if(reason === "vehicle"){
       sub.textContent = isEn ? "Custom vehicle models and skins are unlocked in the Full Version for $4.99!" : "Dodatni modeli vozil in preobleke so na voljo v polni različici za 4,99 €!";
+    } else if(reason === "ghost"){
+      sub.textContent = isEn ? "Ghost racer (Personal Best & World Record) is unlocked in the Full Version for $4.99!" : "Dirkanje proti duhovom (Osebni rekord in Svetovni rekord) je na voljo v polni različici za 4,99 €!";
     } else {
       sub.textContent = isEn ? "Unlock the complete racing experience for $4.99!" : "Odkleni celotno dirkaško izkušnjo za 4,99 €!";
     }
   }
+  if($("pwFeatTracks")) $("pwFeatTracks").innerHTML = isEn ? "<b>All 7 tracks unlocked</b> · Play anywhere without limits" : "<b>Vseh 7 prog odklenjenih</b> · Igraj kjerkoli brez omejitev";
+  if($("pwFeatCareer")) $("pwFeatCareer").innerHTML = isEn ? "<b>Career mode (50 levels)</b> · Story, challenges & car tuning" : "<b>Način Kariera (50 stopenj)</b> · Zgodba, izzivi in nadgradnje";
+  if($("pwFeatWC")) $("pwFeatWC").innerHTML = isEn ? "<b>World Cup Championship</b> · Full tournament & trophy battle" : "<b>World Cup prvenstvo</b> · Celotno prvenstvo & boj za pokal";
+  if($("pwFeatTT")) $("pwFeatTT").innerHTML = isEn ? "<b>Time Trial & Ghosts</b> · Race your PB or friends' ghosts" : "<b>Time Trial & duhovi</b> · Tekmuj proti lastnemu ali prijateljevemu duhu";
+  if($("pwFeatMulti")) $("pwFeatMulti").innerHTML = isEn ? "<b>Full Multiplayer</b> · Choose any track in friend rooms" : "<b>Polni večigralski način</b> · Izbira vseh prog v sobah s prijatelji";
+  if($("pwFeatVeh")) $("pwFeatVeh").innerHTML = isEn ? "<b>All Vehicles & Skins</b> · Sports car, custom colors & effects" : "<b>Vsa vozila & preobleke</b> · Športni avto, barve in efekti";
+  if($("pwFeatAds")) $("pwFeatAds").innerHTML = isEn ? "<b>100% Ad-Free</b> · One-time purchase forever" : "<b>100% Brez oglasov</b> · Enkratno plačilo za vedno";
+  if($("btnPaywallBuy")) $("btnPaywallBuy").textContent = isEn ? "💎 UNLOCK FULL GAME ($4.99)" : "💎 ODKLENI POLNO IGRO (4,99 €)";
+  if($("btnPaywallRestore")) $("btnPaywallRestore").textContent = isEn ? "Restore purchases" : "Obnovi pretekle nakupe";
+  if($("btnPaywallLater")) $("btnPaywallLater").textContent = isEn ? "Continue Free" : "Nadaljuj brezplačno";
   const modal = $("paywallModal");
   if(modal) modal.style.display = "flex";
 }
@@ -1767,6 +1992,9 @@ function simulateRestore(){
 }
 function setFreemiumMode(enabled){
   save.freemiumMode = !!enabled;
+  if(save.freemiumMode){
+    save.ghostMode = "off";
+  }
   persist();
   updateFreemiumVisuals();
   const isEn = (save.lang === "en");
@@ -1788,6 +2016,23 @@ function updateFreemiumVisuals(){
         badge = document.createElement("span");
         badge.className = "freemiumLockBadge";
         bWC.appendChild(badge);
+      }
+      badge.textContent = "🔒";
+    } else if(badge){
+      badge.remove();
+    }
+  }
+
+  // Update main menu Career card
+  const bCareer = $("btnCareer");
+  if(bCareer){
+    bCareer.classList.toggle("freemiumLocked", isFree);
+    let badge = bCareer.querySelector(".freemiumLockBadge");
+    if(isFree){
+      if(!badge){
+        badge = document.createElement("span");
+        badge.className = "freemiumLockBadge";
+        bCareer.appendChild(badge);
       }
       badge.textContent = "🔒";
     } else if(badge){
@@ -1829,13 +2074,41 @@ function updateFreemiumVisuals(){
   }
 
   // Update Settings controls if present
-  if($("btnToggleFreemium")) $("btnToggleFreemium").classList.toggle("sel", isFree);
-  if($("btnToggleFull")) $("btnToggleFull").classList.toggle("sel", !isFree);
+  if($("btnToggleFreemium")) {
+    $("btnToggleFreemium").classList.toggle("sel", isFree);
+    $("btnToggleFreemium").textContent = isEn ? "🔒 Freemium (1 track)" : "🔒 Freemium (1 proga)";
+  }
+  if($("btnToggleFull")) {
+    $("btnToggleFull").classList.toggle("sel", !isFree);
+    $("btnToggleFull").textContent = isEn ? "🔓 Full version ($4.99)" : "🔓 Polna verzija (4,99 €)";
+  }
   const tag = $("freemiumStatusTag");
   if(tag){
     tag.textContent = isFree ? (isEn ? "FREEMIUM (1 TRACK)" : "FREEMIUM (1 PROGA)") : (isEn ? "FULL UNLOCK ($4.99)" : "POLNA VERZIJA (4,99 €)");
     tag.style.background = isFree ? "rgba(255,204,38,.25)" : "rgba(61,255,142,.2)";
     tag.style.color = isFree ? "var(--yellow)" : "var(--green)";
+  }
+  const descTxt = $("freemiumDescTxt");
+  if(descTxt){
+    descTxt.innerHTML = isEn
+      ? "Switch between <b>Free (Freemium - 1 track)</b> and <b>Full Version (Full Unlock - $4.99)</b> to simulate purchase and test paywall."
+      : "Preklopi med <b>Brezplačno (Freemium - 1 proga)</b> in <b>Polno verzijo (Full Unlock - 4,99 €)</b> za simulacijo nakupa in preizkus zaslona za plačilo.";
+  }
+  if($("btnPreviewPaywall")) $("btnPreviewPaywall").textContent = isEn ? "👁️ View Paywall Screen" : "👁️ Pokaži zaslon za nakup (Paywall Preview)";
+
+  // Update main menu mode toggle button near ?
+  const btnToggle = $("btnMenuModeToggle");
+  const iconToggle = $("menuModeToggleIcon");
+  if(btnToggle){
+    btnToggle.classList.toggle("isFree", isFree);
+    btnToggle.classList.toggle("isFull", !isFree);
+    btnToggle.title = isFree 
+      ? (isEn ? "Mode: Freemium (Click to toggle Full Unlock)" : "Način: Freemium (Klikni za preklop na Polno verzijo)") 
+      : (isEn ? "Mode: Full Unlock (Click to toggle Freemium)" : "Način: Polna verzija (Klikni za preklop na Freemium)");
+    btnToggle.setAttribute("aria-label", btnToggle.title);
+  }
+  if(iconToggle){
+    iconToggle.textContent = isFree ? "🔒" : "💎";
   }
 }
 
@@ -2013,6 +2286,83 @@ function sdAt(x,y){
 /* ============ POŠKODBE KROGCA + BOKSI ============ */
 const R0=26, R_MAX=82;         // (ohranjeno za združljivost; polmer je zdaj fiksen)
 const RAD=30;                  // FIKSNA velikost krogca (px slike) — se ne spreminja
+const ROPE_LEN=60;             // Dolžina vrvi za vleko avta (~premer vozila cca 2*RAD)
+function getFingerOffset(){
+  return (typeof save.fingerOff === "number") ? save.fingerOff : 0;
+}
+function getFingerSlotPos(slot){
+  if(!slot) return {x:0, y:0};
+  if(save.fingerOff === "rope"){
+    const i = slot.i != null ? slot.i : (slot.s != null ? idxOf(slot.s) : (typeof player !== "undefined" && player && player.idx != null ? player.idx : 0));
+    const tx = (typeof TXa !== "undefined" && TXa && TXa[i] != null) ? TXa[i] : 0;
+    const ty = (typeof TYa !== "undefined" && TYa && TYa[i] != null) ? TYa[i] : -1;
+    return { x: slot.x + tx * ROPE_LEN, y: slot.y + ty * ROPE_LEN };
+  }
+  return { x: slot.x, y: slot.y + getFingerOffset() };
+}
+function drawRope(c, carX, carY, fx, fy, u, isHeld){
+  const dx = fx - carX, dy = fy - carY;
+  const dist = Math.hypot(dx, dy);
+  const ang = (dist > 0.001) ? Math.atan2(dy, dx) : 0;
+  const attachX = carX + Math.cos(ang) * (RAD * 0.82);
+  const attachY = carY + Math.sin(ang) * (RAD * 0.82);
+  
+  c.save();
+  // Kavelj / rinka na sprednjem delu avta
+  c.strokeStyle = "#e8eaed";
+  c.lineWidth = 2.5 * u;
+  c.beginPath();
+  c.arc(attachX, attachY, 3.2 * u, 0, 6.283);
+  c.stroke();
+
+  // Pot vrvi: če je ohlapna, rahlo zaniha (krivulja)
+  c.beginPath();
+  c.moveTo(attachX, attachY);
+  if(dist < ROPE_LEN - 3){
+    const midX = (attachX + fx) / 2;
+    const midY = (attachY + fy) / 2 + Math.min(18 * u, (ROPE_LEN - dist) * 0.35);
+    c.quadraticCurveTo(midX, midY, fx, fy);
+  } else {
+    c.lineTo(fx, fy);
+  }
+  
+  // Senčna obroba vrvi
+  c.lineCap = "round";
+  c.strokeStyle = "rgba(10, 12, 16, 0.7)";
+  c.lineWidth = 4.2 * u;
+  c.stroke();
+
+  // Glavna barva vrvi (konoplja / vrv za vleko)
+  c.strokeStyle = "#d8ab70";
+  c.lineWidth = 2.8 * u;
+  c.stroke();
+
+  // Pletena struktura vrvi
+  c.strokeStyle = "#82501e";
+  c.lineWidth = 1.6 * u;
+  c.setLineDash([3.5 * u, 3 * u]);
+  c.stroke();
+  c.setLineDash([]);
+
+  // Ročaj / obroček na mestu prsta
+  c.fillStyle = "rgba(255, 255, 255, 0.22)";
+  c.beginPath();
+  c.arc(fx, fy, 11 * u, 0, 6.283);
+  c.fill();
+  c.strokeStyle = isHeld ? "#3dff8e" : "#f4efe3";
+  c.lineWidth = 2.2 * u;
+  c.beginPath();
+  c.arc(fx, fy, 11 * u, 0, 6.283);
+  c.stroke();
+
+  // Vozel / kovinska zaponka v sredini
+  c.fillStyle = "#ffd21f";
+  c.beginPath();
+  c.arc(fx, fy, 3.5 * u, 0, 6.283);
+  c.fill();
+
+  c.restore();
+}
 const CURB_W=26;               // pas ograje/robnika tik ob cesti (px zunaj roba)
 const SAND_W=20;               // pas peska/gramoza tik za robnikom (nato trava)
 const OFF_MAX=64;              // dlje od tega zunaj ceste = takojšnja nesreča
@@ -2373,7 +2723,8 @@ try {
   console.warn("Firebase init failed:", e);
 }
 
-const save={unlocked:3,best:{},sound:true,diff:2,fingerOff:0,lang:"en",freemiumMode:false,ghostMode:"off"};
+const save={unlocked:3,best:{},sound:true,diff:2,fingerOff:0,lang:"en",freemiumMode:false,ghostMode:"off",showFps:true};
+window.save = save;
 const DIFFS=[{n:"lahko",m:.82},{n:"normalno",m:1},{n:"težko",m:1.22},{n:"Xtra Hard",m:1.42}];
 const AI_BOOST=1.08;   // splošno hitrejši AI (srednje)
 
@@ -2535,7 +2886,7 @@ let trackImg=null;
 
 function setScreen(id){
   // The global rank card belongs to the current results screen only (it survives a trip to the leaderboard)
-  if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; }
+  if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; if($("resWorld")) $("resWorld").style.display="none"; if($("resRaceHead")) $("resRaceHead").style.display="none"; }
   ["menu","levels","help","intro","wcName","wcPreview","singlePick","ttOpp","tutorial","career","leaderboard","wcRaceIntro","wcStand","settings","pause","results","loading","training","trainInfo","clevels","cinfo","repairQ","garage","achScreen","mpHome","mpLobby","langPicker"].forEach(s=>$(s)&&$(s).classList.toggle("on",s===id));
 }
 
@@ -2682,7 +3033,7 @@ const I18N = {
     setLookTab: "🎨 Appearance",
     setSoundTab: "🔊 Audio",
     setFingerLbl: "Finger position relative to car",
-    setFingerHint: "If finger covers the car, move it lower.",
+    setFingerHint: "On car, under car, or drag car with a rope.",
     setDiffLbl: "Difficulty",
     setCtrlLbl: "Driving mode",
     setCtrlHint: "Finger under car: car follows finger. Draw path: car follows drawn path at its own speed.",
@@ -2691,6 +3042,10 @@ const I18N = {
     ghostOff: "Off 🚫",
     ghostPersonal: "Personal Best 👻",
     ghostWorld: "World Record 👑",
+    setFpsLbl: "FPS Counter ⚡",
+    setFpsHint: "Show frames per second (FPS) counter during the game.",
+    fpsOn: "On ✅",
+    fpsOff: "Off 🚫",
     setVehLbl: "Vehicle type",
     setColorLbl: "Disc color",
     setSizeLbl: "Disc size",
@@ -2850,7 +3205,7 @@ const I18N = {
     setLookTab: "🎨 Videz",
     setSoundTab: "🔊 Zvok",
     setFingerLbl: "Lega prsta glede na avto",
-    setFingerHint: "Če prst prekriva avto, ga postavi nižje.",
+    setFingerHint: "Na avtu, pod njim ali vleka z vrvjo.",
     setDiffLbl: "Težavnost",
     setCtrlLbl: "Način vožnje",
     setCtrlHint: "Prst pod avtom: avto sledi prstu. Riši pot: avto sledi risani poti s svojo hitrostjo.",
@@ -2859,6 +3214,10 @@ const I18N = {
     ghostOff: "Izklopljeno 🚫",
     ghostPersonal: "Osebni rekord 👻",
     ghostWorld: "Svetovni rekord 👑",
+    setFpsLbl: "Prikaz FPS ⚡",
+    setFpsHint: "Prikaz števila sličic na sekundo (FPS) med dirko.",
+    fpsOn: "Vklopljeno ✅",
+    fpsOff: "Izklopljeno 🚫",
     setVehLbl: "Vrsta vozila",
     setColorLbl: "Barva krožnika",
     setSizeLbl: "Velikost krožnika",
@@ -2918,6 +3277,10 @@ const I18N = {
     ghostOff: "Aus 🚫",
     ghostPersonal: "Persönliche Bestzeit 👻",
     ghostWorld: "Weltrekord 👑",
+    setFpsLbl: "FPS-Anzeige ⚡",
+    setFpsHint: "Bilder pro Sekunde (FPS) während des Spiels anzeigen.",
+    fpsOn: "Ein ✅",
+    fpsOff: "Aus 🚫",
     setVehLbl: "Fahrzeugtyp",
     setColorLbl: "Scheibenfarbe",
     setSizeLbl: "Scheibengröße",
@@ -2975,6 +3338,10 @@ const I18N = {
     ghostOff: "Disattivato 🚫",
     ghostPersonal: "Record personale 👻",
     ghostWorld: "Record mondiale 👑",
+    setFpsLbl: "Contatore FPS ⚡",
+    setFpsHint: "Mostra il contatore di fotogrammi al secondo (FPS) durante la partita.",
+    fpsOn: "Attivo ✅",
+    fpsOff: "Disattivato 🚫",
     setVehLbl: "Tipo di veicolo",
     setColorLbl: "Colore del disco",
     setSizeLbl: "Dimensione del disco",
@@ -3032,6 +3399,10 @@ const I18N = {
     ghostOff: "Désactivé 🚫",
     ghostPersonal: "Record personnel 👻",
     ghostWorld: "Record du monde 👑",
+    setFpsLbl: "Compteur FPS ⚡",
+    setFpsHint: "Afficher les images par seconde (FPS) pendant la course.",
+    fpsOn: "Activé ✅",
+    fpsOff: "Désactivé 🚫",
     setVehLbl: "Type de véhicule",
     setColorLbl: "Couleur du disque",
     setSizeLbl: "Taille du disque",
@@ -3089,6 +3460,10 @@ const I18N = {
     ghostOff: "Desactivado 🚫",
     ghostPersonal: "Récord personal 👻",
     ghostWorld: "Récord mundial 👑",
+    setFpsLbl: "Contador FPS ⚡",
+    setFpsHint: "Mostrar fotogramas por segundo (FPS) durante la carrera.",
+    fpsOn: "Activado ✅",
+    fpsOff: "Desactivado 🚫",
     setVehLbl: "Tipo de vehículo",
     setColorLbl: "Color del disco",
     setSizeLbl: "Tamaño del disco",
@@ -3146,6 +3521,10 @@ const I18N = {
     ghostOff: "Isključeno 🚫",
     ghostPersonal: "Osobni rekord 👻",
     ghostWorld: "Svjetski rekord 👑",
+    setFpsLbl: "Prikaz FPS ⚡",
+    setFpsHint: "Prikaz broja sličica u sekundi (FPS) tijekom igre.",
+    fpsOn: "Uključeno ✅",
+    fpsOff: "Isključeno 🚫",
     setVehLbl: "Vrsta vozila",
     setColorLbl: "Boja diska",
     setSizeLbl: "Veličina diska",
@@ -3390,6 +3769,8 @@ function applyLang(l){
     setTx("hintSetCtrl", tr.setCtrlHint);
     setTx("lblSetGhost", tr.setGhostLbl);
     setTx("hintSetGhost", tr.setGhostHint);
+    setTx("lblSetFps", tr.setFpsLbl);
+    setTx("hintSetFps", tr.setFpsHint);
     setTx("lblSettingLang", isEn ? "🌐 Language" : "🌐 Jezik");
     setTx("lblSettingPlayerName", isEn ? "Player name" : "Ime igralca");
     setTx("hintSettingPlayerName", isEn ? "Shown in multiplayer and on leaderboards (max 12 characters)." : "Ime, ki se prikazuje v multiplayerju in na lestvicah (do 12 znakov).");
@@ -3399,9 +3780,8 @@ function applyLang(l){
     const lbls = pLook.querySelectorAll('.setLbl');
     if(lbls[0]) lbls[0].textContent = tr.setVehLbl;
     if(lbls[1]) lbls[1].textContent = tr.setColorLbl;
-    if(lbls[2]) lbls[2].textContent = tr.setSizeLbl;
-    if(lbls[3]) lbls[3].textContent = tr.setWeatherLbl;
-    if(lbls[4]) lbls[4].textContent = tr.setAnimLbl;
+    if(lbls[2]) lbls[2].textContent = tr.setWeatherLbl;
+    if(lbls[3]) lbls[3].textContent = tr.setAnimLbl;
   }
   const pSound = $("settings")?.querySelector('[data-page="sound"]');
   if(pSound){
@@ -3420,8 +3800,51 @@ function applyLang(l){
   if($("btnBack1")) $("btnBack1").querySelector("span").textContent = tr.back;
   if($("helpTitleH")) $("helpTitleH").textContent = tr.helpTitle;
   if($("btnBack2")) $("btnBack2").querySelector("span").textContent = tr.back;
+  if($("btnHelpReplayIntro")) $("btnHelpReplayIntro").querySelector("span").textContent = isEn ? "🎬 Interactive Intro" : "🎬 Interaktivni uvod";
   if($("btnIntroSkip")) $("btnIntroSkip").querySelector("span").textContent = tr.skip;
   if($("btnIntroNext")) $("btnIntroNext").querySelector("span").textContent = tr.next;
+
+  const hBody = $("helpBody");
+  if(hBody){
+    hBody.innerHTML = isEn ?
+      "<b>1.</b> Place your finger on the marked circle <span class=\"k\">behind the start line</span>. Follow the countdown <b>3&nbsp;&middot;&nbsp;2&nbsp;&middot;&nbsp;1</b> — at <span class=\"k\">START</span> begin driving.<br>" +
+      "<b>2.</b> Slide your finger along the <span class=\"k\">track</span> as fast as you can. Your vehicle is the colored disc under your finger.<br>" +
+      "<b>3.</b> Driving gradually causes <b>wear & tear</b> (≈20% per lap). Hitting barriers, sand, or grass rapidly increases damage (phone <b>vibrates</b>). Watch the <b>circular gauge top-left</b>.<br>" +
+      "<b>4.</b> At <b>100%</b> your engine <b>EXPLODES</b> 💥 and the race ends. If you lift your finger, hold for 1 second on the marker to resume. If you go off track, place your finger where you left the road to continue immediately.<br>" +
+      "<b>5.</b> <b>Touching rivals</b> causes damage to both vehicles — overtake carefully! Rivals also make mistakes and pit.<br>" +
+      "<b>6.</b> <span class=\"k\" style=\"color:#4da3ff\">PIT LANE 🔧</span> — blue strip on the side before the finish: stay on it to <b>repair</b> your vehicle. Slow down for full repairs!<br>" +
+      "<b>7.</b> Complete all laps and finish in the <b>top 3</b> to advance. 🏆"
+      :
+      "<b>1.</b> Postavi prst na označeni krog <span class=\"k\">za ciljno črto</span>. Sledi odštevanje <b>3&nbsp;&middot;&nbsp;2&nbsp;&middot;&nbsp;1</b> — ob <span class=\"k\">START</span> začni voziti.<br>" +
+      "<b>2.</b> S prstom drsi <span class=\"k\">po cesti</span> čim hitreje. Tvoj avto je barvni krogec pod prstom.<br>" +
+      "<b>3.</b> Vozilo se z vožnjo počasi <b>obrablja</b> (≈20&nbsp;% na krog). Ob <b>ograji/robniku</b> in na <b>travi</b> pa telefon vibrira in krogec z vsakim pulzom hitro <b>zraste</b> — ograja je hujša od trave, globlje ko zaideš, hitreje raste. Velikost kaže <b>okrogli merilnik zgoraj levo</b>.<br>" +
+      "<b>4.</b> Pri <b>100&nbsp;%</b> motor <b>EKSPLODIRA</b> 💥 in dirke je zate konec (odstop). Če <b>dvigneš prst</b>, je nesreča — prst drži <b>1&nbsp;sekundo</b> na označenem mestu. Če zapelješ <b>predaleč s proge</b>, pa čakanja ni: prst samo postaviš na točko, <b>kjer si zapustil cesto</b>, in takoj nadaljuješ.<br>" +
+      "<b>5.</b> <b>Dotik tekmeca</b>: oba vibrirata in <b>oba rasteta</b>, dokler se ne razideta — prehitevaj previdno! Tudi tekmeci delajo napake, rastejo in hodijo v bokse.<br>" +
+      "<b>6.</b> <span class=\"k\" style=\"color:#4da3ff\">BOKSI 🔧</span> — moder pas ob <b>eni strani</b> ceste pred ciljem: dokler si na njem, se vozilo počasi <b>popravlja</b>. Za polno popravilo upočasni ali se ustavi — a pazi, tekmeci medtem vozijo!<br>" +
+      "<b>7.</b> Prevozi <b>6 krogov</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Tekmeci so različno dobri — najboljši je hud oreh že na prvem levelu, zmaga pa je stvar prestiža. 🏆";
+  }
+
+  const introData = isEn ? [
+    { t: "Drive with your finger", x: "Slide your finger <b>on the road</b> as fast as you can. Your vehicle is the colored <b>disc under your finger</b>. Follow the countdown <b>3·2·1·START</b> and drive in the direction of the <b>green arrow</b>." },
+    { t: "Watch the wear & tear", x: "The ring around your disc shows <b>damage</b>. Barriers, sand, and grass quickly increase it (phone <b>vibrates</b>). At <b>100%</b> your engine <b>explodes</b> and the race ends. If you lift your finger or leave the road — just <b>place your finger back on the disc</b> to resume." },
+    { t: "Pit Lane", x: "The blue <b>PIT LANE</b> strip beside the track <b>repairs</b> your car. Drive onto it and <b>slow down</b> for full repair — but watch out, rivals keep racing!" },
+    { t: "Slipstream", x: "Driving <b>close behind a rival</b> gives you a <b>slipstream</b> — your car speeds up and also <b>partially repairs</b>. Use the slipstream for quick overtakes!" },
+    { t: "The Race", x: "Complete <b>all laps</b> and finish in the <b>top 3</b> to unlock the next track. Touching rivals <b>damages both</b> — overtake carefully. In every race, one rival's <b>engine blows up</b> and becomes an obstacle!" }
+  ] : [
+    { t: "Vozi s prstom", x: "Drsi s prstom <b>po cesti</b> čim hitreje. Tvoj avto je barvni <b>krogec pod prstom</b>. Sledi odštevanju <b>3·2·1·START</b> in speljivaj v smeri <b>zelene puščice</b>." },
+    { t: "Pazi na obrabo", x: "Obroč okoli krogca kaže <b>poškodbo</b>. Ograja, pesek in trava jo hitro večajo (telefon <b>vibrira</b>). Pri <b>100 %</b> motor <b>eksplodira</b> in dirke je konec. Če dvigneš prst ali zapelješ s ceste — samo <b>vrni prst na krogec</b> in takoj nadaljuj." },
+    { t: "Boksi", x: "Moder pas <b>BOKSI</b> ob progi te <b>popravlja</b>. Zapelji nanj in <b>upočasni</b> za polno popravilo — a pazi, tekmeci medtem vozijo naprej!" },
+    { t: "Zavetrje", x: "Vožnja <b>tik za tekmecem</b> ti prinaša <b>zavetrje</b> — tvoj avto pospeši, hkrati pa se vozilo <b>delno popravlja</b>. Izkoristi zavetrje za hitro prehitevanje!" },
+    { t: "Tekma", x: "Prevozi <b>vse kroge</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Dotik tekmeca <b>poškoduje oba</b> — prehitevaj previdno. Enemu tekmecu na dirko <b>poči motor</b> in ostane ovira!" }
+  ];
+  document.querySelectorAll("#intro .islide").forEach(s=>{
+    const i = +s.dataset.i;
+    if(introData[i]){
+      const ti = s.querySelector(".ititle"); if(ti) ti.textContent = introData[i].t;
+      const tx = s.querySelector(".itext"); if(tx) tx.innerHTML = introData[i].x;
+    }
+  });
+  if(typeof showIntro === "function" && document.querySelector("#intro.on")) showIntro(introIdx);
   if($("wcRITitle")) $("wcRITitle").innerHTML = "<span>" + tr.wcRace + "</span>";
   if($("btnWCRaceGo")) $("btnWCRaceGo").querySelector("span").textContent = tr.continueBtn;
   if($("wcStandTitle")) $("wcStandTitle").innerHTML = "<span>" + tr.wcStandings + "</span>";
@@ -3577,10 +4000,17 @@ async function loadSave(){
   }catch(e){}
   save.unlocked=Math.max(3,Math.min(MAXLVL,save.unlocked|0||3));
   save.diff=Math.max(0,Math.min(DIFFS.length-1,save.diff|0));
+  let offMigrated = false;
+  if(save.fingerOff === 210){ save.fingerOff = "rope"; offMigrated = true; }
+  else if(save.fingerOff === 140){ save.fingerOff = 70; offMigrated = true; }
+  else if(save.fingerOff !== "rope" && save.fingerOff !== 70){ if(save.fingerOff !== 0) offMigrated = true; save.fingerOff = 0; }
+  if(offMigrated) persist();
   if(!save.lang) save.lang="en";
   if(!save.ghostMode) save.ghostMode = "off";
+  if(save.showFps == null) save.showFps = true;
   if(save.freemiumMode == null) save.freemiumMode = false;
   if(!save.uid){ save.uid = 'p_' + Math.random().toString(36).substr(2,9) + Date.now().toString(36); persist(); }
+  const hf = $("hFps"); if(hf) hf.style.display = (save.showFps !== false) ? "inline-block" : "none";
 }
 const ANIM_CATS=[
   ["finishline","1. Ciljna črta","Karirast pas čez cesto na ciljni ravnini — vedno viden.",1],
@@ -3857,9 +4287,72 @@ let pitCrew=[], crewReady=false, repairReady=false, fuelerReady=false, fuelRescu
 let mechAvail=4, deathMarks=[];
 function _pitHome(){ const ms=pitMidS(), i=idxOf(ms), hw=HW[i]||40, side=(typeof PIT_SIDE!=="undefined"&&PIT_SIDE)?PIT_SIDE:1; return posAt(ms, side*(hw+9)); }
 function _rescSide(){ return (typeof pitLaneSide!=="undefined"&&pitLaneSide)?pitLaneSide:((typeof PIT_SIDE!=="undefined"&&PIT_SIDE)?PIT_SIDE:1); }
+let stuckAlertTO = null;
+function showStuckAlert(cfg){
+  const el = $("stuckAlert");
+  if(!el) return;
+  el.className = "stuckAlert" + (cfg.type ? " " + cfg.type : "");
+  if($("stuckAlertIcon")) $("stuckAlertIcon").textContent = cfg.icon || "⚠️";
+  if($("stuckAlertTitle")) $("stuckAlertTitle").textContent = cfg.title || "";
+  if($("stuckAlertSub")) $("stuckAlertSub").textContent = cfg.sub || "";
+  if($("stuckAlertBody")) $("stuckAlertBody").textContent = cfg.body || "";
+  if($("stuckAlertStatusText")) $("stuckAlertStatusText").textContent = cfg.status || "";
+  
+  el.style.display = "block";
+  clearTimeout(stuckAlertTO);
+  if(cfg.autoHideMs){
+    stuckAlertTO = setTimeout(() => { hideStuckAlert(); }, cfg.autoHideMs);
+  }
+  if(cfg.haptic && navigator.vibrate && save.haptics !== false){
+    try { navigator.vibrate([100, 50, 100]); } catch(e){}
+  }
+  if(cfg.sound && Snd && Snd.announce){
+    try { Snd.announce(); } catch(e){}
+  }
+}
+
+function updateStuckAlertStatus(statusTxt, isDone){
+  const stText = $("stuckAlertStatusText");
+  if(stText && statusTxt) stText.textContent = statusTxt;
+  if(isDone){
+    clearTimeout(stuckAlertTO);
+    stuckAlertTO = setTimeout(() => { hideStuckAlert(); }, 3200);
+  }
+}
+
+function hideStuckAlert(){
+  const el = $("stuckAlert");
+  if(el) el.style.display = "none";
+  clearTimeout(stuckAlertTO);
+}
+
 function startRescue(mode){
   const side=_rescSide(), ms=pitMidS(), i=idxOf(ms), hw=HW[i]||40, p=posAt(ms, side*(hw+12));
   fuelRescue={mode, x:p.x, y:p.y, s:ms, side, phase:"come", t:0, ph:Math.random()*6.28, run:true, col:playerColor()};
+  const isEn = (save.lang === "en");
+  if(mode === "repair"){
+    showStuckAlert({
+      type: "damage",
+      icon: "💥",
+      title: isEn ? "100% DAMAGE / BROKEN DOWN!" : "100% POŠKODBA / ZLOM!",
+      sub: isEn ? "Vehicle stopped on track" : "Vozilo je obstalo na progi",
+      body: isEn ? "Severe wear or barrier crash broke your vehicle. A track mechanic is running to do emergency repairs (20%)." : "Zaradi trkov in obrabe vozilo ne more več peljati. Mehanik teče iz boksov za zasilno popravilo (20%).",
+      status: isEn ? "🏃 Mechanic is running to you..." : "🏃 Mehanik teče proti tebi...",
+      haptic: true,
+      sound: true
+    });
+  } else {
+    showStuckAlert({
+      type: "fuel",
+      icon: "⛽",
+      title: isEn ? "OUT OF FUEL!" : "ZMANJKALO GORIVA!",
+      sub: isEn ? "Vehicle stopped on track" : "Vozilo je obstalo na progi",
+      body: isEn ? "Your vehicle ran out of gas. A track mechanic is running to you with an emergency fuel can (20%)." : "Zmanjkalo ti je bencina. Mehanik teče iz boksov s kanistrom za zasilno dolitje (20%).",
+      status: isEn ? "🏃 Mechanic is running to you..." : "🏃 Mehanik teče proti tebi...",
+      haptic: true,
+      sound: true
+    });
+  }
   try{ showComment(mode==="repair"?"🔧 Vozilo ne vozi več! Mehanik teče do tebe ob robu proge...":"⛽ Zmanjkalo goriva! Mehanik teče do tebe s kanistrom...",0); }catch(e){}
 }
 function _rescStartFromPit(fr){ const side=_rescSide(), ms=pitMidS(), i=idxOf(ms), hw=HW[i]||40, p=posAt(ms, side*(hw+12)); fr.x=p.x; fr.y=p.y; fr.s=ms; fr.side=side; fr.phase="come"; fr.run=true; }
@@ -3872,6 +4365,8 @@ function _mechRunOver(fr){
       let idx=-1; for(let k=0;k<pitCrew.length;k++){ if(pitCrew[k].owner==="player"&&pitCrew[k].slot<3){ idx=k; break; } }
       if(idx<0) for(let k=0;k<pitCrew.length;k++){ if(pitCrew[k].owner==="player"){ idx=k; break; } }
       if(idx>=0) pitCrew.splice(idx,1);
+      const isEn = (save.lang === "en");
+      updateStuckAlertStatus(isEn ? "⚠️ Mechanic was hit! A replacement is running..." : "⚠️ Mehanika je povozil tekmec! Nov teče iz boksov...");
       try{ showComment("💥 Mehanika je povozil "+((rc.name)||"nasprotnik")+"! Nov teče iz boksov ("+mechAvail+" mehanikov).",0); Snd.gasp&&Snd.gasp(); }catch(e){}
       _rescStartFromPit(fr); return true;
     } }
@@ -3891,13 +4386,22 @@ function updateRescue(dt){
     if(Math.abs(ds)>26){ _stepEdge(fr,player.s,dt,220); fr.run=true; }
     else { const dx=player.x-fr.x, dy=player.y-fr.y, d=Math.hypot(dx,dy)||1; fr.run=true;
       if(d>RAD*1.4){ const sp=200*dt; fr.x+=dx/d*sp; fr.y+=dy/d*sp; }
-      else { fr.phase="work"; fr.run=false; try{ showComment(fr.mode==="repair"?"🔧 Mehanik popravlja vozilo...":"⛽ Mehanik doliva gorivo...",0); Snd.pit&&Snd.pit(); }catch(e){} } }
+      else { fr.phase="work"; fr.run=false;
+        const isEn = (save.lang === "en");
+        updateStuckAlertStatus(fr.mode === "repair" ? (isEn ? "🔧 Repairing vehicle (20%)..." : "🔧 Mehanik popravlja vozilo (20%)...") : (isEn ? "⛽ Refueling vehicle (20%)..." : "⛽ Mehanik doliva gorivo (20%)..."));
+        try{ showComment(fr.mode==="repair"?"🔧 Mehanik popravlja vozilo...":"⛽ Mehanik doliva gorivo...",0); Snd.pit&&Snd.pit(); }catch(e){} } }
   } else if(fr.phase==="work"){
     fr.t+=dt;
     if(fr.mode==="repair"){ player.dmg=Math.max(0.8,(player.dmg!=null?player.dmg:1)-0.5*dt);
-      if(player.dmg<=0.8+1e-3){ player.dmg=0.8; fr.phase="leave"; try{ showComment("✅ Zasilno popravljeno (20%) — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){} } }
+      if(player.dmg<=0.8+1e-3){ player.dmg=0.8; fr.phase="leave";
+        const isEn = (save.lang === "en");
+        updateStuckAlertStatus(isEn ? "✅ Emergency repairs done (20%)! Head to the PIT LANE 🔧" : "✅ Zasilno popravljeno (20%)! Zapelji v BOKSE 🔧", true);
+        try{ showComment("✅ Zasilno popravljeno (20%) — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){} } }
     else { player.fuel=Math.min(0.20,(player.fuel||0)+0.28*dt);
-      if(player.fuel>=0.20-1e-3){ player.fuel=0.20; player._fuelOut=0; player._fuelW25=0; player._fuelW12=0; player.fuelWarn=false; player.fuelWarn2=false; fr.phase="leave"; try{ showComment("✅ Nalito 20% — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){} } }
+      if(player.fuel>=0.20-1e-3){ player.fuel=0.20; player._fuelOut=0; player._fuelW25=0; player._fuelW12=0; player.fuelWarn=false; player.fuelWarn2=false; fr.phase="leave";
+        const isEn = (save.lang === "en");
+        updateStuckAlertStatus(isEn ? "✅ Emergency refuel done (20%)! Head to the PIT LANE ⛽" : "✅ Zasilno nalito 20%! Zapelji v BOKSE ⛽", true);
+        try{ showComment("✅ Nalito 20% — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){} } }
   } else {
     if(_mechRunOver(fr)) return;
     let ds=((pitMidS()-fr.s)%L+L)%L; if(ds>L/2) ds-=L;
@@ -4773,12 +5277,13 @@ function generateWorldRecordGhost(trackIdx, crossNeed){
   }
 }
 function startRace(){
+  hideStuckAlert();
   let _tw=careerLv?careerCfg(careerLv).weather:((training&&TRAIN_STEPS[training-1]&&TRAIN_STEPS[training-1].weather!=null)?TRAIN_STEPS[training-1].weather:null);
   if(mpMode&&mp&&mp.weather!=null) _tw=mp.weather;   // multiplayer: everybody gets the host's weather
   mode="race"; finishOrder=[]; particles=[]; groundMarks=[]; fastestLap={name:null,time:1e9,me:false};
   ghostRec=[]; ghostPlayIdx=0; ghostT=0; ghostDelta=null; recordBeat=false;
   if(!timeTrial){                                   // ghost izbira v Single/Trening/WC/Kariera
-    const gm = save.ghostMode || "off";
+    const gm = isFreemiumActive() ? "off" : (save.ghostMode || "off");
     if(gm === "personal"){
       const gk=_ghostKey(); if(!save.ghosts) save.ghosts={};
       ghostPlay=save.ghosts[gk]||null; ghostIsFriend=false; ghostKind="personal";
@@ -4790,6 +5295,7 @@ function startRace(){
   } else {
     ghostKind = ghostIsFriend ? "friend" : "personal";
   }
+  window.ghostKind = ghostKind; window.ghostPlay = ghostPlay;
   genCones();
   try{ genDecor(); }catch(e){}
   try{ genProps(); }catch(e){}
@@ -4945,6 +5451,17 @@ function wreckRacer(rc){
   }
   if(!rc.finished){ rc.finished=true; rc.finishTime=1e9; rc.dnf=true;
     rc.finPos=finishOrder.length; finishOrder.push(racers.indexOf(rc)); }
+  const isEn = (save.lang === "en");
+  showStuckAlert({
+    type: "rival",
+    icon: "⚠️",
+    title: isEn ? "OBSTACLE ON TRACK!" : "OVIRA NA PROGI!",
+    sub: rc.name + (isEn ? " is stuck on track" : " je obstal na progi"),
+    body: isEn ? (rc.name + "'s engine blew up! Watch out for the stopped wreck on track.") : (rc.name + " ima okvaro motorja! Previdno obvozi gorečo razbitino ob cesti."),
+    status: isEn ? "⚠️ Danger — Stopped wreck on track" : "⚠️ Nevarnost — Obstala razbitina",
+    autoHideMs: 4000,
+    haptic: true
+  });
   if(state==="racing"||state==="crashed") showBanner(rc.name+" – motor je eksplodiral! 💥",1800);
 }
 function blowUp(x,y){
@@ -5000,7 +5517,9 @@ function applyS(ns){
 function resumeFromHold(){
   applyS(respawn.s);
   player.idx=idxOf(player.s);
-  player.x=pointer.x; player.y=pointer.y-(save.fingerOff||0); player.trail.length=0;
+  if(save.fingerOff==="rope"){ player.x=respawn.x; player.y=respawn.y; }
+  else{ player.x=pointer.x; player.y=pointer.y-getFingerOffset(); }
+  player.trail.length=0;
   state="racing"; showBanner("GREMO!",800,true);
 }
 
@@ -5136,10 +5655,14 @@ function finishRace(){
   }
   if(globalRun && (!prevBest || t<prevBest)) save.trackBest[recTrack]=Math.round(t*1000)/1000;
   persist();
-  if($("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; }
+  if($("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; if($("resWorld")) $("resWorld").style.display="none"; if($("resRaceHead")) $("resRaceHead").style.display="none"; }
+  // Single Race results headline = this run's world rank (filled by showGlobalRankCard); "fail" falls back to the race place
+  worldHead = globalRun ? (db ? {state:"loading", t:Math.round(t*1000)/1000, track:recTrack} : {state:"fail"}) : null;
+  resWorldMode = false;
   if(globalRun){
     try { submitGlobalRecord(recTrack, t); } catch(e){}
-    try { showGlobalRankCard(recTrack, t, prevBest); } catch(e){}
+    // Unnamed players get the name prompt on the results screen; its callback shows the rank card after the name is saved
+    if(hasCustomPlayerName()){ try { showGlobalRankCard(recTrack, t, prevBest); } catch(e){} }
   }
   $("count").style.display="none";
   pendingResults=()=>{
@@ -5220,7 +5743,7 @@ function finishRace(){
       $("resStats").innerHTML="\u010cas: "+fmt(t)+" \u00b7 Krogi: "+LAPS+" \u00b7 Nesre\u010de: "+player.crashes+rivalMsg+sponsorMsg+diaryMsg+chapMsg+dmgStatsHTML()+bh;
       $("btnNext").querySelector("span").textContent="Naprej \u25b6";
       $("btnNext").onclick=null;
-      $("btnNext").style.display="block"; $("btnRetry").style.display="none"; $("btnMenu2").style.display="none";
+      $("btnNext").style.display="block"; $("btnMenu2").style.display="none"; $("btnRetry").style.display="block"; $("btnRetry").querySelector("span").textContent=((I18N[save.lang]||I18N.en).restartRace||"🔄 Ponovi dirko");
       $("btnNext")._career={dmg:Math.round(Math.min(1,player.dmg)*100)};
       $("hud").style.display="none"; $("standings").style.display="none"; if($("penBadge"))$("penBadge").style.display="none";
       setScreen("results"); return;
@@ -5249,14 +5772,22 @@ function finishRace(){
     }
     if(singleMode){
       resultMode="single";
-      $("resPlace").textContent=pos+". mesto";
-      $("resPlace").classList.toggle("win",pos<=3);
-      $("resSub").innerHTML="Posamezna dirka (5 krogov) — končal si na "+pos+". mestu."+(recordBeat?"<br><b style='color:#ffe08a'>✨ NOV OSEBNI REKORD PROGE!</b>":"");
-      $("btnNext").querySelector("span").textContent="Glavni meni";
+      const isEnR=(save.lang==="en");
+      // Fallback headline (offline / not a global run): the place against the AI
+      raceHeadFallback={place:pos+". mesto", win:pos<=3,
+        sub:"Posamezna dirka (5 krogov) — končal si na "+pos+". mestu."+(recordBeat?"<br><b style='color:#ffe08a'>✨ NOV OSEBNI REKORD PROGE!</b>":"")};
+      resWorldMode = !!(worldHead && worldHead.state!=="fail");
+      if(resWorldMode) renderWorldHead();
+      else { $("resPlace").textContent=raceHeadFallback.place; $("resPlace").classList.toggle("win",raceHeadFallback.win); $("resSub").innerHTML=raceHeadFallback.sub; if($("resWorld")) $("resWorld").style.display="none"; }
+      // The race against the AI becomes a small heading above the finishing order
+      const rh=$("resRaceHead");
+      if(rh){ rh.innerHTML="🏁 "+(isEnR?"Race vs AI: ":"Dirka proti AI: ")+"<b>"+lbOrdinal(pos,isEnR)+"</b> "+(isEnR?"of ":"od ")+order.length; rh.style.display=resWorldMode?"block":"none"; }
+      $("btnNext").querySelector("span").textContent=((I18N[save.lang]||I18N.en).mainMenu||"Glavni meni");
       const rl=$("resList"); rl.innerHTML="";
       buildResRows(rl,order,t);
       $("resStats").innerHTML="Čas: "+fmt(t)+"  ·  Nesreče: "+player.crashes+(fastestLap.name?"<br>⚡ Najhitrejši krog: <b style=\"color:#c39bff\">"+fastestLap.name+"</b> "+fmt(fastestLap.time):"")+dmgStatsHTML();
-      $("btnNext").style.display="block"; $("btnRetry").style.display="none"; $("btnMenu2").style.display="none";
+      $("btnNext").style.display="block"; $("btnMenu2").style.display="none";
+      $("btnRetry").style.display="block"; $("btnRetry").querySelector("span").textContent=((I18N[save.lang]||I18N.en).restartRace||"🔄 Ponovi dirko");
       $("hud").style.display="none"; $("standings").style.display="none"; if($("penBadge"))$("penBadge").style.display="none"; if($("dmgBar"))$("dmgBar").style.display="none"; if($("fuelBar"))$("fuelBar").style.display="none"; if($("commentBar"))$("commentBar").style.display="none"; if($("ghostDelta"))$("ghostDelta").style.display="none";
       setScreen("results");
       if(typeof hasCustomPlayerName === "function" && !hasCustomPlayerName() && globalRun && !player.dnf){
@@ -5319,14 +5850,16 @@ function update(dt){
   updateParticles(dt);
 
   if(state==="prestart"){
-    if(pointer.down&&Math.hypot(pointer.x-startSlot.x,pointer.y-(startSlot.y+(save.fingerOff||0)))<R_START){
+    const sPos=getFingerSlotPos(startSlot);
+    if(pointer.down&&Math.hypot(pointer.x-sPos.x,pointer.y-sPos.y)<R_START){
       state="countdown"; cdT=3.0; cdShown=-1; _launchWin=false;
       $("count").classList.remove("go"); $("count").style.display="block";
     }
     return;
   }
   if(state==="countdown"){
-    if(!mpMode && (!pointer.down||Math.hypot(pointer.x-startSlot.x,pointer.y-(startSlot.y+(save.fingerOff||0)))>R_START*1.45)){ falseStart(); return; }
+    const sPos=getFingerSlotPos(startSlot);
+    if(!mpMode && (!pointer.down||Math.hypot(pointer.x-sPos.x,pointer.y-sPos.y)>R_START*1.45)){ falseStart(); return; }
     cdT-=dt;
     const n=Math.ceil(cdT);
     if(n!==cdShown&&n>0){ cdShown=n; $("count").textContent=n; bumpCount(); Snd.count(); speak2({3:"Three...",2:"Two...",1:"One...",}[n], 1); }
@@ -5504,7 +6037,7 @@ function update(dt){
       let nx, ny;
       if(drawMode){
         // RIŠEŠ POT: avto jo sledi s svojo hitrostjo (pospešuje; v ovinkih/izven proge počasneje -> zaostaja za prstom)
-        const fx=pointer.x, fy=pointer.y-(save.fingerOff||0);
+        const fx=pointer.x, fy=pointer.y-getFingerOffset();
         const last=drawPath[drawPath.length-1];
         if(!last||Math.hypot(fx-last.x,fy-last.y)>7) drawPath.push({x:fx,y:fy});
         if(drawPath.length>240) drawPath.shift();
@@ -5524,8 +6057,17 @@ function update(dt){
           else { cx+=dx/d*move; cy+=dy/d*move; move=0; }
         }
         nx=cx; ny=cy;
+      } else if(save.fingerOff==="rope"){
+        const dx=pointer.x-player.x, dy=pointer.y-player.y;
+        const dist=Math.hypot(dx,dy);
+        if(dist>ROPE_LEN){
+          nx=pointer.x-(dx/dist)*ROPE_LEN;
+          ny=pointer.y-(dy/dist)*ROPE_LEN;
+        } else {
+          nx=player.x; ny=player.y;
+        }
       } else {
-        nx=pointer.x; ny=pointer.y-(save.fingerOff||0);
+        nx=pointer.x; ny=pointer.y-getFingerOffset();
       }
       { const _fu=(player.fuel!=null?player.fuel:1), _dm=player.dmg||0;
         const _noFuel=_fu<=0.004, _wrecked=_dm>=0.999;   // vozilo se USTAVI le ob praznem tanku ali 0% (sicer polna hitrost prsta)
@@ -5773,10 +6315,15 @@ function update(dt){
     crashAnimT+=dt;
     const tgt=state==="crashed"?respawn:rejoinPos;
     const need=holdNeed;
-    const inZone=pointer.down&&Math.hypot(pointer.x-tgt.x,pointer.y-(tgt.y+(save.fingerOff||0)))<R_HOLD;
+    const sPos=getFingerSlotPos(tgt);
+    const inZone=pointer.down&&Math.hypot(pointer.x-sPos.x,pointer.y-sPos.y)<R_HOLD;
     if(inZone) holdT+=dt; else holdT=0;
     if(inZone&&holdT>=need){
-      if(state==="rejoin"){ player.x=pointer.x; player.y=pointer.y-(save.fingerOff||0); player.trail.length=0; state="racing"; showBanner("GREMO!",700,true); }
+      if(state==="rejoin"){
+        if(save.fingerOff==="rope"){ player.x=tgt.x; player.y=tgt.y; }
+        else { player.x=pointer.x; player.y=pointer.y-getFingerOffset(); }
+        player.trail.length=0; state="racing"; showBanner("GREMO!",700,true);
+      }
       else resumeFromHold();
     }
   }
@@ -5787,6 +6334,12 @@ function update(dt){
 let lastHUD="", lastStand=0, lastFr=-1;
 function updateHUD(force){
   if(state==="finished")return;
+  const hf=$("hFps");
+  if(hf){
+    const shouldShow=(save.showFps!==false);
+    if(shouldShow && hf.style.display==="none") hf.style.display="inline-block";
+    else if(!shouldShow && hf.style.display!=="none") hf.style.display="none";
+  }
   const fr=dmgFrac();
   if(fr!==lastFr||force){ lastFr=fr;
     const st=$("standings");
@@ -6363,7 +6916,7 @@ function drawVehicle(c,x,y,ang,tilt,tdir,color,energy,dmg,u,ghost){
 function shade(hex,f){ const h=hexRGB(hex); return "rgb("+Math.round(h[0]*f)+","+Math.round(h[1]*f)+","+Math.round(h[2]*f)+")"; }
 function rrect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x-w/2+r,y-h/2); c.arcTo(x+w/2,y-h/2,x+w/2,y+h/2,r); c.arcTo(x+w/2,y+h/2,x-w/2,y+h/2,r); c.arcTo(x-w/2,y+h/2,x-w/2,y-h/2,r); c.arcTo(x-w/2,y-h/2,x+w/2,y-h/2,r); c.closePath(); }
 function drawCar(c,x,y,ang,tilt,tdir,color,energy,dmg,u,ghost){
-  const R=RAD*0.95*(save.discSize||1);
+  const R=RAD*0.95;
   const LEN=R*2.05, WID=R*1.15, dim=1-0.35*dmg;
   // lebdeča senca
   c.save(); 
@@ -6399,7 +6952,7 @@ function drawCar(c,x,y,ang,tilt,tdir,color,energy,dmg,u,ghost){
 function drawDisc(c,x,y,ang,tilt,tdir,color,energy,dmg,u,ghost){
   c.save(); c.translate(x,y); c.rotate(ang);
   if(animOn("fx_squash")){ const st=Math.min(0.16,Math.abs(tilt||0)*0.32); c.scale(1+st,1-st); }   // (53) stisk/razteg v ovinkih
-  const R=RAD*0.95*(save.discSize||1), sq=1-0.5*tilt, off=tdir*tilt*R*0.22;
+  const R=RAD*0.95, sq=1-0.5*tilt, off=tdir*tilt*R*0.22;
   if(ghost) c.globalAlpha=0.55;
   // REP v barvi energije: dolg+zelen pri polni, kratek+rdeč pri prazni
   {
@@ -6845,9 +7398,16 @@ function draw(){
       const gi=idxOf(rc.s), gt=trackTilt(gi);
       drawVehicle(c,rc.px,rc.py,Math.atan2(TYa[gi],TXa[gi]),gt.t,gt.d,rc.color,1,0,u);
     }
-    const inZone=pointer.down&&Math.hypot(pointer.x-startSlot.x,pointer.y-(startSlot.y+(save.fingerOff||0)))<R_START;
-    marker(c,startSlot.x,startSlot.y+(save.fingerOff||0),R_START*.72,0,!inZone,
+    const si=startSlot.i!=null?startSlot.i:idxOf(startSlot.s), st=trackTilt(si);
+    drawPlayerVehicle(c,startSlot.x,startSlot.y,Math.atan2(TYa[si],TXa[si]),st.t,st.d,playerColor(),1,0,u);
+    const sPos=getFingerSlotPos(startSlot);
+    const inZone=pointer.down&&Math.hypot(pointer.x-sPos.x,pointer.y-sPos.y)<R_START;
+    marker(c,sPos.x,sPos.y,R_START*.72,0,!inZone,
       state==="countdown"?"DRŽI!":"PRST SEM");
+    if(save.fingerOff==="rope"){
+      const rTarget=(inZone&&pointer.down)?pointer:sPos;
+      drawRope(c,startSlot.x,startSlot.y,rTarget.x,rTarget.y,u,inZone&&pointer.down);
+    }
     // puščica smeri — pred pole pozicijo (rdeči krogec)
     {
       const pole=gridSlot(0);
@@ -6928,9 +7488,14 @@ function draw(){
       drawVehicle(c,tgt.x,tgt.y,Math.atan2(TYa[ci]||0,TXa[ci]||1),ct.t,ct.d,playerColor(),Math.max(0,1-dmgFrac()),dmgFrac(),u,true); }
     if(tgt){
       const need=holdNeed;
-      const inZone=pointer.down&&Math.hypot(pointer.x-tgt.x,pointer.y-(tgt.y+(save.fingerOff||0)))<R_HOLD;
-      marker(c,tgt.x,tgt.y+(save.fingerOff||0),R_HOLD*.8,need>0?Math.min(1,holdT/need):0,!inZone,
+      const sPos=getFingerSlotPos(tgt);
+      const inZone=pointer.down&&Math.hypot(pointer.x-sPos.x,pointer.y-sPos.y)<R_HOLD;
+      marker(c,sPos.x,sPos.y,R_HOLD*.8,need>0?Math.min(1,holdT/need):0,!inZone,
         (need>0&&inZone)?("DRŽI "+Math.max(0,need-holdT).toFixed(1)+" s"):"PRST SEM");
+      if(save.fingerOff==="rope"){
+        const rTarget=(inZone&&pointer.down)?pointer:sPos;
+        drawRope(c,tgt.x,tgt.y,rTarget.x,rTarget.y,u,inZone&&pointer.down);
+      }
     }
   }
 
@@ -6951,18 +7516,25 @@ function draw(){
   }
   // PRST DVIGNJEN: nariši vozilo na trenutni poziciji + utripajoč krog, kamor naj se vrne prst
   if(liftRing && !pointer.down && state==="racing"){
-    const foff=save.fingerOff||0, u=1/scale;
+    const u=1/scale;
     const fr=dmgFrac();
     const pt=pitOn?{t:0,d:1}:trackTilt(player.idx);
     drawPlayerVehicle(c,player.x,player.y,Math.atan2(TYa[player.idx],TXa[player.idx]),pt.t,pt.d,playerColor(),Math.max(0,1-fr),fr,u);
     // krog za vrnitev prsta (na avtu ali pod avtom glede na nastavitev)
-    const ry=player.y+foff*u, t2=performance.now()/1000, pulse=0.5+0.5*Math.sin(t2*5);
+    const sPos=getFingerSlotPos({x:player.x,y:player.y,s:player.s,i:player.idx});
+    const t2=performance.now()/1000, pulse=0.5+0.5*Math.sin(t2*5);
+    if(save.fingerOff==="rope"){
+      drawRope(c,player.x,player.y,sPos.x,sPos.y,u,false);
+    }
     c.save();
     c.strokeStyle="rgba(255,255,255,"+(0.55+0.35*pulse).toFixed(2)+")"; c.lineWidth=(2.4+1.6*pulse)*u; c.setLineDash([7*u,6*u]);
-    c.beginPath(); c.arc(player.x,ry,(RAD*0.72)*u*(1+0.12*pulse),0,6.283); c.stroke(); c.setLineDash([]);
+    c.beginPath(); c.arc(sPos.x,sPos.y,(RAD*0.72)*(1+0.12*pulse),0,6.283); c.stroke(); c.setLineDash([]);
     c.fillStyle="rgba(255,255,255,.9)"; c.font="bold "+(11*u)+"px sans-serif"; c.textAlign="center";
-    c.fillText("↩",player.x,ry+4*u);
-    if(foff>4){ c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=1.4*u; c.setLineDash([4*u,4*u]); c.beginPath(); c.moveTo(player.x,player.y); c.lineTo(player.x,ry); c.stroke(); c.setLineDash([]); }
+    c.fillText("↩",sPos.x,sPos.y+4*u);
+    if(save.fingerOff!==0 && save.fingerOff!=="rope"){
+      c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=1.4*u; c.setLineDash([4*u,4*u]);
+      c.beginPath(); c.moveTo(player.x,player.y); c.lineTo(sPos.x,sPos.y); c.stroke(); c.setLineDash([]);
+    }
     c.restore();
     if(!liftBannerShown){ liftBannerShown=true; showBanner("Vrni prst na krog ↩ za nadaljevanje",1800,true); }
   }
@@ -6990,7 +7562,7 @@ function draw(){
   if(mpMode) drawMpOpp(c);
   if(mpMode&&mp&&mp.gap!=null&&state==="racing"){ c.save(); c.setTransform(1,0,0,1,0,0); c.font="bold 15px sans-serif"; c.textAlign="center"; const g=mp.gap; c.fillStyle=g<0?"#7fe08a":"#ff8a80"; c.fillText((g<0?"▲ ":"▼ ")+Math.abs(g).toFixed(2)+"s", W/2, 96); c.restore(); }
   if(showFinger){
-    const rr=RAD*0.5+4*u, foff=save.fingerOff||0, fpx=pointer.x, fpy=pointer.y-foff;
+    const rr=RAD*0.5+4*u, foff=getFingerOffset(), fpx=pointer.x, fpy=pointer.y-foff;
     const fr=(state==="racing")?dmgFrac():0;
     const hue=140-132*fr, col="hsl("+hue.toFixed(0)+",100%,58%)";
     c.save();
@@ -7032,6 +7604,9 @@ function draw(){
           c.restore(); 
         }
         drawPlayerVehicle(c,player.x,player.y,Math.atan2(TYa[player.idx],TXa[player.idx]),pt.t,pt.d,playerColor(),Math.max(0,1-fr),fr,u);
+        if(save.fingerOff==="rope" && state==="racing"){
+          drawRope(c, player.x, player.y, pointer.x, pointer.y, u, pointer.down);
+        }
       } }
     /* črtkana črta od prsta do vozila odstranjena */
     c.restore();
@@ -7116,8 +7691,22 @@ function draw(){
     drawFXScreen(c,performance.now()/1000);
   }
 }
+let fpsFrames=0, fpsLastT=0, fpsVal=60;
 function loop(now){
   let dt=Math.min(.05,(now-lastT)/1000||0); lastT=now;
+  fpsFrames++;
+  if(now-fpsLastT>=250){
+    fpsVal=Math.round((fpsFrames*1000)/(now-fpsLastT));
+    fpsFrames=0;
+    fpsLastT=now;
+    if(save.showFps!==false){
+      const hf=$("hFps");
+      if(hf){
+        hf.textContent=fpsVal+" FPS";
+        hf.style.color=(fpsVal>=50)?"#7fe08a":(fpsVal>=30?"#ffd166":"#ff5c5c");
+      }
+    }
+  }
   if(slowmo>0){ const rdt=dt; slowmo-=dt; dt*=0.28; if(slowmo<0)slowmo=0;
     if(finishCam){
       finishCamT=(finishCamT||0)+rdt;
@@ -7171,7 +7760,7 @@ function bindInput(){
 /* ================= UI WIRING ================= */
 function pauseGame(){
   if(state==="racing"||state==="crashed"||state==="countdown"||state==="prestart"||state==="rejoin"){
-    rejoinPos=(state==="crashed")?respawn:(()=>{const p=posAt(player.s,0);return{x:p.x,y:p.y};})();
+    rejoinPos=(state==="crashed")?respawn:{x:player.x,y:player.y,s:player.s,i:player.idx};
     $("pauseLvl").textContent="Level "+level;
     try{
       const pp=player.crossings*L+player.s;
@@ -7197,6 +7786,7 @@ function resumeGame(){
   }
 }
 function toMenu(){
+  hideStuckAlert();
   state="menu"; applyLang(save.lang || "en"); wc=null; singleMode=false; training=0; testDrive=false; decorTrack=-1; if(mpMode||mp){ mpSend({t:"bye"}); mpReset(); } mpMode=false; careerOff(); Snd.engineStop();
   { const cp=$("careerProg"); if(cp){ const done=save.career?Object.keys(save.career.res||{}).filter(k=>(save.career.res[k].stars||0)>0).length:0; cp.textContent="🎖️ "+playerTitle()+" · "+done+"/50 · 🪙 "+(save.tokens||0); } }
   { const ap=$("achProg"); if(ap){ const un=save.ach||{}; let g=0; ACH_LIST.forEach(([k])=>{if(un[k])g++;}); ap.textContent=g+"/"+ACH_LIST.length+" odklenjenih"; } }
@@ -7207,15 +7797,27 @@ function toMenu(){
   $("count").style.display="none";
   setScreen("menu");
 }
-const FINGER_OPTS=[{n:"Na avtu",off:0},{n:"Pod avtom",off:140},{n:"Daleč pod",off:210}];
+const FINGER_OPTS=[
+  { off: 0, n: "Na avtu", nEn: "On car" },
+  { off: 70, n: "Pod avtom (70 px)", nEn: "Under car (70 px)" },
+  { off: "rope", n: "Vleka z vrvjo", nEn: "Rope drag" }
+];
 const DIFF_BONUS=[0,4,10,16];
 function fingerSVG(off){
-  // avto (krogec) zgoraj, prst (obroc) spodaj glede na off
-  const cy=22-off*0.11, fy=22+off*0.11;
+  if(off === "rope"){
+    return '<svg width="54" height="54" viewBox="0 0 54 54">'+
+      '<circle cx="27" cy="36" r="8" fill="#3dff8e" stroke="#0a0c09" stroke-width="1.5"/>'+
+      '<circle cx="27" cy="14" r="6" fill="none" stroke="#f4efe3" stroke-width="2"/>'+
+      '<path d="M27,28 Q23,21 27,20" fill="none" stroke="#d8ab70" stroke-width="2.5" stroke-linecap="round"/>'+
+      '<circle cx="27" cy="28" r="2.2" fill="#8d99ae"/>'+
+      '</svg>';
+  }
+  const numOff = (typeof off === "number") ? off : 0;
+  const cy=22-numOff*0.11, fy=22+numOff*0.11;
   return '<svg width="54" height="54" viewBox="0 0 54 54">'+
     '<circle cx="27" cy="'+cy+'" r="8" fill="#3dff8e" stroke="#0a0c09" stroke-width="1.5"/>'+
     '<circle cx="27" cy="'+fy+'" r="6" fill="none" stroke="#f4efe3" stroke-width="2"/>'+
-    (off>2?'<line x1="27" y1="'+(cy+8)+'" x2="27" y2="'+(fy-6)+'" stroke="#f4efe3" stroke-width="1.5" stroke-dasharray="2 2"/>':'')+
+    (numOff>2?'<line x1="27" y1="'+(cy+8)+'" x2="27" y2="'+(fy-6)+'" stroke="#f4efe3" stroke-width="1.5" stroke-dasharray="2 2"/>':'')+
     '</svg>';
 }
 function openSettings(){
@@ -7240,9 +7842,9 @@ function openSettings(){
     if(spn) spn.addEventListener("keydown", (e) => { if(e.key === "Enter") saveNameFn(); });
   }
   const fo=$("fingerOpts"); fo.innerHTML="";
-  FINGER_OPTS.forEach((o,i)=>{
+  FINGER_OPTS.forEach((o)=>{
     const d=document.createElement("div"); d.className="setOpt"+(save.fingerOff===o.off?" sel":"");
-    d.innerHTML=fingerSVG(o.off)+o.n;
+    d.innerHTML=fingerSVG(o.off)+(isEn ? o.nEn : o.n);
     d.addEventListener("click",()=>{ save.fingerOff=o.off; persist(); openSettings(); });
     fo.appendChild(d);
   });
@@ -7336,15 +7938,52 @@ function renderSizeHaptics(){
   if(go){
     go.innerHTML = "";
     GHOST_OPTS.forEach(o=>{
+      const isLocked = isFreemiumActive() && (o.v !== "off");
       const d = document.createElement("div");
       d.className = "setOpt" + (save.ghostMode === o.v ? " sel" : "");
-      d.textContent = o.n;
+      if(isLocked) d.classList.add("freemiumLocked");
+      d.textContent = o.n + (isLocked ? " 🔒" : "");
       d.addEventListener("click", () => {
+        if(isLocked){
+          openPaywall("ghost");
+          return;
+        }
         save.ghostMode = o.v;
         persist();
         openSettings();
       });
       go.appendChild(d);
+    });
+  }
+  const hsg = $("hintSetGhost");
+  if(hsg){
+    if(isFreemiumActive()){
+      hsg.textContent = isEn
+        ? "Ghost racer is locked in Freemium mode (Personal & World Record require Full Version)."
+        : "Dirkanje proti duhovom je zaklenjeno v Freemium načinu (Osebni in Svetovni rekord zahtevata polno različico).";
+    } else {
+      hsg.textContent = tr.setGhostHint;
+    }
+  }
+  const fo = $("fpsOpts");
+  if(fo){
+    fo.innerHTML = "";
+    const FPS_OPTS = [
+      { n: tr.fpsOn || "On ✅", v: true },
+      { n: tr.fpsOff || "Off 🚫", v: false }
+    ];
+    FPS_OPTS.forEach(o => {
+      const d = document.createElement("div");
+      d.className = "setOpt" + ((save.showFps !== false) === o.v ? " sel" : "");
+      d.textContent = o.n;
+      d.addEventListener("click", () => {
+        save.showFps = o.v;
+        persist();
+        const hf = $("hFps");
+        if(hf) hf.style.display = save.showFps ? "inline-block" : "none";
+        openSettings();
+      });
+      fo.appendChild(d);
     });
   }
   const VEH = isEn
@@ -7369,22 +8008,7 @@ function renderSizeHaptics(){
   });
 
   // Update freemium toggle in settings
-  const isFree = isFreemiumActive();
-  if($("btnToggleFreemium")) $("btnToggleFreemium").classList.toggle("sel", isFree);
-  if($("btnToggleFull")) $("btnToggleFull").classList.toggle("sel", !isFree);
-  const tag = $("freemiumStatusTag");
-  if(tag){
-    tag.textContent = isFree ? (isEn ? "FREEMIUM (1 TRACK)" : "FREEMIUM (1 PROGA)") : (isEn ? "FULL UNLOCK ($4.99)" : "POLNA VERZIJA (4,99 €)");
-    tag.style.background = isFree ? "rgba(255,204,38,.25)" : "rgba(61,255,142,.2)";
-    tag.style.color = isFree ? "var(--yellow)" : "var(--green)";
-  }
-  const SIZES = isEn
-    ? [{n:"Small",v:0.8},{n:"Normal",v:1},{n:"Large",v:1.25}]
-    : [{n:"Majhen",v:0.8},{n:"Normalen",v:1},{n:"Velik",v:1.25}];
-  if(save.discSize==null) save.discSize=1;
-  const so=$("sizeOpts"); so.innerHTML="";
-  SIZES.forEach(s=>{ const d=document.createElement("div"); d.className="setOpt"+(Math.abs((save.discSize||1)-s.v)<0.01?" sel":"");
-    d.textContent=s.n; d.addEventListener("click",()=>{ save.discSize=s.v; persist(); openSettings(); }); so.appendChild(d); });
+  updateFreemiumVisuals();
 
   if($("btnHaptics")) $("btnHaptics").querySelector("span").textContent = isEn
     ? ("Vibrations: "+(save.haptics!==false?"on":"off"))
@@ -7704,6 +8328,16 @@ function lbEsc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// Rank as text: EN "1st/2nd/3rd/11th/21st", SL "16." — accepts a number or a capped value like "1000+"
+function lbOrdinal(n, isEn) {
+  const plus = /\+$/.test(String(n)) ? "+" : "";
+  const k = parseInt(n, 10);
+  if (!isEn) return plus ? k + "+" : k + ".";
+  const m100 = k % 100, m10 = k % 10;
+  const suf = (m100 >= 11 && m100 <= 13) ? "th" : (m10 === 1 ? "st" : m10 === 2 ? "nd" : m10 === 3 ? "rd" : "th");
+  return k + suf + plus;
+}
+
 // One leaderboard row: rank (medal for top 3), name, optional sub-label, value
 function lbRow(i, name, sub, value, isMe) {
   const row = document.createElement("div");
@@ -7754,7 +8388,7 @@ function lbSetMine(label, value, rank, trackNum) {
     m.innerHTML = '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span>' + label + '</span>' + nameBadge + '</div><b style="color:#9aa887;font-size:13px;">--:--.---</b>';
     return;
   }
-  m.innerHTML = '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span>' + label + '</span>' + nameBadge + '</div><b>' + value + (rank ? '<span class="lbMyRk">#' + rank + '</span>' : '') + '</b>';
+  m.innerHTML = '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span>' + label + '</span>' + nameBadge + '</div><b>' + value + (rank ? '<span class="lbMyRk">🌍 ' + lbOrdinal(rank, isEn) + '</span>' : '') + '</b>';
 }
 
 let lbFrom = "menu", lbScrollMe = false;
@@ -7769,7 +8403,6 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
   t = r3(t);
   if (prevBest) prevBest = r3(prevBest);
   const isPB = !prevBest || t < prevBest;
-  const myTime = isPB ? t : prevBest;
   const tok = c._tok = {};
 
   const p = (typeof getPreview === "function") ? getPreview(trackNum - 1) : null;
@@ -7789,29 +8422,32 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
 
     const capped = snap.size >= CAP;
     const docs = snap.docs.filter(d => d.id !== runId).map(d => d.data());
-    const faster = docs.filter(d => d.time < myTime);
-    const rank = faster.length + 1;
-    const prevRank = (isPB && prevBest) ? docs.filter(d => d.time < prevBest).length + 1 : 0;
-    const moved = (prevRank && !capped) ? prevRank - rank : 0;
-    const who = d => (d.flag ? lbEsc(d.flag) + " " : "") + lbEsc(d.name || "Racer");
+    const faster = docs.filter(d => d.time < t);             // entries ahead of THIS run
+    const runRank = faster.length + 1;
+    const bestRank = (prevBest && !isPB) ? docs.filter(d => d.time < prevBest).length + 1 : runRank;
+    const oldRank = (isPB && prevBest) ? docs.filter(d => d.time < prevBest).length + 1 : 0;
+    const moved = (oldRank && !capped) ? oldRank - runRank : 0;
+    const ord = n => lbOrdinal(capped ? CAP + "+" : n, isEn);
+    const who = d => (save.uid && d.uid === save.uid) ? (isEn ? "you" : "ti") : (d.flag ? lbEsc(d.flag) + " " : "") + lbEsc(d.name || "Racer");
+    const isWR = runRank === 1 && !capped;
 
-    let line1, line2;
-    if (!prevBest) { line1 = isEn ? "First time on this track!" : "Prvič na tej progi!"; line2 = isEn ? "Your time is on the board" : "Tvoj čas je na lestvici"; }
-    else if (isPB) {
-      line1 = moved > 0 ? "▲ " + moved + (isEn ? (moved === 1 ? " place" : " places") : (moved === 1 ? " mesto" : " mest")) : (isEn ? "Rank held" : "Uvrstitev ohranjena");
-      line2 = isEn ? "New personal best!" : "Nov osebni rekord!";
-    } else {
-      line1 = isEn ? "Your best on this track" : "Tvoj rekord na tej progi";
-      line2 = "+" + (t - prevBest).toFixed(3) + "s " + (isEn ? "off your best" : "za rekordom");
+    // Headline (resPlace/resSub/resWorld) shows this run's world rank
+    if (worldHead && worldHead.state === "loading" && worldHead.track === trackNum && worldHead.t === t) {
+      worldHead = { state: "done", t, track: trackNum, rank: runRank, rankTxt: ord(runRank), capped, isPB, first: !prevBest,
+        moved, off: prevBest ? t - prevBest : 0, bestRankTxt: ord(bestRank) };
+      renderWorldHead();
     }
 
-    let h = head + '<div class="rgMain"><div class="rgRank">' + (capped ? "#" + CAP + "+" : "#" + rank) + '</div>' +
-      '<div class="rgInfo"><div class="rgL1' + (moved > 0 ? ' up' : '') + '">' + line1 + '</div><div class="rgL2">' + line2 + '</div></div></div>';
-    if (rank === 1 && !capped) {
-      h += '<div class="rgLine gold">' + (isPB ? (isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!") : (isEn ? "🥇 You hold the world record" : "🥇 Svetovni rekord je tvoj")) + '</div>';
+    const row = (lbl, rk, tm, cls) => '<div class="rgRow' + (cls ? ' ' + cls : '') + '"><span class="rgRowL">' + lbl + '</span><span class="rgRowR">' + rk + '</span><span class="rgRowT">' + tm + '</span></div>';
+    let h = head + '<div class="rgRows">' +
+      row(isEn ? "This race" : "Ta dirka", ord(runRank), fmt(t), isPB ? "pb" : "");
+    if (prevBest && !isPB) h += row(isEn ? "Your best" : "Tvoj rekord", ord(bestRank) + (bestRank === 1 && !capped ? " 🥇" : ""), fmt(prevBest), "");
+    h += '</div>';
+    if (isWR) {
+      h += '<div class="rgLine gold">' + (isPB ? (isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!") : (isEn ? "🥇 Fastest time on this track" : "🥇 Najhitrejši čas na tej progi")) + '</div>';
     } else if (!capped) {
       const next = faster[faster.length - 1];
-      h += '<div class="rgLine"><b>' + (myTime - next.time).toFixed(3) + 's</b> ' + (isEn ? "behind" : "za") + ' #' + (rank - 1) + ' (' + who(next) + ')</div>';
+      h += '<div class="rgLine"><b>' + (t - next.time).toFixed(3) + 's</b> ' + (isEn ? "behind" : "za") + ' ' + lbOrdinal(runRank - 1, isEn) + ' (' + who(next) + ')</div>';
       h += '<div class="rgLine">🥇 ' + (isEn ? "World record" : "Svetovni rekord") + ': <b>' + fmt(faster[0].time) + '</b> (' + who(faster[0]) + ')</div>';
     }
     h += '<button class="rgBtn" id="btnResLb">' + (isEn ? "View leaderboard →" : "Poglej lestvico →") + '</button>';
@@ -7822,15 +8458,55 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
       openLeaderboard("single");
     });
 
-    if (rank === 1 && isPB && !capped) {
+    if (isWR && isPB) {
       c.classList.add("wr");
       showBanner(isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!", 3000, true);
       try { spawnFireworks(); } catch(e) {}
     }
   } catch(err) {
     console.warn("Global rank card error:", err);
-    if (c._tok === tok) c.style.display = "none";
+    if (c._tok === tok) {
+      c.style.display = "none";
+      if (worldHead && worldHead.state === "loading") { worldHead = { state: "fail" }; renderWorldHead(); }
+    }
   }
+}
+
+// Single Race results headline. worldHead: null | {state:"loading"|"done"|"fail", ...}; resWorldMode is set
+// once the results screen is built, so the lookup may finish before or after the screen opens.
+let worldHead = null, resWorldMode = false, raceHeadFallback = null;
+function renderWorldHead() {
+  if (!resWorldMode || !worldHead) return;
+  const isEn = (save.lang === "en");
+  const P = $("resPlace"), S = $("resSub"), W = $("resWorld");
+  if (!P || !S || !W) return;
+  if (worldHead.state === "fail") {   // no world rank → back to the place against the AI
+    resWorldMode = false;
+    const f = raceHeadFallback || {};
+    P.textContent = f.place || ""; P.classList.toggle("win", !!f.win);
+    S.innerHTML = f.sub || ""; W.style.display = "none";
+    if ($("resRaceHead")) $("resRaceHead").style.display = "none";
+    return;
+  }
+  const h = worldHead;
+  if (h.state === "loading") {
+    P.textContent = fmt(h.t); P.classList.remove("win");
+    S.innerHTML = isEn ? "Checking world rank… ⏳" : "Preverjam svetovno uvrstitev… ⏳";
+    W.style.display = "none";
+    return;
+  }
+  const p = (typeof getPreview === "function" && PREVIEWS[h.track - 1]) ? getPreview(h.track - 1) : null;
+  const tName = p && p.name ? p.name.split(" · ").slice(1).join(" · ") : "";
+  P.textContent = h.rankTxt;
+  P.classList.toggle("win", h.isPB || h.rank <= 3);
+  S.innerHTML = "🌍 " + (isEn ? "in the world" : "na svetu") + " · " + (isEn ? "Track " : "Proga ") + h.track + (tName ? " · " + lbEsc(tName) : "");
+  let line;
+  if (h.isPB && h.rank === 1 && !h.capped) line = '<span class="gold">' + (isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!") + '</span>';
+  else if (h.first) line = isEn ? "First time on this track!" : "Prvič na tej progi!";
+  else if (h.isPB) line = '<span class="up">' + (isEn ? "NEW PERSONAL BEST" : "NOV OSEBNI REKORD") + (h.moved > 0 ? " ▲ " + h.moved : "") + '</span>';
+  else line = "+" + h.off.toFixed(3) + "s " + (isEn ? "off your best" : "za tvojim rekordom") + " (" + h.bestRankTxt + ")";
+  W.innerHTML = '<b>' + fmt(h.t) + '</b> · ' + line;
+  W.style.display = "block";
 }
 
 async function loadGlobalTrackLeaderboard(trackNum) {
@@ -9105,6 +9781,7 @@ function drawQuakeCracks(c,u){ if(!quakeCracks.length) return; c.save(); c.lineC
     c.strokeStyle="rgba(90,84,70,.7)"; c.lineWidth=q.w*0.8*u*Math.max(1,scale); c.beginPath(); c.moveTo(q.x+1,q.y+1); for(const s of q.segs) c.lineTo(s.x+1,s.y+1); c.stroke(); }
   c.restore(); }
 function startCareer(lv){
+  if(isFreemiumActive()){ openPaywall("career"); return; }
   const cfg=careerCfg(lv);
   training=0; singleMode=false; timeTrial=false; coneHunt=false; wc=null; finishOrder=[]; particles=[];
   careerLv=lv; level=cfg.track+1; loadTrack(cfg.track); eventsReset();
@@ -9143,6 +9820,7 @@ function startCareer(lv){
   if(cd>0){ player.dmg=cd; setTimeout(()=>showBanner("⚠️ Vozilo štartaš "+Math.round(cd*100)+"% poškodovano (nepopravljeno)",2600),600); }
 }
 function openCareer(){
+  if(isFreemiumActive()){ openPaywall("career"); return; }
   if(!save.career) save.career={unl:50,res:{}}; save.career.unl=50; persist(); const unl=50;
   $("cTokens").textContent="🪙 "+(save.tokens||0);
   const g=$("cGrid"); g.innerHTML="";
@@ -9155,6 +9833,7 @@ function openCareer(){
   setScreen("clevels");
 }
 function openCareerInfo(lv){
+  if(isFreemiumActive()){ openPaywall("career"); return; }
   const cfg=careerCfg(lv), res=(save.career&&save.career.res[lv])||null;
   $("ciNum").textContent=lv; $("ciTitle").textContent=cfg.arcName;
   const wIco=["☀️","🌧️","🌙","❄️","🌫️"][cfg.weather]||"☀️"; const wTxt=["sončno","dež","noč","sneg","megla"][cfg.weather]||"sončno";
@@ -12286,16 +12965,46 @@ function showWCRaceIntro(){
   setScreen("wcRaceIntro");
 }
 let introIdx=0; const INTRO_N=5;
+let introBackScreen="menu";
 function showIntro(i){
   introIdx=Math.max(0,Math.min(INTRO_N-1,i));
   document.querySelectorAll("#intro .islide").forEach(s=>s.classList.toggle("on",+s.dataset.i===introIdx));
-  const dots=$("introDots"); dots.innerHTML="";
-  for(let k=0;k<INTRO_N;k++){ const d=document.createElement("div"); d.className="idot"+(k===introIdx?" on":""); dots.appendChild(d); }
-  $("btnIntroNext").querySelector("span").textContent=(introIdx===INTRO_N-1)?"Začni igro 🏁":"Naprej";
-  $("btnIntroSkip").style.visibility=(introIdx===INTRO_N-1)?"hidden":"visible";
+  const dots=$("introDots");
+  if(dots){
+    dots.innerHTML="";
+    for(let k=0;k<INTRO_N;k++){
+      const d=document.createElement("div");
+      d.className="idot"+(k===introIdx?" on":"");
+      dots.appendChild(d);
+    }
+  }
+  const isEn = (save.lang === "en");
+  const isLast = (introIdx === INTRO_N - 1);
+  const nextBtn = $("btnIntroNext");
+  if(nextBtn){
+    const nextSpan = nextBtn.querySelector("span");
+    if(nextSpan){
+      nextSpan.textContent = isLast ? (isEn ? "Start Race 🏁" : "Začni igro 🏁") : (isEn ? "Next" : "Naprej");
+    }
+  }
+  if($("btnIntroSkip")){
+    $("btnIntroSkip").style.visibility = isLast ? "hidden" : "visible";
+  }
 }
-function openIntro(){ showIntro(0); setScreen("intro"); }
-function introDone(){ save.introSeen=true; persist(); toMenu(); }
+function openIntro(fromScreen){
+  introBackScreen = fromScreen || "menu";
+  showIntro(0);
+  setScreen("intro");
+}
+function introDone(){
+  save.introSeen = true;
+  persist();
+  if(introBackScreen === "help"){
+    setScreen("help");
+  } else {
+    toMenu();
+  }
+}
 function buildLvlGrid(){
   const g=$("lvlGrid"); g.innerHTML="";
   for(let i=1;i<=MAXLVL;i++){
@@ -12309,7 +13018,7 @@ function buildLvlGrid(){
 }
 function bindUI(){
   $("btnWC").addEventListener("click",()=>{ if(isFreemiumActive()){ openPaywall("wc"); } else openWC(); });
-  $("btnCareer").addEventListener("click",()=>{ Snd.unlock(); Snd.click&&Snd.click(); if(!save.playerName){ askPlayerName(openCareer); } else openCareer(); });
+  $("btnCareer").addEventListener("click",()=>{ if(isFreemiumActive()){ openPaywall("career"); return; } Snd.unlock(); Snd.click&&Snd.click(); if(!save.playerName){ askPlayerName(openCareer); } else openCareer(); });
   $("btnCareerBack").addEventListener("click",()=>setScreen("menu"));
   if($("btnAch")) $("btnAch").addEventListener("click",()=>{ Snd.click&&Snd.click(); openAch("menu"); });
   if($("btnAchBack")) $("btnAchBack").addEventListener("click",()=>setScreen(achBackScreen||"leaderboard"));
@@ -12519,6 +13228,10 @@ function bindUI(){
   if($("btnVoiceToggle")) $("btnVoiceToggle").addEventListener("click", () => {
     if(typeof mpVoice !== "undefined") mpVoice.onButton();
   });
+  if($("btnMenuModeToggle")) $("btnMenuModeToggle").addEventListener("click", () => {
+    Snd.click && Snd.click();
+    setFreemiumMode(!isFreemiumActive());
+  });
   if($("btnToggleFreemium")) $("btnToggleFreemium").addEventListener("click",()=>setFreemiumMode(true));
   if($("btnToggleFull")) $("btnToggleFull").addEventListener("click",()=>setFreemiumMode(false));
   if($("btnPreviewPaywall")) $("btnPreviewPaywall").addEventListener("click",()=>openPaywall("preview"));
@@ -12541,6 +13254,7 @@ function bindUI(){
   });
   if($("btnSettingsGear")) $("btnSettingsGear").addEventListener("click",()=>{ settingsFromRace=false; openSettings(); });
   $("btnRaceSettings").addEventListener("click",()=>{ pauseGame(); settingsFromRace=true; openSettings(); });
+  if($("btnStuckAlertClose")) $("btnStuckAlertClose").addEventListener("click", hideStuckAlert);
   $("btnSetBack").addEventListener("click",()=>{ if(settingsFromRace){ settingsFromRace=false; setScreen("pause"); } else setScreen("menu"); });
   $("btnWCNameBack").addEventListener("click",()=>setScreen("menu"));
   $("btnWCName").addEventListener("click",()=>{ buildWCCards(); setScreen("wcPreview"); });
@@ -12549,11 +13263,11 @@ function bindUI(){
   $("btnWCStart").addEventListener("click",startWC);
   $("btnWCNext").addEventListener("click",wcNextFromStand);
   $("btnIntroSkip").addEventListener("click",introDone);
-  $("btnIntroNext").addEventListener("click",()=>{
-    if(introIdx>=INTRO_N-1) introDone(); else showIntro(introIdx+1);
-  });
+  $("btnIntroNext").addEventListener("click",()=>{ if(introIdx>=INTRO_N-1) introDone(); else showIntro(introIdx+1); });
   $("btnBack1").addEventListener("click",()=>setScreen("menu"));
   $("btnBack2").addEventListener("click",()=>setScreen("menu"));
+  if($("btnMenuHelp")) $("btnMenuHelp").addEventListener("click",()=>{ Snd.click&&Snd.click(); openIntro("help"); });
+  if($("btnHelpReplayIntro")) $("btnHelpReplayIntro").addEventListener("click",()=>{ Snd.click&&Snd.click(); openIntro("help"); });
   $("btnSound").addEventListener("click",e=>{
     save.sound=!save.sound; Snd.on=save.sound; persist();
     if(!save.sound) Snd.musicStop(); else if(state==="racing") Snd.musicStart();
