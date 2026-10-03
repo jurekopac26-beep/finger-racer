@@ -924,11 +924,80 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpSection { margin-bottom:12px; display:flex; flex-direction:column; gap:6px; }
 .mpSectionHead { display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; padding:0 2px; }
 .mpSecTitle { font-size:12px; font-weight:900; color:#b9c2cf; text-transform:uppercase; letter-spacing:.5px; display:flex; align-items:center; gap:6px; }
-.mpTabs { display:flex; gap:6px; border-bottom:1.5px solid rgba(255,255,255,.1); padding-bottom:8px; margin-bottom:10px; flex:none; }
-.mpTab { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:7px 4px; font-size:11.5px; font-weight:800; color:#dfe6cf; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; -webkit-tap-highlight-color:transparent; }
-.mpTab.sel { background:rgba(61,255,142,.18); border-color:var(--green); color:var(--green); }
+/* Browse: rooms | racers of the selected room (one column + inline details on phones) */
+#mpHome .mpPanel { width:min(780px,96vw)!important; max-width:min(780px,96vw)!important; }
+.mpBrowse { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:12px; align-items:start; margin-bottom:10px; }
+.mpBrowseCol { display:flex; flex-direction:column; gap:6px; min-width:0; }
+@media (max-width:699px){ .mpBrowse { grid-template-columns:1fr; } .mpDetailCol { display:none; } }
+.mpRoomItem { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.mpRoomItem.sel { border-color:var(--green); background:rgba(61,255,142,.1); }
+.mpRoomDetail { background:rgba(10,12,16,.6); border:1.5px solid rgba(255,255,255,.12); border-radius:14px; padding:10px; min-height:140px; }
+.mpDetail { display:flex; flex-direction:column; gap:6px; text-align:left; }
+#mpRoomList > .mpDetail { margin:-4px 0 2px 12px; padding:10px; background:rgba(10,12,16,.6); border-left:2px solid var(--green); border-radius:0 12px 12px 0; }
+.mpDetailHead { font-size:14px; font-weight:900; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mpDetailMeta { font-size:11px; opacity:.75; margin-bottom:2px; }
+.mpHostTag { font-size:9px; font-weight:900; color:var(--yellow); border:1px solid rgba(255,204,38,.5); border-radius:6px; padding:0 4px; margin-left:4px; vertical-align:middle; }
+.mpDetailAction { margin-top:4px; }
+.mpDetailJoin { width:100%; padding:11px; font-size:14px; }
+.mpDetailFull { display:block; text-align:center; padding:9px; font-size:12px; }
+.mpPrivHint { font-size:11.5px; opacity:.85; margin-bottom:6px; }
+.mpPrivRow { display:flex; gap:6px; }
+.mpPrivRow .mpDetailJoin { width:auto; flex:none; }
+#mpPrivCodeIn { flex:1; min-width:0; height:40px; padding:0 8px; border-radius:9px; border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.1); color:#ffd21f; font-size:16px; font-weight:900; letter-spacing:3px; text-align:center; text-transform:uppercase; outline:none; }
+#mpPrivCodeIn:focus { border-color:var(--green); }
+.mpGearBtn { width:34px; height:34px; flex:none; border-radius:50%; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.mpGearBtn:active { transform:scale(.92); }
+
+/* Floating lobby chat: sticks to the bottom of the scrolling lobby, opens upward */
+.mpChatDock { position:sticky; bottom:8px; z-index:5; display:flex; flex-direction:column-reverse; gap:6px; margin-top:4px; }
+.mpChatDock .mpChatBox { display:none; box-shadow:0 8px 24px rgba(0,0,0,.6); background:rgba(14,18,24,.97); }
+.mpChatDock.open .mpChatBox { display:flex; }
+.mpChatDock.open .mpChatMessages { max-height:min(38vh,260px); }
+.mpChatDockBar { display:flex; align-items:center; gap:8px; width:100%; height:44px; padding:0 12px; background:rgba(14,18,24,.96); border:1.5px solid rgba(255,255,255,.2); border-radius:14px; color:#dfe6cf; font-weight:800; font-size:12.5px; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent; }
+.mpChatDockLast { flex:1; min-width:0; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpChatDockUnread { min-width:20px; height:20px; border-radius:10px; background:var(--red); color:#fff; font-size:11px; font-weight:900; align-items:center; justify-content:center; padding:0 5px; }
+.mpChatDockArrow { font-size:11px; opacity:.7; transition:transform .15s; }
+.mpChatDock.open .mpChatDockArrow { transform:rotate(180deg); }
+
+/* Chat Box */
+.mpChatBox { background:rgba(10,12,16,.7); border:1.5px solid rgba(255,255,255,.12); border-radius:14px; padding:9px; display:flex; flex-direction:column; gap:8px; text-align:left; }
+.mpChatMessages { max-height:120px; min-height:55px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; padding-right:4px; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+.mpChatMsg { font-size:11.5px; line-height:1.4; color:#dfe6cf; word-break:break-word; }
+.mpChatSender { font-weight:900; margin-right:4px; }
+.mpChatTime { font-size:9.5px; opacity:.5; margin-left:4px; }
+.mpChatEmpty { font-size:11.5px; opacity:.6; text-align:center; padding:12px 6px; font-style:italic; }
+.mpQuickChatPills { display:flex; gap:6px; overflow-x:auto; padding-bottom:3px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.mpQuickChatPills::-webkit-scrollbar { display:none; }
+.mpQuickPill { flex:none; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-radius:14px; padding:5px 10px; font-size:11px; font-weight:800; color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent; white-space:nowrap; transition:background .1s, transform .1s; }
+.mpQuickPill:active { transform:scale(.94); background:rgba(61,255,142,.22); border-color:var(--green,#3dff8e); }
+.mpChatInputRow { display:flex; gap:6px; align-items:center; }
+#btnMpCustomize { display:block; width:100%; margin:0 0 8px; padding:12px 14px; border:1.5px solid rgba(255,255,255,.25); border-radius:10px; background:linear-gradient(135deg,#6d3cb8,#4b2a8a); color:#fff; font:inherit; font-weight:800; font-size:15px; cursor:pointer; }
+#btnMpCustomize:active { transform:translateY(2px); }
+#mpRoomChatIn, #mpChatIn { flex:1; height:36px; background:rgba(255,255,255,.1); border:1.5px solid rgba(255,255,255,.2); border-radius:9px; padding:0 10px; color:#fff; font-size:16px; font-weight:700; outline:none; }
+#mpRoomChatIn:focus, #mpChatIn:focus { border-color:var(--green,#3dff8e); background:rgba(255,255,255,.15); }
+.mpBtnChatSend { width:38px; height:36px; background:var(--green,#3dff8e); color:#0c0e0a; border:none; border-radius:9px; font-weight:900; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none; -webkit-tap-highlight-color:transparent; }
+.mpBtnChatSend:active { transform:scale(.92); }
+
+.mpHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex:none; }
+.mpStatusIndicator { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:800; background:rgba(255,255,255,.08); padding:4px 10px; border-radius:20px; border:1px solid rgba(255,255,255,.12); color:#dfe6cf; }
+.mpDot { width:8px; height:8px; border-radius:50%; background:#ffbb00; }
+.mpDot.ok { background:var(--green); box-shadow:0 0 8px var(--green); }
+.mpDot.err { background:var(--red); }
+.mpProfileStrip { display:flex; flex-direction:column; gap:9px; background:rgba(10,12,16,.75); border:1.5px solid rgba(255,255,255,.14); border-radius:14px; padding:10px 12px; margin-bottom:10px; flex:none; }
+.mpProfileMain { display:flex; align-items:center; gap:10px; width:100%; }
+.mpAvatar { width:40px; height:40px; border-radius:50%; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.5); flex:none; }
+.mpProfileInfo { flex:1; min-width:0; text-align:left; display:flex; flex-direction:column; gap:3px; }
+.mpNameWrap { position:relative; display:flex; align-items:center; width:100%; }
+#mpName { width:100%; height:38px; background:rgba(255,255,255,.11); border:1.5px solid rgba(255,255,255,.24); border-radius:9px; padding:0 32px 0 10px; color:#fff; font-size:16px; font-weight:800; letter-spacing:.02em; outline:none; transition:border-color .2s, background .2s, box-shadow .2s; box-shadow:inset 0 2px 4px rgba(0,0,0,.25); }
+#mpName:focus { background:rgba(255,255,255,.18); border-color:var(--green); box-shadow:0 0 10px rgba(61,255,142,.35), inset 0 2px 4px rgba(0,0,0,.2); }
+.mpNameEditIco { position:absolute; right:10px; pointer-events:none; font-size:13px; opacity:.65; }
+.mpRank { font-size:11px; opacity:.8; font-weight:700; color:#b9c2cf; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpProfileBtns { display:flex; gap:8px; width:100%; }
+.mpProfileBtns .mpBtnAction { flex:1; height:36px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center; text-align:center; }
+.mpBtnAction { background:rgba(61,255,142,.15); border:1.5px solid var(--green); color:var(--green); font-size:11.5px; font-weight:900; border-radius:9px; cursor:pointer; flex:none; text-transform:uppercase; -webkit-tap-highlight-color:transparent; }
+.mpBtnAction:active { transform:scale(.96); }
+.mpBtnAction.quick { background:linear-gradient(135deg,#d48b1a,#8c5506); border-color:#ffcc26; color:#fff; }
 .mpBadgeCount { background:rgba(0,0,0,.45); padding:1px 6px; border-radius:10px; font-size:10px; color:#fff; }
-.mpTabView { flex:1; min-height:160px; max-height:44vh; overflow-y:auto; padding-right:2px; }
 .mpList { display:flex; flex-direction:column; gap:8px; }
 .mpEmpty { padding:24px 10px; font-size:13px; opacity:.7; text-align:center; }
 .mpRoomItem { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.12); border-radius:12px; padding:9px 11px; text-align:left; transition:.15s; }
@@ -948,9 +1017,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpPlayerAvatar { width:28px; height:28px; border-radius:50%; border:1.5px solid #fff; flex:none; }
 .mpPlayerName { font-size:13px; font-weight:800; color:#fff; }
 .mpPlayerRank { font-size:10px; opacity:.7; margin-top:1px; }
-.mpCodeCard { background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.12); border-radius:14px; padding:18px 12px; text-align:center; max-width:320px; margin:10px auto; }
-.mpCodeLabel { font-size:13px; opacity:.8; margin-bottom:8px; }
-#mpCodeIn { width:70%; max-width:200px; padding:10px; border-radius:10px; border:2px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#ffd21f; font-size:22px; font-weight:900; letter-spacing:4px; text-align:center; text-transform:uppercase; }
 .mpModal { position:absolute; inset:0; background:rgba(8,11,14,.88); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; padding:14px; }
 .mpModalContent { background:#141920; border:2px solid rgba(255,255,255,.18); border-radius:16px; padding:16px; width:100%; max-width:360px; box-shadow:0 8px 30px rgba(0,0,0,.6); text-align:left; }
 .mpModalTitle { font-size:18px; font-weight:900; color:var(--yellow); text-transform:uppercase; font-style:italic; margin-bottom:12px; text-align:center; }
@@ -1437,7 +1503,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     <div class="panel wide mpPanel">
       <div class="mpHeader">
         <h1 class="disp" style="font-size:24px;margin:0">MULTIPLAYER <span>LOBBY</span></h1>
-        <div class="mpStatusIndicator" id="mpHubStatus"><span class="mpDot" id="mpDot"></span> <span id="mpHubTxt">Connecting to lobby…</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="mpStatusIndicator" id="mpHubStatus"><span class="mpDot" id="mpDot"></span> <span id="mpHubTxt">Connecting to lobby…</span></div>
+          <button class="mpGearBtn" id="btnMpSettings" title="Settings" aria-label="Settings">⚙️</button>
+        </div>
       </div>
 
       <!-- User Profile Strip -->
@@ -1453,9 +1522,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
           </div>
         </div>
         <div class="mpProfileBtns">
-          <button class="mpBtnAction" id="btnMpCustomizeHome" title="Customize">🛠️</button>
-          <button class="mpBtnAction" id="btnMpCreateModalOpen">➕ New Room</button>
-          <button class="mpBtnAction quick" id="btnMpQuick" style="animation: gp 1.5s infinite alternate; box-shadow: 0 0 10px var(--yellow);">⚡ Quick Play</button>
+          <button class="mpBtnAction quick" id="btnMpCreateModalOpen">➕ Create room</button>
         </div>
       </div>
 
@@ -1477,47 +1544,28 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <button class="mpBtnAction quick" id="btnMpQJAction" style="font-size:11.5px;padding:6px 12px">⚡ Quick Join</button>
       </div>
 
-      <!-- Navigation Tabs / View Filters -->
-      <div class="mpTabs">
-        <button class="mpTab sel" id="mpTabAll">🌐 All</button>
-        <button class="mpTab" id="mpTabRooms">🏁 Rooms <span class="mpBadgeCount" id="mpRoomCount">0</span></button>
-        <button class="mpTab" id="mpTabPlayers">👥 Racers <span class="mpBadgeCount" id="mpPlayerCount">1</span></button>
-        <button class="mpTab" id="mpTabChat">💬 Chat</button>
-      </div>
-
-      <!-- Section 1: Open Rooms -->
-      <div id="mpSectionRooms" class="mpSection">
-        <div class="mpSectionHead">
-          <div class="mpSecTitle" id="lblMpSecRooms">🏁 Open Rooms</div>
-          <button class="mpBtnCodeToggle" id="btnMpToggleCode">🔑 Room Code ▾</button>
-        </div>
-        <div id="mpCodeInline" class="mpCodeInlineBox" style="display:none">
-          <div class="mpCodeLabel" style="font-size:11px;opacity:.8;margin-bottom:4px">Have a 5-digit room code?</div>
-          <div style="display:flex;gap:6px;justify-content:center;align-items:center">
-            <input id="mpCodeIn" placeholder="CODE" maxlength="6" />
-            <button class="mpBtnJoin" id="btnMpJoin" style="height:36px;padding:0 14px">Join 🔗</button>
+      <!-- Browse: rooms (left) + racers of the selected room (right); one column with inline details on phones -->
+      <div class="mpBrowse">
+        <div class="mpBrowseCol">
+          <div class="mpSecTitle" id="lblMpSecRooms">🏁 Rooms <span class="mpBadgeCount" id="mpRoomCount">0</span></div>
+          <div class="mpList" id="mpRoomList">
+            <div class="mpEmpty">🔎 Searching for open rooms on network…</div>
           </div>
         </div>
-        <div class="mpList" id="mpRoomList">
-          <div class="mpEmpty">🔎 Searching for open rooms on network…</div>
+        <div class="mpBrowseCol mpDetailCol">
+          <div class="mpSecTitle" id="lblMpSecPlayers">👥 Racers <span class="mpBadgeCount" id="mpPlayerCount">1</span></div>
+          <div id="mpRoomDetail" class="mpRoomDetail"></div>
         </div>
       </div>
 
-      <!-- Section 2: Online Racers -->
-      <div id="mpSectionPlayers" class="mpSection">
-        <div class="mpSectionHead">
-          <div class="mpSecTitle" id="lblMpSecPlayers">👥 Racers in Lobby</div>
-        </div>
-        <div class="mpList" id="mpPlayerList">
-          <div class="mpEmpty">Loading players…</div>
-        </div>
-      </div>
-
-      <!-- Section 3: Lobby Chat -->
-      <div id="mpSectionChat" class="mpSection">
-        <div class="mpSectionHead">
-          <div class="mpSecTitle" id="lblMpSecChat">💬 Lobby Chat</div>
-        </div>
+      <!-- Floating lobby chat dock (collapsed bar → expands upward) -->
+      <div id="mpChatDock" class="mpChatDock">
+        <button id="mpChatDockBar" class="mpChatDockBar" type="button">
+          <span class="mpChatDockIco">💬</span>
+          <span id="mpChatDockLast" class="mpChatDockLast">Lobby chat</span>
+          <span id="mpChatDockUnread" class="mpChatDockUnread" style="display:none">0</span>
+          <span class="mpChatDockArrow">▲</span>
+        </button>
         <div class="mpChatBox" id="mpLobbyChatBox">
           <div class="mpChatMessages" id="mpLobbyChatMessages">
             <div class="mpChatEmpty">💬 Welcome to multiplayer chat! Say hi to racers.</div>
@@ -3925,14 +3973,9 @@ function applyLang(l){
   if($("btnMpCreateModalOpen")) $("btnMpCreateModalOpen").textContent = tr.mpNewRoomBtn;
   const rc = $("mpRoomCount") ? $("mpRoomCount").textContent : "0";
   const pc = $("mpPlayerCount") ? $("mpPlayerCount").textContent : "1";
-  if($("mpTabAll")) $("mpTabAll").textContent = tr.mpTabAll;
-  if($("mpTabRooms")) $("mpTabRooms").innerHTML = tr.mpTabRooms + ' <span class="mpBadgeCount" id="mpRoomCount">' + rc + '</span>';
-  if($("mpTabPlayers")) $("mpTabPlayers").innerHTML = tr.mpTabPlayers + ' <span class="mpBadgeCount" id="mpPlayerCount">' + pc + '</span>';
-  if($("mpTabChat")) $("mpTabChat").textContent = tr.mpTabChat;
-  if($("lblMpSecRooms")) $("lblMpSecRooms").textContent = tr.mpTabRooms;
-  if($("lblMpSecPlayers")) $("lblMpSecPlayers").textContent = tr.mpTabPlayers;
-  if($("lblMpSecChat")) $("lblMpSecChat").textContent = tr.mpTabChat;
-  if($("btnMpToggleCode")) $("btnMpToggleCode").textContent = tr.mpTabCode + ($("mpCodeInline") && $("mpCodeInline").style.display !== "none" ? " ▴" : " ▾");
+  if($("lblMpSecRooms")) $("lblMpSecRooms").innerHTML = tr.mpSecRooms + ' <span class="mpBadgeCount" id="mpRoomCount">' + rc + '</span>';
+  if($("lblMpSecPlayers")) $("lblMpSecPlayers").innerHTML = tr.mpSecRacers + ' <span class="mpBadgeCount" id="mpPlayerCount">' + pc + '</span>';
+  if($("mpChatDockLast") && !$("mpChatDockLast").dataset.msg) $("mpChatDockLast").textContent = tr.mpChatDockTitle;
   if($("btnMpSettings")) { $("btnMpSettings").title = tr.mpSettingsBtn; $("btnMpSettings").setAttribute("aria-label", tr.mpSettingsBtn); }
   if($("btnMpBrowseLobby")) $("btnMpBrowseLobby").textContent = tr.mpBrowseLobby;
   if($("btnMpReturnRoom")) $("btnMpReturnRoom").textContent = tr.mpReturnToRoom;
@@ -11410,24 +11453,8 @@ function mpStartPresenceHeartbeat(){
       time: Date.now()
     });
 
-    if(mp && mp.isHost && mp.isPublic && !mp.started){
-      mpPublishMqtt("finger-racer/v2/lobby/rooms", {
-        id: mp.roomId,
-        code: mp.code,
-        title: mp.title,
-        host: mp.name, hostLv: save.careerLv || 1,
-        color: mp.myColor,
-        track: mp.track,
-        laps: mp.laps,
-        ai: mp.nai,
-        mode: mp.mode,
-        quick: !!mp.quick,
-        players: 1 + (mp.peers ? Array.from(mp.peers.values()).filter(p => !p.isSpectator).length : 0),
-        max: mp.maxPlayers || 4,
-        isPublic: true,
-        time: Date.now(),
-        closed: false
-      });
+    if(mp && mp.isHost && !mp.started){
+      mpPublishMqtt("finger-racer/v2/lobby/rooms", mpRoomAdvert());
     }
 
     const now = Date.now();
@@ -11473,14 +11500,14 @@ function mpHandleMqttMessage(topic, data){
 
   // 2. Lobby Rooms
   if(topic === "finger-racer/v2/lobby/rooms"){
-    if(mp && mp.isHost && data.id === mp.roomId) return;
+    if(mp && mp.isHost && data.id === mpAdvertId()) return;
     if(data.closed){
       mpRelay.activeRooms.delete(data.id);
     } else {
       const isNew = !mpRelay.activeRooms.has(data.id);
       data.time = Date.now();
       mpRelay.activeRooms.set(data.id, data);
-      if(isNew && (!mp || mp.browsingLobby)){
+      if(isNew && data.isPublic !== false && (!mp || mp.browsingLobby)){
         mpShowQuickJoinToast(data);
       }
     }
@@ -11492,6 +11519,7 @@ function mpHandleMqttMessage(topic, data){
 
   // 3. Lobby Chat
   if(topic === "finger-racer/v2/lobby/chat"){
+    if(data.id === MP_CLIENT_ID) return;
     mpAppendLobbyChatMessage(data);
     return;
   }
@@ -11541,9 +11569,38 @@ function mpShowQuickJoinToast(rm){
 
 function mpAppendLobbyChatMessage(msg){
   if(!msg || !msg.text) return;
+  const last = mpLobbyChatHistory[mpLobbyChatHistory.length - 1];
+  if(last && last.id === msg.id && last.text === msg.text && Math.abs((msg.time || 0) - (last.time || 0)) < 1500){
+    return;
+  }
   mpLobbyChatHistory.push(msg);
   if(mpLobbyChatHistory.length > 25) mpLobbyChatHistory.shift();
+  if(msg.id !== MP_CLIENT_ID && !mpChatDockOpen) mpChatUnread++;
   mpRenderLobbyChatFeed();
+  mpUpdateChatDockBar();
+}
+
+// Floating lobby chat: collapsed bar shows the latest message + unread count; tap opens the full chat above it
+let mpChatDockOpen = false, mpChatUnread = 0;
+function mpToggleChatDock(open){
+  mpChatDockOpen = (typeof open === "boolean") ? open : !mpChatDockOpen;
+  if(mpChatDockOpen) mpChatUnread = 0;
+  const dock = $("mpChatDock");
+  if(dock) dock.classList.toggle("open", mpChatDockOpen);
+  mpUpdateChatDockBar();
+  if(mpChatDockOpen){
+    const box = $("mpLobbyChatMessages"); if(box) box.scrollTop = box.scrollHeight;
+    const inp = $("mpChatIn"); if(inp && !mpLobbyNarrow()) setTimeout(() => { try{ inp.focus(); }catch(e){} }, 150);
+  }
+}
+function mpUpdateChatDockBar(){
+  const last = $("mpChatDockLast"), un = $("mpChatDockUnread");
+  const m = mpLobbyChatHistory[mpLobbyChatHistory.length - 1];
+  if(last){
+    if(m){ last.dataset.msg = "1"; last.innerHTML = '<b style="color:' + mpSafeColor(m.color, "#3dff8e") + '">' + esc(m.name || "Racer") + ':</b> ' + esc(m.text); }
+    else { delete last.dataset.msg; last.textContent = (save.lang === "en") ? "Lobby chat" : "Klepet lobija"; }
+  }
+  if(un){ un.textContent = mpChatUnread > 9 ? "9+" : String(mpChatUnread); un.style.display = mpChatUnread ? "inline-flex" : "none"; }
 }
 
 function mpRenderLobbyChatFeed(){
@@ -11608,11 +11665,37 @@ function mpInitQuickChatPills(){
 }
 
 const mpLobby = {
-  activeTab: "all",
+  selected: null,      // "lobby" | advertised room id; null = nothing open (phones)
+  userPicked: false,   // false → keep auto-selecting the fullest joinable room
   rooms: [],
   players: [],
   createCfg: { isPublic: true, track: 0, laps: 3, nai: 0 }
 };
+
+// Lobby advert id: public rooms are listed under their room id (it carries the join code by design);
+// private rooms use a random id so the listing never reveals the code.
+function mpAdvertId(){ return mp.isPublic ? mp.roomId : ("LOCK-" + mp.advertId); }
+
+function mpRoomAdvert(){
+  const peers = mp.peers ? Array.from(mp.peers.values()).filter(p => !p.isSpectator) : [];
+  const max = mp.maxPlayers || 4;
+  const racers = [{ name: mp.name, color: mp.myColor, rank: playerTitle(), host: true },
+    ...peers.map(p => ({ name: p.name, color: p.color, rank: p.title || "", host: false }))].slice(0, max);
+  return {
+    id: mpAdvertId(),
+    code: mp.isPublic ? mp.code : undefined,
+    title: mp.title,
+    host: mp.name, hostLv: save.careerLv || 1,
+    color: mp.myColor,
+    track: mp.track, laps: mp.laps, ai: mp.nai, mode: mp.mode,
+    quick: !!mp.quick,
+    players: racers.length, max,
+    racers,
+    isPublic: !!mp.isPublic,
+    time: Date.now(),
+    closed: false
+  };
+}
 
 function mpSendPresence(){
   if(mpRelay.connected){
@@ -11643,89 +11726,142 @@ function mpRenderLobbyUI(){
 
   const otherPlayers = Array.from(mpRelay.activePlayers.values()).filter(p => p.id !== MP_CLIENT_ID);
   const allPlayers = [myPlayer, ...otherPlayers];
-  const roomsList = Array.from(mpRelay.activeRooms.values());
+  // Fullest rooms first (ties: alphabetical, so rows don't jump around between heartbeats)
+  const roomsList = Array.from(mpRelay.activeRooms.values())
+    .sort((a, b) => ((b.players | 0) - (a.players | 0)) || String(a.title || "").localeCompare(String(b.title || "")));
   mpLobby.rooms = roomsList;
+  mpLobby.players = allPlayers;
 
   const rc = $("mpRoomCount"), pc = $("mpPlayerCount");
   if(rc) rc.textContent = roomsList.length;
   if(pc) pc.textContent = allPlayers.length;
 
-  // 1. Zavihek Sob
+  const narrow = mpLobbyNarrow();
+  // Selection: keep the player's pick while that room exists; otherwise pre-select the fullest room with space
+  if(mpLobby.selected && mpLobby.selected !== "lobby" && !roomsList.some(r => r.id === mpLobby.selected)){
+    mpLobby.selected = null; mpLobby.userPicked = false;
+  }
+  if(!mpLobby.userPicked){
+    const best = roomsList.find(r => r.isPublic !== false && (r.players | 0) < (r.max || 4));   // one tap to Join (private rooms need a code)
+    mpLobby.selected = best ? best.id : (narrow ? null : "lobby");
+  }
+  if(!narrow && !mpLobby.selected) mpLobby.selected = "lobby";
+
   const rList = $("mpRoomList");
-  if(rList){
-    if(roomsList.length === 0){
-      rList.innerHTML = isEn
-        ? '<div class="mpEmpty">🏁 Currently no open public rooms.<br><span style="font-size:12px;opacity:.75;margin-top:6px;display:block">Create a new room by clicking "+ NEW ROOM"!</span></div>'
-        : '<div class="mpEmpty">🏁 Trenutno ni odprtih javnih sob.<br><span style="font-size:12px;opacity:.75;margin-top:6px;display:block">Ustvari novo sobo s klikom na "+ NOVA SOBA"!</span></div>';
-    } else {
-      rList.innerHTML = "";
-      roomsList.forEach(rm => {
-        const item = document.createElement("div");
-        item.className = "mpRoomItem";
-        const trName = esc(mpTrackName(rm.track | 0)) + (rm.mode === "wc" ? " · 🏆" : "") + (rm.quick ? " · ⚡" : "");
-        const isFull = rm.players >= rm.max;
-        const lapsText = rm.laps + (isEn ? (rm.laps === 1 ? ' lap' : ' laps') : ' kr.');
-        const aiText = rm.ai ? (rm.ai + ' AI') : (isEn ? 'no AI' : 'brez AI');
-        const statusText = isFull ? (isEn ? 'Full' : 'Zasedeno') : (rm.players + '/' + rm.max);
-        const joinBtnText = isEn ? 'Join' : 'Pridruži se';
-        item.innerHTML = `
-          <div class="mpRoomLeft">
-            <div class="mpRoomIcon" style="border-color:${mpSafeColor(rm.color, '#3dff8e')}">🏎️</div>
-            <div class="mpRoomDetails">
-              <div class="mpRoomTitle">${esc(rm.title)}</div>
-              <div class="mpRoomMeta"><b>${esc(rm.host)}</b> · ${trName} · ${esc(lapsText)} · ${esc(aiText)}</div>
-            </div>
-          </div>
-          <div class="mpRoomRight">
-            <span class="mpPillStatus ${isFull?'full':''} ">${statusText}</span>
-            ${!isFull?`<button class="mpBtnJoin">${joinBtnText}</button>`:''}
-          </div>
-        `;
-        const joinBtn = item.querySelector(".mpBtnJoin");
-        if(joinBtn){
-          joinBtn.addEventListener("click", () => {
-            Snd.click && Snd.click();
-            mpJoinPublicSlot(rm.id, rm.title, isFull);
-          });
-        }
-        rList.appendChild(item);
-      });
-    }
+  if(!rList) return;
+  // Don't rebuild while the player is typing a private-room code (heartbeats re-render every 2.5s)
+  if(document.activeElement && document.activeElement.id === "mpPrivCodeIn") return;
+
+  rList.innerHTML = "";
+  const lobbyCount = allPlayers.filter(p => p.isMe ? !mp : !p.inRoom).length;
+  rList.appendChild(mpRoomRow("lobby", "🌐", isEn ? "Lobby" : "Lobi",
+    isEn ? (lobbyCount === 1 ? "1 racer waiting" : lobbyCount + " racers waiting") : (lobbyCount + " čaka v lobiju"),
+    String(lobbyCount), false, "#3dff8e"));
+  roomsList.forEach(rm => {
+    const isFull = (rm.players | 0) >= (rm.max || 4);
+    const lapsText = rm.laps + (isEn ? (rm.laps === 1 ? ' lap' : ' laps') : ' kr.');
+    const meta = esc(mpTrackName(rm.track | 0)) + (rm.mode === "wc" ? " · 🏆" : "") + " · " + esc(lapsText) + " · " + (rm.ai ? rm.ai + " AI" : (isEn ? "no AI" : "brez AI"));
+    rList.appendChild(mpRoomRow(rm.id, rm.isPublic === false ? "🔒" : "🏁", esc(rm.title || "Room"), meta,
+      isFull ? (isEn ? "Full" : "Polno") : ((rm.players | 0) + "/" + (rm.max || 4)), isFull, rm.color));
+  });
+  if(!roomsList.length){
+    const e = document.createElement("div");
+    e.className = "mpEmpty";
+    e.textContent = isEn ? "No rooms yet — create one!" : "Še ni sob — ustvari svojo!";
+    rList.appendChild(e);
   }
 
-  // 2. Zavihek Igralcev
-  const pList = $("mpPlayerList");
-  if(pList){
-    pList.innerHTML = "";
-    allPlayers.forEach(p => {
-      const item = document.createElement("div");
-      item.className = "mpPlayerItem";
-      const isMe = p.id === MP_CLIENT_ID;
-      const youBadge = isMe ? (isEn ? '<span style="opacity:.6">(YOU)</span>' : '<span style="opacity:.6">(TI)</span>') : '';
-      const inLobbyTxt = p.status || (isEn ? 'In Lobby 🟢' : 'V lobiju 🟢');
-      const challengeBtnTxt = isEn ? '⚔️ Challenge' : '⚔️ Izzovi';
-      item.innerHTML = `
-        <div class="mpPlayerLeft">
-          <div class="mpPlayerAvatar" style="background:${mpSafeColor(p.color, '#3dff8e')}"></div>
-          <div>
-            <div class="mpPlayerName">${esc(p.name)} ${youBadge}</div>
-            <div class="mpPlayerRank">🎖️ ${esc(p.rank)} · <span style="color:var(--yellow)">${esc(inLobbyTxt)}</span></div>
-          </div>
-        </div>
-        <div>
-          ${!isMe ? `<button class="mpBtnAction" style="font-size:10.5px;padding:5px 8px">${challengeBtnTxt}</button>` : ''}
-        </div>
-      `;
-      const chBtn = item.querySelector("button");
-      if(chBtn){
-        chBtn.addEventListener("click", () => {
-          Snd.click && Snd.click();
-          openCreateRoomModal((isEn ? "Challenge: " : "Izziv: ") + p.name);
-        });
-      }
-      pList.appendChild(item);
-    });
+  // Details: own column on wide screens, inline under the selected row on phones
+  const detailCol = $("mpRoomDetail");
+  const detail = mpLobby.selected ? mpRenderRoomDetail(mpLobby.selected) : null;
+  if(detailCol) detailCol.innerHTML = "";
+  if(detail){
+    if(narrow){
+      const row = rList.querySelector('.mpRoomItem[data-id="' + CSS.escape(mpLobby.selected) + '"]');
+      if(row) row.after(detail);
+    } else if(detailCol){
+      detailCol.appendChild(detail);
+    }
   }
+}
+
+function mpLobbyNarrow(){ return window.matchMedia("(max-width: 699px)").matches; }
+
+function mpRoomRow(id, icon, titleHTML, metaHTML, statusTxt, isFull, color){
+  const item = document.createElement("div");
+  item.className = "mpRoomItem" + (mpLobby.selected === id ? " sel" : "");
+  item.dataset.id = id;
+  item.innerHTML = '<div class="mpRoomLeft"><div class="mpRoomIcon" style="border-color:' + mpSafeColor(color, '#3dff8e') + '">' + icon + '</div>'
+    + '<div class="mpRoomDetails"><div class="mpRoomTitle">' + titleHTML + '</div><div class="mpRoomMeta">' + metaHTML + '</div></div></div>'
+    + '<div class="mpRoomRight"><span class="mpPillStatus' + (isFull ? ' full' : '') + '">' + statusTxt + '</span></div>';
+  item.addEventListener("click", () => {
+    Snd.click && Snd.click();
+    // On phones a second tap closes the inline details
+    mpLobby.selected = (mpLobbyNarrow() && mpLobby.selected === id) ? null : id;
+    mpLobby.userPicked = true;
+    mpRenderLobbyUI();
+  });
+  return item;
+}
+
+// Racer list + Join / code / Full for the selected room, or the racers waiting in the lobby
+function mpRenderRoomDetail(sel){
+  const isEn = (save.lang === "en");
+  const box = document.createElement("div");
+  box.className = "mpDetail";
+  const racerRow = (p, extraHTML) => '<div class="mpPlayerItem"><div class="mpPlayerLeft">'
+    + '<div class="mpPlayerAvatar" style="background:' + mpSafeColor(p.color, '#3dff8e') + '"></div><div>'
+    + '<div class="mpPlayerName">' + esc(p.name || "Racer") + (p.host ? ' <span class="mpHostTag">' + (isEn ? 'HOST' : 'GOSTITELJ') + '</span>' : '')
+    + (p.isMe ? ' <span style="opacity:.6">' + (isEn ? '(YOU)' : '(TI)') + '</span>' : '') + '</div>'
+    + (p.rank ? '<div class="mpPlayerRank">🎖️ ' + esc(p.rank) + '</div>' : '') + '</div></div>' + (extraHTML || '') + '</div>';
+
+  if(sel === "lobby"){
+    const waiting = mpLobby.players.filter(p => p.isMe ? !mp : !p.inRoom);
+    box.innerHTML = '<div class="mpDetailHead">🌐 ' + (isEn ? "Racers in the lobby" : "Dirkači v lobiju") + '</div>'
+      + waiting.map(p => racerRow(p, p.isMe ? '' : '<button class="mpBtnAction mpChallengeBtn" data-name="' + esc(p.name) + '">' + (isEn ? '⚔️ Challenge' : '⚔️ Izzovi') + '</button>')).join("")
+      + (waiting.length <= 1 ? '<div class="mpEmpty" style="margin-top:6px">' + (isEn ? "Nobody else is waiting right now." : "Trenutno ne čaka nihče drug.") + '</div>' : '');
+    box.querySelectorAll(".mpChallengeBtn").forEach(b => b.addEventListener("click", (e) => {
+      e.stopPropagation(); Snd.click && Snd.click();
+      openCreateRoomModal((isEn ? "Challenge: " : "Izziv: ") + b.dataset.name);
+    }));
+    return box;
+  }
+
+  const rm = mpLobby.rooms.find(r => r.id === sel);
+  if(!rm) return null;
+  const isFull = (rm.players | 0) >= (rm.max || 4);
+  const isPriv = rm.isPublic === false;
+  const lapsText = rm.laps + (isEn ? (rm.laps === 1 ? ' lap' : ' laps') : ' kr.');
+  const racers = Array.isArray(rm.racers) && rm.racers.length ? rm.racers : [{ name: rm.host, color: rm.color, host: true }];
+  let action;
+  if(isFull) action = '<div class="mpPillStatus full mpDetailFull">' + (isEn ? "Room is full" : "Soba je polna") + '</div>';
+  else if(isPriv) action = '<div class="mpPrivJoin"><div class="mpPrivHint">🔒 ' + (isEn ? "Private room — enter the code from the host:" : "Zasebna soba — vpiši kodo gostitelja:") + '</div>'
+    + '<div class="mpPrivRow"><input id="mpPrivCodeIn" placeholder="' + (isEn ? "CODE" : "KODA") + '" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" />'
+    + '<button class="mpBtnJoin mpDetailJoin" id="btnMpPrivJoin">' + (isEn ? "Join" : "Pridruži se") + '</button></div></div>';
+  else action = '<button class="mpBtnJoin mpDetailJoin" id="btnMpDetailJoin">' + (isEn ? "Join" : "Pridruži se") + ' 🏁</button>';
+
+  box.innerHTML = '<div class="mpDetailHead">' + (isPriv ? "🔒 " : "🏁 ") + esc(rm.title || "Room") + '</div>'
+    + '<div class="mpDetailMeta">' + esc(mpTrackName(rm.track | 0)) + (rm.mode === "wc" ? " · 🏆 World Cup" : "") + " · " + esc(lapsText) + " · "
+    + (rm.ai ? rm.ai + " AI" : (isEn ? "no AI" : "brez AI")) + " · " + (rm.players | 0) + "/" + (rm.max || 4) + '</div>'
+    + racers.map(p => racerRow(p)).join("")
+    + '<div class="mpDetailAction">' + action + '</div>';
+
+  const jb = box.querySelector("#btnMpDetailJoin");
+  if(jb) jb.addEventListener("click", (e) => { e.stopPropagation(); Snd.click && Snd.click(); mpJoinPublicSlot(rm.id, rm.title, false); });
+  const pin = box.querySelector("#mpPrivCodeIn"), pjb = box.querySelector("#btnMpPrivJoin");
+  const tryPriv = () => {
+    const code = (pin.value || "").trim().toUpperCase();
+    if(code.length < 4){ showBanner(isEn ? "Enter the room code" : "Vpiši kodo sobe", 1600, false); pin.focus(); return; }
+    Snd.click && Snd.click();
+    pin.blur();
+    mpJoinCode(code);
+  };
+  if(pin){
+    pin.addEventListener("click", e => e.stopPropagation());
+    pin.addEventListener("keydown", e => { if(e.key === "Enter") tryPriv(); });
+  }
+  if(pjb) pjb.addEventListener("click", e => { e.stopPropagation(); tryPriv(); });
+  return box;
 }
 
 /* ---------- WEBRTC VOICE CHAT MANAGER ----------
@@ -12156,6 +12292,7 @@ function openMP(preserveSession = false){
   setScreen("mpHome");
   mpInitQuickChatPills();
   mpRenderLobbyChatFeed();
+  mpToggleChatDock(false);
 
   // If host returned to lobby to browse, show active hosting bar
   const hBar = $("mpHostingBar");
@@ -12170,23 +12307,10 @@ function openMP(preserveSession = false){
     }
   }
 
-  mpSwitchTab("all");
+  mpLobby.userPicked = false;   // fresh visit → pre-select the fullest open room again
+  mpRenderLobbyUI();
   if(!mpRelay.connected && !mpRelay.connecting){ mpRelay.brokerIdx = 0; mpRelay.failCount = 0; }
   mpConnectRelay();
-}
-
-function mpSwitchTab(tab){
-  mpLobby.activeTab = tab;
-  if($("mpTabAll")) $("mpTabAll").classList.toggle("sel", tab === "all");
-  if($("mpTabRooms")) $("mpTabRooms").classList.toggle("sel", tab === "rooms");
-  if($("mpTabPlayers")) $("mpTabPlayers").classList.toggle("sel", tab === "players");
-  if($("mpTabChat")) $("mpTabChat").classList.toggle("sel", tab === "chat");
-
-  if($("mpSectionRooms")) $("mpSectionRooms").style.display = (tab === "all" || tab === "rooms") ? "flex" : "none";
-  if($("mpSectionPlayers")) $("mpSectionPlayers").style.display = (tab === "all" || tab === "players") ? "flex" : "none";
-  if($("mpSectionChat")) $("mpSectionChat").style.display = (tab === "all" || tab === "chat") ? "flex" : "none";
-
-  mpRenderLobbyUI();
 }
 
 function openCreateRoomModal(prefillTitle){
@@ -12405,6 +12529,7 @@ function mpCreateRoom(cfgOverride, titleOverride){
     oppTitle: "Dirkač",
     code: roomCode,
     roomId,
+    advertId: mpCode() + mpCode(),   // lobby listing id for private rooms — never derived from the join code
     title: roomTitle,
     track: mpLobby.createCfg.track,
     laps: mpLobby.createCfg.laps,
@@ -12446,26 +12571,7 @@ function mpCreateRoom(cfgOverride, titleOverride){
     if(mpRelay.client && mpRelay.connected){
       mpRelay.client.subscribe(mpRelay.currentRoomTopic);
       mpRelay.subTopics.add(mpRelay.currentRoomTopic);
-      if(isPublic){
-        mpPublishMqtt("finger-racer/v2/lobby/rooms", {
-          id: roomId,
-          code: roomCode,
-          title: roomTitle,
-          host: nm,
-          color: mp.myColor,
-          track: mp.track,
-          laps: mp.laps,
-          ai: mp.nai,
-          mode: mp.mode,
-          quick: !!mp.quick,
-          hostLv: save.careerLv || 1,
-          players: 1,
-          max: mp.maxPlayers || 4,
-          isPublic: true,
-          time: Date.now(),
-          closed: false
-        });
-      }
+      mpPublishMqtt("finger-racer/v2/lobby/rooms", mpRoomAdvert());
     }
   };
 
@@ -12537,7 +12643,10 @@ function mpJoinRoom(roomId, roomCode, roomTitle, isPublic, isSpectator = false){
     setTimeout(() => { if(mp && !mp.hostId && !mp.started) sendJoin(); }, 2500);
     setTimeout(() => {
       if(mp && (!mp.peers || mp.peers.size === 0) && !mp.started){
-        mpStatus(isEn ? "Host did not respond. Try again." : "Gostitelj se ni odzval. Poskusi znova.");
+        // A private room only answers on the right code, so silence there almost always means a wrong code
+        mpStatus(mp.isPublic
+          ? (isEn ? "Host did not respond. Try again." : "Gostitelj se ni odzval. Poskusi znova.")
+          : (isEn ? "Wrong code or the room was closed." : "Napačna koda ali pa je soba zaprta."));
       }
     }, 6000);
   };
@@ -12551,77 +12660,15 @@ function mpJoinPublicSlot(roomId, roomTitle, isSpectator = false){
   mpJoinRoom(roomId, code, roomTitle, true, isSpectator);
 }
 
+// Join a private room by its code (typed on the selected 🔒 room in the lobby)
 function mpJoinCode(customCode){
-  const code = (customCode || $("mpCodeIn").value || "").trim().toUpperCase();
+  const isEn = (save.lang === "en");
+  const code = (customCode || "").trim().toUpperCase();
   if(code.length < 4){
-    showBanner("Vpiši veljavno kodo sobe.", 2200, true);
+    showBanner(isEn ? "Enter a valid room code." : "Vpiši veljavno kodo sobe.", 2200, true);
     return;
   }
-  let roomId = "PRIV-" + code;
-  for(const [id, r] of mpRelay.activeRooms){
-    if(r.code === code){ roomId = id; break; }
-  }
-  mpJoinRoom(roomId, code, "Soba #" + code, false);
-}
-
-// QUICK PLAY: one tap -> join the best open public room, or instantly host a quick room
-// (no setup dialog; the room auto-starts 30s after someone joins).
-let _mpQuickBusy = false;
-function mpQuickPickRoom(){
-  const myLv = save.careerLv || 1;
-  const openRooms = Array.from(mpRelay.activeRooms.values())
-    .filter(r => r.isPublic !== false && (r.players || 1) < (r.max || 4) && !mpTrackLocked(r.track | 0));
-  if(!openRooms.length) return null;
-  // prefer quick rooms, then rooms with more players waiting, then similar level
-  openRooms.sort((a, b) =>
-    ((b.quick ? 1 : 0) - (a.quick ? 1 : 0)) ||
-    ((b.players || 1) - (a.players || 1)) ||
-    (Math.abs((a.hostLv || 1) - myLv) - Math.abs((b.hostLv || 1) - myLv)));
-  return openRooms[0];
-}
-function mpQuick(){
-  if(_mpQuickBusy) return;
-  const isEn = (save.lang === "en");
-  const btn = $("btnMpQuick");
-  const origTxt = btn ? btn.textContent : "";
-  _mpQuickBusy = true;
-  if(btn) btn.textContent = isEn ? "🔎 Searching…" : "🔎 Iščem…";
-
-  let done = false;
-  setTimeout(() => {
-    if(done) return;
-    done = true; _mpQuickBusy = false;
-    if(btn) btn.textContent = origTxt;
-    showBanner(isEn ? "Can't reach the multiplayer server. Try again." : "Strežnik ni dosegljiv. Poskusi znova.", 2200, true);
-  }, 9000);
-  const finish = () => {
-    if(done) return;
-    done = true;
-    _mpQuickBusy = false;
-    if(btn) btn.textContent = origTxt;
-    if(!$("mpHome") || !$("mpHome").classList.contains("on")) return;   // user left meanwhile
-    const best = mpQuickPickRoom();
-    if(best){
-      showBanner((isEn ? "⚡ Joining " : "⚡ Pridružujem se: ") + best.title, 1500, true);
-      mpJoinPublicSlot(best.id, best.title);
-      return;
-    }
-    const unlocked = MP_TRACKS.filter(t => !mpTrackLocked(t));
-    const track = unlocked[(Math.random() * unlocked.length) | 0] || 0;
-    showBanner(isEn ? "⚡ No open rooms — hosting a quick race!" : "⚡ Ni odprtih sob — odpiram hitro dirko!", 1800, true);
-    mpCreateRoom({ isPublic: true, track, laps: 3, nai: 0, mode: "single", voice: false, quick: true },
-      isEn ? "⚡ Quick Race" : "⚡ Hitra dirka");
-  };
-
-  // If a room is already known, join right away; otherwise wait briefly for room adverts (heartbeat is 2.5s)
-  mpConnectRelay(() => {
-    if(mpQuickPickRoom()){ finish(); return; }
-    let waited = 0;
-    const iv = setInterval(() => {
-      waited += 250;
-      if(mpQuickPickRoom() || waited >= 2750){ clearInterval(iv); finish(); }
-    }, 250);
-  });
+  mpJoinRoom("PRIV-" + code, code, (isEn ? "Room #" : "Soba #") + code, false);
 }
 
 function mpSend(o){
@@ -13272,8 +13319,8 @@ function mpHostStart(){
   }
   mp.seed = (Math.random() * 1e9) | 0;
   mp.weather = mpPickWeather();
-  if(mp.isPublic){
-    mpPublishMqtt("finger-racer/v2/lobby/rooms", { id: mp.roomId, closed: true });
+  if(mp.isHost){
+    mpPublishMqtt("finger-racer/v2/lobby/rooms", { id: mpAdvertId(), closed: true });
   }
   if(mp.mode === "wc" && mp.wcTracks && mp.wcTracks.length > 0){
     mp.wcIndex = 0;
@@ -14435,15 +14482,12 @@ function bindUI(){
   $("btnMpCreateModalOpen").addEventListener("click",()=>{ Snd.click&&Snd.click(); openCreateRoomModal(); });
   $("btnMpConfirmCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpCreateRoom(); });
   $("btnMpCancelCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); closeCreateRoomModal(); });
-  if($("mpTabAll")) $("mpTabAll").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("all"); });
-  if($("mpTabRooms")) $("mpTabRooms").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("rooms"); });
-  if($("mpTabPlayers")) $("mpTabPlayers").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("players"); });
-  if($("mpTabChat")) $("mpTabChat").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpSwitchTab("chat"); });
-
-  if($("btnMpToggleCode")) $("btnMpToggleCode").addEventListener("click",()=>{
-    Snd.click&&Snd.click();
-    const box = $("mpCodeInline");
-    if(box) box.style.display = (box.style.display === "none") ? "block" : "none";
+  if($("mpChatDockBar")) $("mpChatDockBar").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpToggleChatDock(); });
+  // Rooms/details switch between two columns and inline (phones) when the window is resized
+  let _mpNarrow = mpLobbyNarrow();
+  window.addEventListener("resize",()=>{
+    const n = mpLobbyNarrow();
+    if(n !== _mpNarrow){ _mpNarrow = n; if($("mpHome").classList.contains("on")) mpRenderLobbyUI(); }
   });
 
   if($("btnMpBrowseLobby")) $("btnMpBrowseLobby").addEventListener("click",()=>{
@@ -14475,13 +14519,6 @@ function bindUI(){
       const inp = $("mpChatIn");
       if(inp){ Snd.click&&Snd.click(); mpSendLobbyChat(inp.value); inp.value = ""; }
     }
-  });
-  if($("mpChatDockBar")) $("mpChatDockBar").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpToggleChatDock(); });
-  function mpLobbyNarrow(){ return !!(window.matchMedia && window.matchMedia("(max-width: 699px)").matches); }
-  let _mpNarrow = mpLobbyNarrow();
-  window.addEventListener("resize",()=>{
-    const n = mpLobbyNarrow();
-    if(n !== _mpNarrow){ _mpNarrow = n; if($("mpHome").classList.contains("on")) mpRenderLobbyUI(); }
   });
 
   if($("btnMpRoomChatSend")) $("btnMpRoomChatSend").addEventListener("click",()=>{
