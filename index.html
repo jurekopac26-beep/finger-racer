@@ -966,10 +966,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpChatSender { font-weight:900; margin-right:4px; }
 .mpChatTime { font-size:9.5px; opacity:.5; margin-left:4px; }
 .mpChatEmpty { font-size:11.5px; opacity:.6; text-align:center; padding:12px 6px; font-style:italic; }
-.mpQuickChatPills { display:flex; gap:6px; overflow-x:auto; padding-bottom:3px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-.mpQuickChatPills::-webkit-scrollbar { display:none; }
-.mpQuickPill { flex:none; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-radius:14px; padding:5px 10px; font-size:11px; font-weight:800; color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent; white-space:nowrap; transition:background .1s, transform .1s; }
-.mpQuickPill:active { transform:scale(.94); background:rgba(61,255,142,.22); border-color:var(--green,#3dff8e); }
 .mpChatInputRow { display:flex; gap:6px; align-items:center; }
 #btnMpCustomize { display:block; width:100%; margin:0 0 8px; padding:12px 14px; border:1.5px solid rgba(255,255,255,.25); border-radius:10px; background:linear-gradient(135deg,#6d3cb8,#4b2a8a); color:#fff; font:inherit; font-weight:800; font-size:15px; cursor:pointer; }
 #btnMpCustomize:active { transform:translateY(2px); }
@@ -1570,7 +1566,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
           <div class="mpChatMessages" id="mpLobbyChatMessages">
             <div class="mpChatEmpty">💬 Welcome to multiplayer chat! Say hi to racers.</div>
           </div>
-          <div class="mpQuickChatPills" id="mpQuickChatPills"></div>
           <div class="mpChatInputRow">
             <input id="mpChatIn" placeholder="Type a message…" maxlength="50" autocomplete="off" />
             <button id="btnMpChatSend" class="mpBtnChatSend" title="Send">➤</button>
@@ -1682,7 +1677,6 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <div class="mpChatMessages" id="mpRoomChatMessages" style="max-height:85px;min-height:48px">
           <div class="mpChatEmpty" id="mpRoomChatEmpty">💬 Room chat is open. Talk with racers!</div>
         </div>
-        <div class="mpQuickChatPills" id="mpRoomQuickPills"></div>
         <div class="mpChatInputRow">
           <input id="mpRoomChatIn" placeholder="Chat in room…" maxlength="50" autocomplete="off" />
           <button id="btnMpRoomChatSend" class="mpBtnChatSend" title="Send">➤</button>
@@ -11643,27 +11637,6 @@ function mpSendLobbyChat(rawText){
   mpAppendLobbyChatMessage(msg);
 }
 
-function mpInitQuickChatPills(){
-  const pillsBox = $("mpQuickChatPills");
-  if(!pillsBox) return;
-  const isEn = (save.lang === "en");
-  const pills = isEn
-    ? ["👋 Hi!", "🏎️ Anyone race?", "⚡ Join me!", "👍 Ready!", "🔥 Let's go!"]
-    : ["👋 Živjo!", "🏎️ Kdo za dirko?", "⚡ Pridruži se!", "👍 Pripravljen!", "🔥 Gremo!"];
-  pillsBox.innerHTML = "";
-  pills.forEach(p => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "mpQuickPill";
-    btn.textContent = p;
-    btn.addEventListener("click", () => {
-      Snd.click && Snd.click();
-      mpSendLobbyChat(p);
-    });
-    pillsBox.appendChild(btn);
-  });
-}
-
 const mpLobby = {
   selected: null,      // "lobby" | advertised room id; null = nothing open (phones)
   userPicked: false,   // false → keep auto-selecting the fullest joinable room
@@ -12290,7 +12263,6 @@ function openMP(preserveSession = false){
   if(rk) rk.textContent = "🎖️ " + playerTitle();
 
   setScreen("mpHome");
-  mpInitQuickChatPills();
   mpRenderLobbyChatFeed();
   mpToggleChatDock(false);
 
@@ -12938,9 +12910,9 @@ function mpOnData(d){
     if(!mp.trackVotes) mp.trackVotes = {};
     mp.trackVotes[d.sender] = d.trackId;
     mpRenderHostSettings();
-  } else if(d.t === "emote"){
-    const txt = String(d.text || "").slice(0, 40);
-    if(txt) mpShowEmote(d.sender, txt);
+  } else if(d.t === "chat" || d.t === "emote"){
+    const txt = String(d.text || "").slice(0, 50);
+    if(txt) mpShowRoomChatMessage(d.sender, txt, d.name, d.color);
   } else if(d.t === "info"){
     const peer = mp.peers ? mp.peers.get(d.sender) : null;
     if(peer){
@@ -13030,31 +13002,53 @@ function mpAutoTimerTick() {
 
 /* ---------- ROOM VIEW & READY TOGGLE ---------- */
 
-let _mpLastEmote = 0;
-function mpSendEmote(text){
-  if(mp){
-    const now = Date.now();
-    if(now - _mpLastEmote < 1000) return;   // anti-spam
-    _mpLastEmote = now;
-    mpSend({ t: "emote", text: text });
-    mpShowEmote(MP_CLIENT_ID, text);
-  }
+let _lastMpRoomChatTime = 0;
+
+function mpSendRoomChat(rawText){
+  if(!mp) return;
+  const text = (rawText || "").trim().slice(0, 50);
+  if(!text) return;
+  const now = Date.now();
+  if(now - _lastMpRoomChatTime < 250) return;
+  _lastMpRoomChatTime = now;
+  mpSend({ t: "chat", text: text, name: mp.name, color: mp.myColor });
+  mpShowRoomChatMessage(MP_CLIENT_ID, text, mp.name, mp.myColor);
 }
-function mpShowEmote(senderId, text){
-  // chat log line (visible to everyone in the room)
-  const log = $("mpChatLog");
-  if(log){
+
+function mpSendEmote(text){
+  mpSendRoomChat(text);
+}
+
+let _lastRoomMsg = null;
+function mpShowRoomChatMessage(senderId, text, senderName, senderColor){
+  const now = Date.now();
+  if(_lastRoomMsg && _lastRoomMsg.senderId === senderId && _lastRoomMsg.text === text && (now - _lastRoomMsg.time < 1200)){
+    return;
+  }
+  _lastRoomMsg = { senderId, text, time: now };
+  const box = $("mpRoomChatMessages");
+  if(box){
     const isMe = senderId === MP_CLIENT_ID;
     const peer = (!isMe && mp && mp.peers) ? mp.peers.get(senderId) : null;
-    const who = isMe ? (mp && mp.name ? mp.name : "TI") : (peer ? peer.name : "?");
-    const col = isMe ? (mp ? mp.myColor : "#3dff8e") : (peer ? peer.color : "#ccc");
-    const line = document.createElement("div");
-    line.className = "mpChatLine";
-    line.innerHTML = `<b style="color:${mpSafeColor(col, '#ccc')}">${esc(who)}:</b> ${esc(text)}`;
-    log.appendChild(line);
-    while(log.children.length > 4) log.removeChild(log.firstChild);
-    log.style.display = "block";
+    const who = senderName || (isMe ? (mp ? mp.name : "YOU") : (peer ? peer.name : "Racer"));
+    const col = senderColor || (isMe ? (mp ? mp.myColor : "#3dff8e") : (peer ? peer.color : "#3dff8e"));
+
+    const empty = box.querySelector(".mpChatEmpty");
+    if(empty) empty.remove();
+
+    const row = document.createElement("div");
+    row.className = "mpChatMsg";
+    const d = new Date();
+    const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    row.innerHTML = '<span class="mpChatSender" style="color:' + mpSafeColor(col, '#3dff8e') + '">' + esc(who) + ':</span>'
+      + '<span class="mpChatBody">' + esc(text) + '</span>'
+      + '<span class="mpChatTime">' + timeStr + '</span>';
+    box.appendChild(row);
+    while(box.children.length > 25) box.removeChild(box.firstChild);
+    box.scrollTop = box.scrollHeight;
   }
+
+  // Sound and avatar speech bubble
   if(mp && senderId !== MP_CLIENT_ID){ try{ Snd.click && Snd.click(); }catch(e){} }
   let el = document.getElementById("mpAvatar_" + senderId);
   if(!el) return;
@@ -13064,7 +13058,7 @@ function mpShowEmote(senderId, text){
   t.style.top = "-24px";
   t.style.left = "50%";
   t.style.transform = "translateX(-50%)";
-  t.style.background = "rgba(0,0,0,0.8)";
+  t.style.background = "rgba(0,0,0,0.85)";
   t.style.color = "#fff";
   t.style.padding = "4px 8px";
   t.style.borderRadius = "8px";
@@ -13083,6 +13077,11 @@ function mpShowEmote(senderId, text){
   el.appendChild(t);
   setTimeout(()=>t.remove(), 2000);
 }
+
+function mpShowEmote(senderId, text){
+  mpShowRoomChatMessage(senderId, text);
+}
+
 
 function mpUpdateRoomView(){
   if(!mp) return;
@@ -14098,6 +14097,9 @@ function mpReset(){
   mp = null;
   const log = $("mpChatLog");
   if(log){ log.innerHTML = ""; log.style.display = "none"; }
+  // fresh room chat for the next room
+  const rcb = $("mpRoomChatMessages");
+  if(rcb) rcb.innerHTML = '<div class="mpChatEmpty" id="mpRoomChatEmpty">' + ((save.lang === "en") ? "💬 Room chat is open. Talk with racers!" : "💬 Klepet v sobi je odprt. Klepetaj z dirkači!") + '</div>';
 }
 
 
