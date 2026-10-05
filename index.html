@@ -4963,22 +4963,53 @@ function drawDeathMarks(c,u){
     c.restore();
   }
 }
+function drawMechanicFace(c,hx,hy,mu,expr){
+  // 2 piki za oči (2 dots for eyes)
+  c.fillStyle="#221915";
+  c.beginPath();
+  c.arc(hx-0.75*mu,hy+0.15*mu,0.35*mu,0,6.28);
+  c.arc(hx+0.75*mu,hy+0.15*mu,0.35*mu,0,6.28);
+  c.fill();
+  // preprost izraz za usta (mouth expression)
+  if(expr==="grin"){
+    c.fillStyle="#3e1e12";
+    c.beginPath(); c.arc(hx,hy+0.8*mu,0.65*mu,0.15,Math.PI-0.15); c.closePath(); c.fill();
+  } else if(expr==="open"){
+    c.fillStyle="#3e1e12";
+    c.beginPath(); c.ellipse(hx,hy+1.15*mu,0.38*mu,0.48*mu,0,0,6.28); c.fill();
+  } else if(expr==="smirk"){
+    c.strokeStyle="#3e1e12"; c.lineWidth=0.48*mu; c.lineCap="round";
+    c.beginPath(); c.arc(hx+0.15*mu,hy+0.75*mu,0.58*mu,0.1,Math.PI*0.72); c.stroke();
+  } else if(expr==="focus"){
+    c.strokeStyle="#3e1e12"; c.lineWidth=0.48*mu; c.lineCap="round";
+    c.beginPath(); c.moveTo(hx-0.45*mu,hy+1.15*mu); c.lineTo(hx+0.45*mu,hy+1.15*mu); c.stroke();
+  } else {
+    c.strokeStyle="#3e1e12"; c.lineWidth=0.48*mu; c.lineCap="round";
+    c.beginPath(); c.arc(hx,hy+0.65*mu,0.65*mu,0.25,Math.PI-0.25); c.stroke();
+  }
+}
 function drawFuelRescue(c,u){
   if(!fuelRescue) return; const fr=fuelRescue;
-  const ssx=offX+fr.x*scale, ssy=offY+fr.y*scale; if(ssx<-50||ssx>W+50||ssy<-50||ssy>H+50) return;
-  const now=performance.now()/1000, bob=fr.run?Math.sin(now*12+fr.ph)*2*u:0;
+  const ssx=offX+fr.x*scale, ssy=offY+fr.y*scale; if(ssx<-60||ssx>W+60||ssy<-60||ssy>H+60) return;
+  const now=performance.now()/1000, mu=u*1.2, bob=fr.run?Math.sin(now*12+fr.ph)*2*mu:0;
+  const headY=-4.4*mu+bob;
   c.save(); c.translate(fr.x,fr.y);
-  c.fillStyle="rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0,4.6*u,4*u,2*u,0,0,6.28); c.fill();
+  c.fillStyle="rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0,4.6*mu,4*mu,2*mu,0,0,6.28); c.fill();
   if(fr.phase==="work"){ const tx=(player.x-fr.x)*0.55, ty=(player.y-fr.y)*0.55;
-    if(fr.mode==="repair"){ c.fillStyle="#ffd36b"; for(let q=0;q<4;q++){ const a=Math.random()*6.28,dd=Math.random()*3.5*u; c.beginPath(); c.arc(tx*0.4+Math.cos(a)*dd,ty*0.4+Math.sin(a)*dd,0.7*u,0,6.28); c.fill(); } }
-    else { c.strokeStyle="#20242b"; c.lineWidth=1.4*u; c.beginPath(); c.moveTo(3.4*u,-0.3*u+bob); c.lineTo(tx,ty); c.stroke();
-      c.fillStyle="#c8e06a"; for(let q=0;q<3;q++){ const t=(now*1.9+q/3)%1; c.beginPath(); c.arc(3.4*u+(tx-3.4*u)*t,(-0.3*u+bob)+(ty+0.3*u-bob)*t,1.0*u,0,6.28); c.fill(); } } }
-  c.fillStyle=fr.col; c.beginPath(); c.ellipse(0,bob,3.4*u,4.4*u,0,0,6.28); c.fill();
-  c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=0.7*u; c.beginPath(); c.ellipse(0,bob,3.4*u,4.4*u,0,0,6.28); c.stroke();
-  c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,-4.4*u+bob,2.4*u,0,6.28); c.fill();
-  c.fillStyle="#ffd24a"; c.beginPath(); c.arc(0,-5*u+bob,2.6*u,Math.PI,0); c.fill();
-  if(fr.mode==="repair"){ c.strokeStyle="#cfd3d8"; c.lineWidth=1.7*u; c.lineCap="round"; c.beginPath(); c.moveTo(2.0*u,0.6*u+bob); c.lineTo(4.8*u,-1.6*u+bob); c.stroke(); }
-  else { c.save(); c.translate(3.4*u,0.4*u+bob); c.fillStyle="#c0392b"; c.fillRect(-1.8*u,-2.2*u,3.6*u,4.4*u); c.fillStyle="#8a2820"; c.fillRect(-1.8*u,-0.4*u,3.6*u,1*u); c.fillStyle="#2a2f38"; c.fillRect(-0.4*u,-3.1*u,0.9*u,1.1*u); c.restore(); }
+    if(fr.mode==="repair"){ c.fillStyle="#ffd36b"; for(let q=0;q<4;q++){ const a=Math.random()*6.28,dd=Math.random()*3.5*mu; c.beginPath(); c.arc(tx*0.4+Math.cos(a)*dd,ty*0.4+Math.sin(a)*dd,0.7*mu,0,6.28); c.fill(); } }
+    else { c.strokeStyle="#20242b"; c.lineWidth=1.4*mu; c.beginPath(); c.moveTo(3.4*mu,-0.3*mu+bob); c.lineTo(tx,ty); c.stroke();
+      c.fillStyle="#c8e06a"; for(let q=0;q<3;q++){ const t=(now*1.9+q/3)%1; c.beginPath(); c.arc(3.4*mu+(tx-3.4*mu)*t,(-0.3*mu+bob)+(ty+0.3*mu-bob)*t,1.0*mu,0,6.28); c.fill(); } } }
+  c.fillStyle=fr.col; c.beginPath(); c.ellipse(0,bob,3.4*mu,4.4*mu,0,0,6.28); c.fill();
+  c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=0.7*mu; c.beginPath(); c.ellipse(0,bob,3.4*mu,4.4*mu,0,0,6.28); c.stroke();
+  c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,2.4*mu,0,6.28); c.fill();
+  c.fillStyle="#ffd24a"; c.beginPath(); c.arc(0,headY-0.6*mu,2.6*mu,Math.PI,0); c.fill();
+  let expr="smile";
+  if(fr.phase==="come") expr="open";
+  else if(fr.phase==="work") expr="focus";
+  else if(fr.phase==="leave") expr="grin";
+  drawMechanicFace(c,0,headY,mu,expr);
+  if(fr.mode==="repair"){ c.strokeStyle="#cfd3d8"; c.lineWidth=1.7*mu; c.lineCap="round"; c.beginPath(); c.moveTo(2.0*mu,0.6*mu+bob); c.lineTo(4.8*mu,-1.6*mu+bob); c.stroke(); }
+  else { c.save(); c.translate(3.4*mu,0.4*mu+bob); c.fillStyle="#c0392b"; c.fillRect(-1.8*mu,-2.2*mu,3.6*mu,4.4*mu); c.fillStyle="#8a2820"; c.fillRect(-1.8*mu,-0.4*mu,3.6*mu,1*mu); c.fillStyle="#2a2f38"; c.fillRect(-0.4*mu,-3.1*mu,0.9*mu,1.1*mu); c.restore(); }
   c.restore();
 }
 // Multiplayer: human opponents are mp.peers (not in racers[]); their crew owner is "mp:<peer id>"
@@ -5044,8 +5075,8 @@ function updatePitCrew(dt){
   crewReady = repairReady && fuelerReady;
 }
 function drawPitCrew(c,u){
-  const now=performance.now()/1000;
-  for(const m of pitCrew){ const sx=offX+m.x*scale, sy=offY+m.y*scale; if(sx<-24||sx>W+24||sy<-24||sy>H+24) continue;
+  const now=performance.now()/1000, mu=u*1.2;
+  for(const m of pitCrew){ const sx=offX+m.x*scale, sy=offY+m.y*scale; if(sx<-28||sx>W+28||sy<-28||sy>H+28) continue;
     // lastnikovo vozilo + faza (popravilo dokler je škoda; tankanje šele ko je popravljeno)
     const oi=pitOwnerInfo(m.owner);
     const ox=(oi&&oi.x!=null)?oi.x:m.x, oy=(oi&&oi.y!=null)?oi.y:m.y, odmg=oi?oi.dmg:0, ofuel=oi?oi.fuel:1;
@@ -5053,29 +5084,35 @@ function drawPitCrew(c,u){
     const repairPhase = m.working && odmg>0.001;                 // servis opravljajo samo 3 mehaniki
     const fuelPhase   = m.working && odmg<=0.001 && ofuel<0.999; // tankar dela šele po popravilu
     const active = fueler ? fuelPhase : repairPhase;
-    const run=m.run, bob=run?Math.sin(now*11+m.ph)*2*u:0;
+    const run=m.run, bob=run?Math.sin(now*11+m.ph)*2*mu:0;
     const crouch = active && !fueler;                            // le popravljalci POČEPNEJO
-    const bodyH=(crouch?3.0:4.4)*u, bodyY=(crouch?1.8:0)*u+bob, headY=(crouch?-1.9:-4.4)*u+bob;
+    const bodyH=(crouch?3.0:4.4)*mu, bodyY=(crouch?1.8:0)*mu+bob, headY=(crouch?-1.9:-4.4)*mu+bob;
     c.save(); c.translate(m.x,m.y);
-    c.fillStyle="rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0,4.6*u,4*u,2*u,0,0,6.28); c.fill();     // senca
+    c.fillStyle="rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0,4.6*mu,4*mu,2*mu,0,0,6.28); c.fill();     // senca
     // TANKAR: sod za gorivo + cev, ki jo vleče za sabo (le ko je ob vozilu)
     if(fueler){ const cxr=ox-m.x, cyr=oy-m.y, cl=Math.hypot(cxr,cyr)||1;
-      if(cl<RAD*3){ const ux=cxr/cl, uy=cyr/cl, dx=-ux*13*u, dy=-uy*13*u, nx=ux*(cl-RAD*0.7), ny=uy*(cl-RAD*0.7);
-        c.strokeStyle="#20242b"; c.lineWidth=1.8*u; c.lineJoin="round"; c.beginPath(); c.moveTo(dx,dy); c.lineTo(0,1*u+bob); c.lineTo(nx,ny); c.stroke();   // cev
-        c.fillStyle="#c0392b"; c.beginPath(); c.ellipse(dx,dy,2.6*u,3.2*u,0,0,6.28); c.fill(); c.fillStyle="#8a2820"; c.fillRect(dx-2.6*u,dy-0.6*u,5.2*u,1.2*u);   // sod
-        if(fuelPhase){ c.fillStyle="#c8e06a"; for(let q=0;q<3;q++){ const t=(now*1.6+q/3)%1, fx=dx+(nx-dx)*t, fy=dy+(ny-dy)*t; c.beginPath(); c.arc(fx,fy,0.9*u,0,6.28); c.fill(); }
-          c.fillStyle="rgba(200,224,106,.9)"; c.beginPath(); c.arc(nx,ny,1.4*u,0,6.28); c.fill(); }   // pretok bencina v rezervoar
+      if(cl<RAD*3){ const ux=cxr/cl, uy=cyr/cl, dx=-ux*13*mu, dy=-uy*13*mu, nx=ux*(cl-RAD*0.7), ny=uy*(cl-RAD*0.7);
+        c.strokeStyle="#20242b"; c.lineWidth=1.8*mu; c.lineJoin="round"; c.beginPath(); c.moveTo(dx,dy); c.lineTo(0,1*mu+bob); c.lineTo(nx,ny); c.stroke();   // cev
+        c.fillStyle="#c0392b"; c.beginPath(); c.ellipse(dx,dy,2.6*mu,3.2*mu,0,0,6.28); c.fill(); c.fillStyle="#8a2820"; c.fillRect(dx-2.6*mu,dy-0.6*mu,5.2*mu,1.2*mu);   // sod
+        if(fuelPhase){ c.fillStyle="#c8e06a"; for(let q=0;q<3;q++){ const t=(now*1.6+q/3)%1, fx=dx+(nx-dx)*t, fy=dy+(ny-dy)*t; c.beginPath(); c.arc(fx,fy,0.9*mu,0,6.28); c.fill(); }
+          c.fillStyle="rgba(200,224,106,.9)"; c.beginPath(); c.arc(nx,ny,1.4*mu,0,6.28); c.fill(); }   // pretok bencina v rezervoar
       }
     }
-    c.fillStyle=m.c; c.beginPath(); c.ellipse(0,bodyY,3.4*u,bodyH,0,0,6.28); c.fill();               // kombinezon (barva ekipe)
-    c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=0.7*u; c.beginPath(); c.ellipse(0,bodyY,3.4*u,bodyH,0,0,6.28); c.stroke();
-    c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,2.4*u,0,6.28); c.fill();                     // glava
-    c.fillStyle=fueler?"#ffd24a":"#f2f2f5"; c.beginPath(); c.arc(0,headY-0.6*u,2.6*u,Math.PI,0); c.fill();  // čelada (tankar rumena)
+    c.fillStyle=m.c; c.beginPath(); c.ellipse(0,bodyY,3.4*mu,bodyH,0,0,6.28); c.fill();               // kombinezon (barva ekipe)
+    c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=0.7*mu; c.beginPath(); c.ellipse(0,bodyY,3.4*mu,bodyH,0,0,6.28); c.stroke();
+    c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,2.4*mu,0,6.28); c.fill();                     // glava
+    c.fillStyle=fueler?"#ffd24a":"#f2f2f5"; c.beginPath(); c.arc(0,headY-0.6*mu,2.6*mu,Math.PI,0); c.fill();  // čelada (tankar rumena)
+    // Obraz z izrazom (oči + usta)
+    let expr="smile";
+    if(run) expr="open";
+    else if(active) expr=fueler?"smile":"focus";
+    else { const exprs=["smile","grin","smirk","smile"]; expr=exprs[(m.slot||0)%4]||"smile"; }
+    drawMechanicFace(c,0,headY,mu,expr);
     if(active && !fueler){                                                                            // POPRAVLJALEC: ključ, ki niha + iskre
-      const sw=Math.sin(now*20+m.ph), ax=2.6*u, ay=1.6*u+bob, tx=ax+2.4*u, ty=ay+(0.3+sw*1.3)*u;
-      c.strokeStyle=m.c; c.lineWidth=1.4*u; c.beginPath(); c.moveTo(0.6*u,ay); c.lineTo(ax,ay); c.stroke();
-      c.strokeStyle="#cfd3d8"; c.lineWidth=1.7*u; c.beginPath(); c.moveTo(ax,ay); c.lineTo(tx,ty); c.stroke();
-      if(sw>0.8){ c.fillStyle="#ffd36b"; for(let q=0;q<3;q++){ const a=Math.random()*6.28,d=Math.random()*3*u; c.beginPath(); c.arc(tx+Math.cos(a)*d,ty+Math.sin(a)*d,0.6*u,0,6.28); c.fill(); } }
+      const sw=Math.sin(now*20+m.ph), ax=2.6*mu, ay=1.6*mu+bob, tx=ax+2.4*mu, ty=ay+(0.3+sw*1.3)*mu;
+      c.strokeStyle=m.c; c.lineWidth=1.4*mu; c.beginPath(); c.moveTo(0.6*mu,ay); c.lineTo(ax,ay); c.stroke();
+      c.strokeStyle="#cfd3d8"; c.lineWidth=1.7*mu; c.beginPath(); c.moveTo(ax,ay); c.lineTo(tx,ty); c.stroke();
+      if(sw>0.8){ c.fillStyle="#ffd36b"; for(let q=0;q<3;q++){ const a=Math.random()*6.28,d=Math.random()*3*mu; c.beginPath(); c.arc(tx+Math.cos(a)*d,ty+Math.sin(a)*d,0.6*mu,0,6.28); c.fill(); } }
     }
     c.restore();
   }
@@ -9254,10 +9291,16 @@ const RK={IW:941,IH:1672,CX:470,CY:836,HW:74,W:270,Hh:694,Rc:153,A:541,B:117,LOT
 function rkSetup(){
   const vw=window.innerWidth||0, vh=window.innerHeight||0, IH=1672;
   let IW=(vw>0&&vh>0)?Math.round(IH*vw/vh):772; IW=Math.max(640,Math.min(1100,IW));
-  const HW=111, INSET=HW+30, W=IW/2-26-(HW+12), CX=IW/2;                    // zunanji rob (sredina + HW + robnik) ostane 26 px od roba slike
-  const yTop=167+HW+12, yBot=IH-64-(HW+12), Hh=(yBot-yTop)/2, CY=(yTop+yBot)/2;   // zgoraj prostor za HUD (obvestila), spodaj manj
-  const Rc=Math.max(HW+54,Math.round(W*0.5));
-  Object.assign(RK,{IW,IH,CX,CY,HW,W,Hh,Rc,A:Hh-Rc,B:W-Rc,LOT:Rc-INSET,LW:W-INSET,LH:Hh-INSET,INF:Rc-INSET+10,CONN:[CY-160,CY+160]});
+  const HW=139, CX=IW/2;                                             // proga 25 % širša (HW 111 -> 139), širi se proti sredini
+  const yTop=167+HW+12, yBot=IH-64-(HW+12), Hh=(yBot-yTop)/2, CY=(yTop+yBot)/2;
+  const W_base=IW/2-26-(111+12), Rc_base=Math.max(111+54,Math.round(W_base*0.5)), B_base=W_base-Rc_base;
+  const B=Math.round(B_base*0.70);                                   // vodoravna odseka zgoraj in spodaj 30 % krajša
+  const edgePad=Math.max(32,Math.round(IW*0.045));                   // zunanji rob proge pomaknjen stran od roba zaslona proti sredini
+  const W_max=Math.round(IW/2-edgePad-(HW+12));
+  const Rc=Math.max(HW+18, W_max-B);
+  const W=B+Rc, A=Hh-Rc;
+  const INSET=HW+12, LOT=Math.max(6,Rc-INSET), LW=Math.max(30,W-INSET), LH=Math.max(100,Hh-INSET), INF=LOT+10, CONN=[CY-160,CY+160];
+  Object.assign(RK,{IW,IH,CX,CY,HW,W,Hh,Rc,A,B,LOT,LW,LH,INF,CONN});
 }
 const TUT_STR={
   en:{skip:"Skip tutorial ⏭",gotIt:"Got it!",back:"↩ Back to track",ready:"🏁 I'm ready to race!",finger:"Put your finger on the circle",hey:"🔧 HEY! Watch where you're driving, rookie!",missed:"😅 Missed! The barrels are back — try again!",name:"Rookie Ring · Tutorial",desc:"Simple O-track with a parking-lot sandbox in the middle. Learn everything in 2 minutes — skip any time.",dmgL:"DAMAGE",fuelL:"FUEL",badge:"TUTORIAL",full:"⛽ Full tank! Drive on and finish the lap 🏁",introBtn:"🎓 Play the tutorial track",
@@ -9472,7 +9515,7 @@ function updateRookieMechs(dt){
   }
 }
 function drawRookieMechs(c,u){
-  const now=performance.now()/1000, k=1.8*u;
+  const now=performance.now()/1000, k=1.8*u*1.2;
   for(const m of rkMechs){
     const bob=m.st==="walk"?Math.sin(now*11+m.ph)*1.1*k:0;
     c.save(); c.translate(m.x,m.y);
@@ -9486,8 +9529,13 @@ function drawRookieMechs(c,u){
     c.fillStyle="#FF6B81"; c.beginPath(); c.arc(0,-5.2*k+bob,2.95*k,Math.PI,0); c.fill();                    // kapa
     c.fillRect(m.face*0.6*k,-5.5*k+bob,m.face*2.6*k,0.9*k);
     c.fillStyle="#5C3B1A"; c.beginPath(); c.ellipse(0,-3.6*k+bob,1.7*k,0.6*k,0,0,6.28); c.fill();            // brki
-    if(m.st==="down"){ c.strokeStyle="#3A2304"; c.lineWidth=0.5*k; for(const ex of [-1,1]){ c.beginPath(); c.moveTo(ex*1.1*k-0.5*k,-5.1*k); c.lineTo(ex*1.1*k+0.5*k,-4.3*k); c.moveTo(ex*1.1*k+0.5*k,-5.1*k); c.lineTo(ex*1.1*k-0.5*k,-4.3*k); c.stroke(); } }
-    else { c.fillStyle="#3A2304"; for(const ex of [-1,1]){ c.beginPath(); c.arc(ex*1.1*k+m.face*0.3*k,-4.7*k+bob,0.42*k,0,6.28); c.fill(); } }
+    if(m.st==="down"){
+      c.strokeStyle="#3A2304"; c.lineWidth=0.5*k; for(const ex of [-1,1]){ c.beginPath(); c.moveTo(ex*1.1*k-0.5*k,-5.1*k); c.lineTo(ex*1.1*k+0.5*k,-4.3*k); c.moveTo(ex*1.1*k+0.5*k,-5.1*k); c.lineTo(ex*1.1*k-0.5*k,-4.3*k); c.stroke(); }
+      c.beginPath(); c.arc(0,-2.6*k+bob,0.55*k,Math.PI*0.2,Math.PI*0.8); c.stroke(); // usta ob padcu (dizzy / ouch)
+    } else {
+      c.fillStyle="#3A2304"; for(const ex of [-1,1]){ c.beginPath(); c.arc(ex*1.1*k+m.face*0.3*k,-4.7*k+bob,0.42*k,0,6.28); c.fill(); }
+      c.strokeStyle="#3A2304"; c.lineWidth=0.45*k; c.lineCap="round"; c.beginPath(); c.arc(0,-2.8*k+bob,0.55*k,0.2,Math.PI-0.2); c.stroke(); // prijazen nasmeh pod brki
+    }
     c.restore();
     if(m.st==="down"){ for(let q=0;q<3;q++){ const a=now*5+q*2.09; taStar(c,m.x+Math.cos(a)*6*k,m.y-9*k+Math.sin(a)*2*k,1.4*k,"#FBBF24"); } }
     if(m.hey>0){ const p=Math.min(1,(1.8-m.hey)/0.3), s=taBack(p)*k; c.save(); c.translate(m.x,m.y-13*k);
@@ -9522,13 +9570,13 @@ function tutTick(dt){
   if(TUT.step>=2&&!TUT.seen.off&&!player._inInf&&pointer.down&&sdAt(player.x,player.y)<-6){ TUT.seen.off=1; tutCard(3); return; }
   if(TUT.step===1&&raceTime>0.8){ tutCard(2,()=>{ TUT.step=2; TUT.dist=0; tutSetGoal("g2"); }); return; }
   const obsAhead=(((TUT.obsS-player.s)%L)+L)%L;                      // koliko px pred igralcem je stena sodov
-  if(TUT.step===2&&TUT.dist>250&&obsAhead<650&&obsAhead>120){ tutPlaceObstacles(); tutCard(4,()=>{ TUT.step=4; tutSetGoal("g4"); }); return; }
+  if(TUT.step===2&&TUT.dist>250&&obsAhead<650&&obsAhead>120){ tutPlaceObstacles(true); tutCard(4,()=>{ TUT.step=4; tutSetGoal("g4"); }); return; }
   if(TUT.step===4){
     const hit=cones.some(c=>c.tutObs&&c.state!=="up");
     if(hit){ TUT.step=5; TUT.hl=null; TUT.hitT=TUT.t; return; }
     if(obsAhead<700&&obsAhead>60) TUT.armed=1;                        // približuje se
     else if(TUT.armed&&obsAhead>L-260&&obsAhead<L-90){ TUT.armed=0; TUT.miss++;   // zapeljal mimo
-      if(TUT.miss>=2){ TUT.step=5; TUT.hl=null; TUT.hitT=TUT.t-1; } else { try{ showComment(TT("missed"),0); }catch(e){} } }
+      if(TUT.miss>=2){ TUT.step=5; TUT.hl=null; TUT.hitT=TUT.t-1; } else { tutPlaceObstacles(true); try{ showComment(TT("missed"),0); }catch(e){} } }
     return;
   }
   if(TUT.step===5&&!TUT.lessonDone&&TUT.t-TUT.hitT>0.65){ TUT.lessonDone=1; tutCrashLesson(); return; }
@@ -9545,12 +9593,13 @@ function tutCrashLesson(){
   try{ updateHUD(true); }catch(e){}
   tutCard(5,()=>tutCard(6,()=>{ TUT.step=6; tutSetGoal("g6"); TUT.hl={type:"pit"}; }),"dmg");
 }
-function tutPlaceObstacles(){
+function tutPlaceObstacles(withHl=true){
   for(let i=cones.length-1;i>=0;i--) if(cones[i].tutObs) cones.splice(i,1);
   const sp=PROP_SPEC.rbarrel;                                         // stena sodov na sredini leve ravnine
-  for(const [dsx,lat] of [[0,-70],[0,-35],[0,0],[0,35],[0,70],[26,-52],[26,-17],[26,17],[26,52]]){ const p=posAt(wrapS(TUT.obsS+dsx),lat);
+  for(const [dsx,lat] of [[0,-88],[0,-44],[0,0],[0,44],[0,88],[26,-66],[26,-22],[26,22],[26,66]]){ const p=posAt(wrapS(TUT.obsS+dsx),lat);
     cones.push({x:p.x,y:p.y,state:"up",prop:true,kind:"rbarrel",hr:sp.hr*1.6,sz:1.6,ang:0,vx:0,vy:0,spin:0,cd:0,tree:false,tutObs:true}); }
-  const c=posAt(TUT.obsS+13,0); TUT.hl={type:"circle",x:c.x,y:c.y,r:130};
+  if(withHl){ const c=posAt(TUT.obsS+13,0); TUT.hl={type:"circle",x:c.x,y:c.y,r:150}; }
+  else { TUT.hl=null; }
 }
 function tutCard(n,after,bar){
   if(TUT.card) return;
@@ -9601,6 +9650,7 @@ function startTutorial(){
   vRef=Math.max(60,BASE1*MEANFAC); qPos=1; raceStarted=false;
   Object.assign(TUT,{on:true,step:1,prev:null,card:0,seen:{},hl:null,dist:0,lastS:0,t:0,obsS:sAt(RK.CX-RK.W,RK.CY,-1).s,armed:0,miss:0,c0:null,after:null,mechHits:0,hitT:0,lessonDone:0,fullT:0,lapCard:0});
   TUT.starting=true; try{ startRace(); } finally { TUT.starting=false; }
+  tutPlaceObstacles(false);
   TUT.lastS=player.s;
   tutShowUI(true); tutSetGoal(null); showBanner(TT("finger"),2600,true);
   setTimeout(()=>{ if(TUT.on&&TUT.step===1&&state==="prestart") tutCard(1); },350);
@@ -9609,6 +9659,7 @@ function tutEnd(){
   if(!TUT.on&&!TUT.card) { tutShowUI(false); return; }
   if(TUT.card){ const el=$("tutCard"); if(el){ el.classList.remove("on"); el.style.display="none"; } taStop(); tutBarArrow(null); if(state==="tutpause") state=TUT.prev||"racing"; TUT.card=0; }
   TUT.on=false; TUT.hl=null; TUT.after=null; tutShowUI(false); tutSetGoal(null);
+  for(let i=cones.length-1;i>=0;i--) if(cones[i].tutObs) cones.splice(i,1);
 }
 function skipTutorial(){
   tutEnd(); save.tutorialDone=true; try{ persist(); }catch(e){}

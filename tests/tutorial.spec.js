@@ -39,8 +39,25 @@ test.describe('Rookie Ring tutorial track', () => {
     await page.waitForSelector('#tutorial.on', { timeout: 15000 });
     await page.locator('#btnTutOk').click();
     await expect(page.locator('#tutCard')).toBeVisible({ timeout: 5000 });
-    const info = await page.evaluate(() => ({ curTrack, racers: racers.length, tutOn: TUT.on, card: TUT.card, state }));
-    expect(info).toEqual({ curTrack: 8, racers: 0, tutOn: true, card: 1, state: 'tutpause' });
+    const info = await page.evaluate(() => ({
+      curTrack,
+      racers: racers.length,
+      tutOn: TUT.on,
+      card: TUT.card,
+      state,
+      tutObsCount: cones.filter(c => c.tutObs).length,
+      hw: RK.HW,
+      b: RK.B,
+    }));
+    expect(info.curTrack).toBe(8);
+    expect(info.racers).toBe(0);
+    expect(info.tutOn).toBe(true);
+    expect(info.card).toBe(1);
+    expect(info.state).toBe('tutpause');
+    // Obstacles are visible on track at the very beginning:
+    expect(info.tutObsCount).toBe(9);
+    // Track is 25% wider (HW = 139):
+    expect(info.hw).toBe(139);
     await expect(page.locator('#tutSkipPill')).toBeVisible();
   });
 
