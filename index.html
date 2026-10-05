@@ -9254,8 +9254,10 @@ const RK={IW:941,IH:1672,CX:470,CY:836,HW:74,W:270,Hh:694,Rc:153,A:541,B:117,LOT
 function rkSetup(){
   const vw=window.innerWidth||0, vh=window.innerHeight||0, IH=1672;
   let IW=(vw>0&&vh>0)?Math.round(IH*vw/vh):772; IW=Math.max(640,Math.min(1100,IW));
-  const HW=74, W=IW/2-26-(HW+12), Hh=IH/2-56-(HW+12), Rc=Math.max(150,Math.round(W*0.56)), CX=IW/2, CY=IH/2;
-  Object.assign(RK,{IW,IH,CX,CY,HW,W,Hh,Rc,A:Hh-Rc,B:W-Rc,LOT:Rc-130,LW:W-130,LH:Hh-130,INF:Rc-130+32,CONN:[CY-186,CY+184]});
+  const HW=111, INSET=HW+30, W=IW/2-26-(HW+12), CX=IW/2;                    // zunanji rob (sredina + HW + robnik) ostane 26 px od roba slike
+  const yTop=167+HW+12, yBot=IH-64-(HW+12), Hh=(yBot-yTop)/2, CY=(yTop+yBot)/2;   // zgoraj prostor za HUD (obvestila), spodaj manj
+  const Rc=Math.max(HW+54,Math.round(W*0.5));
+  Object.assign(RK,{IW,IH,CX,CY,HW,W,Hh,Rc,A:Hh-Rc,B:W-Rc,LOT:Rc-INSET,LW:W-INSET,LH:Hh-INSET,INF:Rc-INSET+10,CONN:[CY-160,CY+160]});
 }
 const TUT_STR={
   en:{skip:"Skip tutorial ⏭",gotIt:"Got it!",back:"↩ Back to track",ready:"🏁 I'm ready to race!",finger:"Put your finger on the circle",hey:"🔧 HEY! Watch where you're driving, rookie!",missed:"😅 Missed! The barrels are back — try again!",name:"Rookie Ring · Tutorial",desc:"Simple O-track with a parking-lot sandbox in the middle. Learn everything in 2 minutes — skip any time.",dmgL:"DAMAGE",fuelL:"FUEL",badge:"TUTORIAL",full:"⛽ Full tank! Drive on and finish the lap 🏁",introBtn:"🎓 Play the tutorial track",
@@ -9430,20 +9432,20 @@ function rookiePreview(){ const t=TRACKS[ROOKIE]; return {name:TT("name"),desc:T
 
 /* ----- peskovnik: predmeti in mehaniki na parkirišču ----- */
 function genRookieProps(){
-  const {CX,CY}=RK, sx=RK.LW/140;
+  const {CX,CY}=RK, sx=Math.max(0.5,RK.LW/140), sy=RK.LH/560, X=d=>CX+d*sx, Y=d=>CY+d*sy;
   const P=(k,x,y,sz,ex)=>{ const s=PROP_SPEC[k]||PROP_SPEC.rock; cones.push(Object.assign({x,y,state:"up",prop:true,kind:k,hr:s.hr*(sz||1),sz:sz||1,ang:0,vx:0,vy:0,spin:0,cd:0,tree:false,sandbox:true},ex||{})); };
-  for(let k=0;k<7;k++) P("rcone", CX+(k%2?26:-26)*sx, CY-300+k*58, 1.3);                     // slalom
-  [[0,0],[-19,0],[19,0],[-9.5,-17],[9.5,-17],[0,-34]].forEach(([dx,dy])=>P("rbarrel",CX-72*sx+dx,CY+300+dy,1.1));   // piramida sodov
-  [[CX+70*sx,CY+250],[CX+92*sx,CY+290],[CX+62*sx,CY+330]].forEach(([x,y])=>P("tires",x,y,1));        // gume
-  for(let k=0;k<4;k++) P("crate",CX-44*sx+k*29,CY-440,1);                                       // zid zabojev
-  P("hay",CX+84*sx,CY-140,1); P("hay",CX-88*sx,CY+60,1); P("sign",CX+96*sx,CY+430,1);
-  P("flag",CX-98*sx,CY-500,1); P("flag",CX+98*sx,CY-500,1);
+  for(let k=0;k<7;k++) P("rcone", X(k%2?26:-26), Y(-300+k*58), 1.3);                       // slalom
+  [[0,0],[-19,0],[19,0],[-9.5,-17],[9.5,-17],[0,-34]].forEach(([dx,dy])=>P("rbarrel",X(-72)+dx,Y(300)+dy,1.1));   // piramida sodov
+  [[70,250],[92,290],[62,330]].forEach(([x,y])=>P("tires",X(x),Y(y),1));                    // gume
+  for(let k=0;k<4;k++) P("crate",X(-44)+k*29,Y(-440),1);                                    // zid zabojev
+  P("hay",X(84),Y(-140),1); P("hay",X(-88),Y(60),1); P("sign",X(96),Y(430),1);
+  P("flag",X(-98),Y(-500),1); P("flag",X(98),Y(-500),1);
   for(let k=0;k<8;k++){ const a=k/8*6.28; P("rcone",CX+Math.cos(a)*64,CY+Math.sin(a)*64,1); }  // krog stožcev
 }
 let rkMechs=[], rkHeyCd=0;
 function genRookieMechs(){
-  rkMechs=[]; const {CX,CY}=RK, sx=RK.LW/140;
-  const homes=[[CX-62*sx,CY-160],[CX+66*sx,CY+40],[CX-50*sx,CY+170],[CX+52*sx,CY-300]], cols=["#FFB547","#38A8F0","#FF6B81","#A78BFA"];
+  rkMechs=[]; const {CX,CY}=RK, sx=Math.max(0.5,RK.LW/140), sy=RK.LH/560;
+  const homes=[[CX-62*sx,CY-160*sy],[CX+66*sx,CY+40*sy],[CX-50*sx,CY+170*sy],[CX+52*sx,CY-300*sy]], cols=["#FFB547","#38A8F0","#FF6B81","#A78BFA"];
   homes.forEach(([x,y],k)=>rkMechs.push({x,y,hx:x,hy:y,tx:x,ty:y,c:cols[k],ph:Math.random()*6.28,st:"idle",t:1+Math.random()*2,vx:0,vy:0,rot:0,spin:0,hey:0,face:1,hits:0}));
 }
 function updateRookieMechs(dt){
@@ -9519,12 +9521,14 @@ function tutTick(dt){
   // dogodek: prvič s ceste
   if(TUT.step>=2&&!TUT.seen.off&&!player._inInf&&pointer.down&&sdAt(player.x,player.y)<-6){ TUT.seen.off=1; tutCard(3); return; }
   if(TUT.step===1&&raceTime>0.8){ tutCard(2,()=>{ TUT.step=2; TUT.dist=0; tutSetGoal("g2"); }); return; }
-  if(TUT.step===2&&TUT.dist>520){ tutPlaceObstacles(); tutCard(4,()=>{ TUT.step=4; tutSetGoal("g4"); }); return; }
+  const obsAhead=(((TUT.obsS-player.s)%L)+L)%L;                      // koliko px pred igralcem je stena sodov
+  if(TUT.step===2&&TUT.dist>250&&obsAhead<650&&obsAhead>120){ tutPlaceObstacles(); tutCard(4,()=>{ TUT.step=4; tutSetGoal("g4"); }); return; }
   if(TUT.step===4){
     const hit=cones.some(c=>c.tutObs&&c.state!=="up");
     if(hit){ TUT.step=5; TUT.hl=null; TUT.hitT=TUT.t; return; }
-    let past=player.s-TUT.obsS; if(past<-L/2)past+=L; if(past>L/2)past-=L;
-    if(past>140&&past<L*0.4){ TUT.miss++; if(TUT.miss>=3){ TUT.step=5; TUT.hl=null; TUT.hitT=TUT.t-1; } else { try{ showComment(TT("missed"),0); }catch(e){} tutPlaceObstacles(); } }
+    if(obsAhead<700&&obsAhead>60) TUT.armed=1;                        // približuje se
+    else if(TUT.armed&&obsAhead>L-260&&obsAhead<L-90){ TUT.armed=0; TUT.miss++;   // zapeljal mimo
+      if(TUT.miss>=2){ TUT.step=5; TUT.hl=null; TUT.hitT=TUT.t-1; } else { try{ showComment(TT("missed"),0); }catch(e){} } }
     return;
   }
   if(TUT.step===5&&!TUT.lessonDone&&TUT.t-TUT.hitT>0.65){ TUT.lessonDone=1; tutCrashLesson(); return; }
@@ -9543,11 +9547,10 @@ function tutCrashLesson(){
 }
 function tutPlaceObstacles(){
   for(let i=cones.length-1;i>=0;i--) if(cones[i].tutObs) cones.splice(i,1);
-  TUT.obsS=wrapS(player.s+560);
-  const sp=PROP_SPEC.rbarrel;
-  for(const [dsx,lat] of [[0,-44],[0,0],[0,44],[26,-22],[26,22]]){ const p=posAt(wrapS(TUT.obsS+dsx),lat);
+  const sp=PROP_SPEC.rbarrel;                                         // stena sodov na sredini leve ravnine
+  for(const [dsx,lat] of [[0,-70],[0,-35],[0,0],[0,35],[0,70],[26,-52],[26,-17],[26,17],[26,52]]){ const p=posAt(wrapS(TUT.obsS+dsx),lat);
     cones.push({x:p.x,y:p.y,state:"up",prop:true,kind:"rbarrel",hr:sp.hr*1.6,sz:1.6,ang:0,vx:0,vy:0,spin:0,cd:0,tree:false,tutObs:true}); }
-  const c=posAt(TUT.obsS+13,0); TUT.hl={type:"circle",x:c.x,y:c.y,r:80};
+  const c=posAt(TUT.obsS+13,0); TUT.hl={type:"circle",x:c.x,y:c.y,r:130};
 }
 function tutCard(n,after,bar){
   if(TUT.card) return;
@@ -9596,7 +9599,7 @@ function startTutorial(){
   LAPS=99; NRACERS=1; CROSS_NEED=999;
   aiParams={SKILLS:[1],base:BASE1,NAI:0};
   vRef=Math.max(60,BASE1*MEANFAC); qPos=1; raceStarted=false;
-  Object.assign(TUT,{on:true,step:1,prev:null,card:0,seen:{},hl:null,dist:0,lastS:0,t:0,obsS:0,miss:0,c0:null,after:null,mechHits:0,hitT:0,lessonDone:0,fullT:0,lapCard:0});
+  Object.assign(TUT,{on:true,step:1,prev:null,card:0,seen:{},hl:null,dist:0,lastS:0,t:0,obsS:sAt(RK.CX-RK.W,RK.CY,-1).s,armed:0,miss:0,c0:null,after:null,mechHits:0,hitT:0,lessonDone:0,fullT:0,lapCard:0});
   TUT.starting=true; try{ startRace(); } finally { TUT.starting=false; }
   TUT.lastS=player.s;
   tutShowUI(true); tutSetGoal(null); showBanner(TT("finger"),2600,true);
