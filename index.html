@@ -4992,7 +4992,7 @@ function drawFuelRescue(c,u){
   if(!fuelRescue) return; const fr=fuelRescue;
   const ssx=offX+fr.x*scale, ssy=offY+fr.y*scale; if(ssx<-60||ssx>W+60||ssy<-60||ssy>H+60) return;
   const now=performance.now()/1000, mu=u*1.2, bob=fr.run?Math.sin(now*12+fr.ph)*2*mu:0;
-  const headY=-4.4*mu+bob;
+  const headY=-5.2*mu+bob;
   c.save(); c.translate(fr.x,fr.y);
   c.fillStyle="rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0,4.6*mu,4*mu,2*mu,0,0,6.28); c.fill();
   if(fr.phase==="work"){ const tx=(player.x-fr.x)*0.55, ty=(player.y-fr.y)*0.55;
@@ -5001,13 +5001,13 @@ function drawFuelRescue(c,u){
       c.fillStyle="#c8e06a"; for(let q=0;q<3;q++){ const t=(now*1.9+q/3)%1; c.beginPath(); c.arc(3.4*mu+(tx-3.4*mu)*t,(-0.3*mu+bob)+(ty+0.3*mu-bob)*t,1.0*mu,0,6.28); c.fill(); } } }
   c.fillStyle=fr.col; c.beginPath(); c.ellipse(0,bob,3.4*mu,4.4*mu,0,0,6.28); c.fill();
   c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=0.7*mu; c.beginPath(); c.ellipse(0,bob,3.4*mu,4.4*mu,0,0,6.28); c.stroke();
-  c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,2.4*mu,0,6.28); c.fill();
-  c.fillStyle="#ffd24a"; c.beginPath(); c.arc(0,headY-0.6*mu,2.6*mu,Math.PI,0); c.fill();
+  c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,3.6*mu,0,6.28); c.fill();
+  c.fillStyle="#ffd24a"; c.beginPath(); c.arc(0,headY-0.9*mu,3.9*mu,Math.PI,0); c.fill();
   let expr="smile";
   if(fr.phase==="come") expr="open";
   else if(fr.phase==="work") expr="focus";
   else if(fr.phase==="leave") expr="grin";
-  drawMechanicFace(c,0,headY,mu,expr);
+  drawMechanicFace(c,0,headY,mu*1.5,expr);
   if(fr.mode==="repair"){ c.strokeStyle="#cfd3d8"; c.lineWidth=1.7*mu; c.lineCap="round"; c.beginPath(); c.moveTo(2.0*mu,0.6*mu+bob); c.lineTo(4.8*mu,-1.6*mu+bob); c.stroke(); }
   else { c.save(); c.translate(3.4*mu,0.4*mu+bob); c.fillStyle="#c0392b"; c.fillRect(-1.8*mu,-2.2*mu,3.6*mu,4.4*mu); c.fillStyle="#8a2820"; c.fillRect(-1.8*mu,-0.4*mu,3.6*mu,1*mu); c.fillStyle="#2a2f38"; c.fillRect(-0.4*mu,-3.1*mu,0.9*mu,1.1*mu); c.restore(); }
   c.restore();
@@ -5086,7 +5086,7 @@ function drawPitCrew(c,u){
     const active = fueler ? fuelPhase : repairPhase;
     const run=m.run, bob=run?Math.sin(now*11+m.ph)*2*mu:0;
     const crouch = active && !fueler;                            // le popravljalci POČEPNEJO
-    const bodyH=(crouch?3.0:4.4)*mu, bodyY=(crouch?1.8:0)*mu+bob, headY=(crouch?-1.9:-4.4)*mu+bob;
+    const bodyH=(crouch?3.0:4.4)*mu, bodyY=(crouch?1.8:0)*mu+bob, headY=(crouch?-2.6:-5.2)*mu+bob;
     c.save(); c.translate(m.x,m.y);
     c.fillStyle="rgba(0,0,0,.3)"; c.beginPath(); c.ellipse(0,4.6*mu,4*mu,2*mu,0,0,6.28); c.fill();     // senca
     // TANKAR: sod za gorivo + cev, ki jo vleče za sabo (le ko je ob vozilu)
@@ -5100,14 +5100,14 @@ function drawPitCrew(c,u){
     }
     c.fillStyle=m.c; c.beginPath(); c.ellipse(0,bodyY,3.4*mu,bodyH,0,0,6.28); c.fill();               // kombinezon (barva ekipe)
     c.strokeStyle="rgba(0,0,0,.25)"; c.lineWidth=0.7*mu; c.beginPath(); c.ellipse(0,bodyY,3.4*mu,bodyH,0,0,6.28); c.stroke();
-    c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,2.4*mu,0,6.28); c.fill();                     // glava
-    c.fillStyle=fueler?"#ffd24a":"#f2f2f5"; c.beginPath(); c.arc(0,headY-0.6*mu,2.6*mu,Math.PI,0); c.fill();  // čelada (tankar rumena)
-    // Obraz z izrazom (oči + usta)
+    c.fillStyle="#e8b98a"; c.beginPath(); c.arc(0,headY,3.6*mu,0,6.28); c.fill();                     // glava (50% večja: 2.4 -> 3.6)
+    c.fillStyle=fueler?"#ffd24a":"#f2f2f5"; c.beginPath(); c.arc(0,headY-0.9*mu,3.9*mu,Math.PI,0); c.fill();  // čelada (tankar rumena)
+    // Obraz z izrazom (oči + usta, 50% večji)
     let expr="smile";
     if(run) expr="open";
     else if(active) expr=fueler?"smile":"focus";
     else { const exprs=["smile","grin","smirk","smile"]; expr=exprs[(m.slot||0)%4]||"smile"; }
-    drawMechanicFace(c,0,headY,mu,expr);
+    drawMechanicFace(c,0,headY,mu*1.5,expr);
     if(active && !fueler){                                                                            // POPRAVLJALEC: ključ, ki niha + iskre
       const sw=Math.sin(now*20+m.ph), ax=2.6*mu, ay=1.6*mu+bob, tx=ax+2.4*mu, ty=ay+(0.3+sw*1.3)*mu;
       c.strokeStyle=m.c; c.lineWidth=1.4*mu; c.beginPath(); c.moveTo(0.6*mu,ay); c.lineTo(ax,ay); c.stroke();
@@ -9525,16 +9525,16 @@ function drawRookieMechs(c,u){
     c.strokeStyle="#3B3B3B"; c.lineWidth=1.8*k; c.beginPath(); c.moveTo(-1.6*k,3*k+bob); c.lineTo(-1.8*k,6*k); c.moveTo(1.6*k,3*k+bob); c.lineTo(1.8*k,6*k); c.stroke();   // noge
     c.fillStyle=m.c; c.beginPath(); c.ellipse(0,0.8*k+bob,3.6*k,4.2*k,0,0,6.28); c.fill();                  // kombinezon
     c.fillStyle="rgba(0,0,0,.14)"; c.beginPath(); c.ellipse(1.2*k,1.6*k+bob,2.2*k,3.2*k,0,0,6.28); c.fill();
-    c.fillStyle="#F8D8B2"; c.beginPath(); c.arc(0,-4.6*k+bob,2.8*k,0,6.28); c.fill();                          // glava
-    c.fillStyle="#FF6B81"; c.beginPath(); c.arc(0,-5.2*k+bob,2.95*k,Math.PI,0); c.fill();                    // kapa
-    c.fillRect(m.face*0.6*k,-5.5*k+bob,m.face*2.6*k,0.9*k);
-    c.fillStyle="#5C3B1A"; c.beginPath(); c.ellipse(0,-3.6*k+bob,1.7*k,0.6*k,0,0,6.28); c.fill();            // brki
+    c.fillStyle="#F8D8B2"; c.beginPath(); c.arc(0,-5.6*k+bob,4.2*k,0,6.28); c.fill();                          // glava (50% večja: 2.8 -> 4.2)
+    c.fillStyle="#FF6B81"; c.beginPath(); c.arc(0,-6.5*k+bob,4.4*k,Math.PI,0); c.fill();                    // kapa
+    c.fillRect(m.face*0.9*k,-7.0*k+bob,m.face*3.9*k,1.3*k);
+    c.fillStyle="#5C3B1A"; c.beginPath(); c.ellipse(0,-4.1*k+bob,2.5*k,0.9*k,0,0,6.28); c.fill();            // brki
     if(m.st==="down"){
-      c.strokeStyle="#3A2304"; c.lineWidth=0.5*k; for(const ex of [-1,1]){ c.beginPath(); c.moveTo(ex*1.1*k-0.5*k,-5.1*k); c.lineTo(ex*1.1*k+0.5*k,-4.3*k); c.moveTo(ex*1.1*k+0.5*k,-5.1*k); c.lineTo(ex*1.1*k-0.5*k,-4.3*k); c.stroke(); }
-      c.beginPath(); c.arc(0,-2.6*k+bob,0.55*k,Math.PI*0.2,Math.PI*0.8); c.stroke(); // usta ob padcu (dizzy / ouch)
+      c.strokeStyle="#3A2304"; c.lineWidth=0.7*k; for(const ex of [-1,1]){ c.beginPath(); c.moveTo(ex*1.6*k-0.7*k,-5.8*k); c.lineTo(ex*1.6*k+0.7*k,-4.6*k); c.moveTo(ex*1.6*k+0.7*k,-5.8*k); c.lineTo(ex*1.6*k-0.7*k,-4.6*k); c.stroke(); }
+      c.beginPath(); c.arc(0,-2.6*k+bob,0.8*k,Math.PI*0.2,Math.PI*0.8); c.stroke(); // usta ob padcu (dizzy / ouch)
     } else {
-      c.fillStyle="#3A2304"; for(const ex of [-1,1]){ c.beginPath(); c.arc(ex*1.1*k+m.face*0.3*k,-4.7*k+bob,0.42*k,0,6.28); c.fill(); }
-      c.strokeStyle="#3A2304"; c.lineWidth=0.45*k; c.lineCap="round"; c.beginPath(); c.arc(0,-2.8*k+bob,0.55*k,0.2,Math.PI-0.2); c.stroke(); // prijazen nasmeh pod brki
+      c.fillStyle="#3A2304"; for(const ex of [-1,1]){ c.beginPath(); c.arc(ex*1.6*k+m.face*0.45*k,-5.4*k+bob,0.6*k,0,6.28); c.fill(); }
+      c.strokeStyle="#3A2304"; c.lineWidth=0.6*k; c.lineCap="round"; c.beginPath(); c.arc(0,-3.0*k+bob,0.8*k,0.2,Math.PI-0.2); c.stroke(); // prijazen nasmeh pod brki
     }
     c.restore();
     if(m.st==="down"){ for(let q=0;q<3;q++){ const a=now*5+q*2.09; taStar(c,m.x+Math.cos(a)*6*k,m.y-9*k+Math.sin(a)*2*k,1.4*k,"#FBBF24"); } }
