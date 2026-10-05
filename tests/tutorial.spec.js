@@ -78,7 +78,7 @@ test.describe('Rookie Ring tutorial track', () => {
       __sim(6, () => state === 'racing' && raceTime > 0.5);
       const inLot = onTrack(RK.CX, RK.CY) && rkInInfield(RK.CX, RK.CY);
       // teleport the car next to the lot via the connector and drive in
-      const c = { x: RK.CX - RK.R + RK.HW - 20, y: RK.CONN[0] };
+      const c = { x: RK.CX - RK.W + RK.HW - 20, y: RK.CONN[0] };
       player.x = c.x; player.y = c.y;
       __drv.target = { x: RK.CX - 40, y: RK.CONN[0] };
       __sim(2, () => player._inInf);

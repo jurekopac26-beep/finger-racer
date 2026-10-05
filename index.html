@@ -9249,7 +9249,14 @@ function getPreview(idx){
 
 /* ================= ROOKIE RING — O-proga z vadnico in parkiriščem (peskovnik) ================= */
 const ROOKIE=8, N_REAL_TRACKS=8;
-const RK={IW:941,IH:1672,CX:470,CY:836,A:420,R:270,HW:74,LOT:140,INF:172,CONN:[650,1020],CONNW:84};
+const RK={IW:941,IH:1672,CX:470,CY:836,HW:74,W:270,Hh:694,Rc:153,A:541,B:117,LOT:23,LW:140,LH:564,INF:55,CONN:[650,1020],CONNW:84};
+// širina slike sledi razmerju zaslona (da proga sega proti robovom); proga = zaobljen pravokotnik z ravnima zgoraj in spodaj
+function rkSetup(){
+  const vw=window.innerWidth||0, vh=window.innerHeight||0, IH=1672;
+  let IW=(vw>0&&vh>0)?Math.round(IH*vw/vh):772; IW=Math.max(640,Math.min(1100,IW));
+  const HW=74, W=IW/2-26-(HW+12), Hh=IH/2-56-(HW+12), Rc=Math.max(150,Math.round(W*0.56)), CX=IW/2, CY=IH/2;
+  Object.assign(RK,{IW,IH,CX,CY,HW,W,Hh,Rc,A:Hh-Rc,B:W-Rc,LOT:Rc-130,LW:W-130,LH:Hh-130,INF:Rc-130+32,CONN:[CY-186,CY+184]});
+}
 const TUT_STR={
   en:{skip:"Skip tutorial ⏭",gotIt:"Got it!",back:"↩ Back to track",ready:"🏁 I'm ready to race!",finger:"Put your finger on the circle",hey:"🔧 HEY! Watch where you're driving, rookie!",missed:"😅 Missed! The barrels are back — try again!",name:"Rookie Ring · Tutorial",desc:"Simple O-track with a parking-lot sandbox in the middle. Learn everything in 2 minutes — skip any time.",dmgL:"DAMAGE",fuelL:"FUEL",badge:"TUTORIAL",full:"⛽ Full tank! Drive on and finish the lap 🏁",introBtn:"🎓 Play the tutorial track",
     t1:"Welcome, Rookie!",b1:"Put your finger on the glowing circle under your car and <b>hold it</b> through the countdown. Lift too early = false start!",g1:"👆 Hold the start circle",
@@ -9333,24 +9340,30 @@ function TT(k){ const lang=(typeof save!=="undefined"&&save&&save.lang)||"en"; c
 
 // sredinska črta O-proge: u∈[0,1) -> točka (štart sredi desne ravnine, vožnja navzgor = v nasprotni smeri urinega kazalca)
 function rkCenter(u){
-  const {CX,CY,A,R}=RK, arc=Math.PI*R, P=4*A+2*arc; let d=((u%1)+1)%1*P;
-  if(d<A) return [CX+R, CY-d]; d-=A;
-  if(d<arc){ const a=d/R; return [CX+R*Math.cos(a), CY-A-R*Math.sin(a)]; } d-=arc;
-  if(d<2*A) return [CX-R, CY-A+d]; d-=2*A;
-  if(d<arc){ const a=d/R; return [CX-R*Math.cos(a), CY+A+R*Math.sin(a)]; } d-=arc;
-  return [CX+R, CY+A-d];
+  const {CX,CY,W,Rc,A,B}=RK, arc=Math.PI*Rc/2, P=4*A+4*B+4*arc; let d=((u%1)+1)%1*P;
+  if(d<A) return [CX+W,CY-d]; d-=A;
+  if(d<arc){ const a=d/Rc; return [CX+B+Rc*Math.cos(a), CY-A-Rc*Math.sin(a)]; } d-=arc;
+  if(d<2*B) return [CX+B-d, CY-A-Rc]; d-=2*B;
+  if(d<arc){ const a=d/Rc; return [CX-B-Rc*Math.sin(a), CY-A-Rc*Math.cos(a)]; } d-=arc;
+  if(d<2*A) return [CX-W, CY-A+d]; d-=2*A;
+  if(d<arc){ const a=d/Rc; return [CX-B-Rc*Math.cos(a), CY+A+Rc*Math.sin(a)]; } d-=arc;
+  if(d<2*B) return [CX-B+d, CY+A+Rc]; d-=2*B;
+  if(d<arc){ const a=d/Rc; return [CX+B+Rc*Math.sin(a), CY+A+Rc*Math.cos(a)]; } d-=arc;
+  return [CX+W, CY+A-d];
 }
-// razdalja od osi parkirišča (stadion)
-function rkAxisDist(x,y){ const {CX,CY,A}=RK; const yy=Math.max(CY-A,Math.min(CY+A,y)); return Math.hypot(x-CX,y-yy); }
+// razdalja od jedra parkirišča (pravokotnik A×B) — vsaka točka sredinske črte je od njega oddaljena Rc
+function rkAxisDist(x,y){ const dx=Math.max(Math.abs(x-RK.CX)-RK.B,0), dy=Math.max(Math.abs(y-RK.CY)-RK.A,0); return Math.hypot(dx,dy); }
 function rkInInfield(x,y){ return rkAxisDist(x,y)<RK.INF; }
-function rkStadiumPath(g,r){ const {CX,CY,A}=RK; g.beginPath(); g.arc(CX,CY-A,r,Math.PI,0); g.lineTo(CX+r,CY+A); g.arc(CX,CY+A,r,0,Math.PI); g.closePath(); }
+function rkStadiumPath(g,r){ const {CX,CY,A,B}=RK, x=CX-B-r, y=CY-A-r, w=2*(B+r), h=2*(A+r);
+  g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
 function buildRookieTrack(){
-  const {IW,IH,CX,CY,A,R,HW,LOT,CONN,CONNW}=RK, P=4*A+2*Math.PI*R, n=Math.round(P/6), sp=P/n;
+  rkSetup();
+  const {IW,IH,CX,CY,A,B,W,Rc,LW,LH,HW,LOT,CONN,CONNW}=RK, P=4*A+4*B+2*Math.PI*Rc, n=Math.round(P/6), sp=P/n;
   const px=[],py=[],hw=[];
   for(let i=0;i<n;i++){ const p=rkCenter(i/n); px.push(+p[0].toFixed(2)); py.push(+p[1].toFixed(2)); hw.push(HW); }
   const nrm=i=>{ const a=(i-1+n)%n,b=(i+1)%n; let tx=px[b]-px[a],ty=py[b]-py[a]; const l=Math.hypot(tx,ty)||1; return [-ty/l,tx/l]; };
   const pathOff=(g,off)=>{ g.beginPath(); for(let i=0;i<=n;i++){ const j=i%n, q=nrm(j), x=px[j]+q[0]*off, y=py[j]+q[1]*off; if(i===0)g.moveTo(x,y); else g.lineTo(x,y); } g.closePath(); };
-  const connRects=()=>CONN.map(y=>[CX-R+HW-10, y-CONNW/2, (CX-LOT+12)-(CX-R+HW-10), CONNW]);
+  const connRects=()=>CONN.map(y=>{ const x0=CX-W+HW-10, x1=CX-LW+12; return [x0, y-CONNW/2, x1-x0, CONNW]; });
   // --- SLIKA ---
   const cv=document.createElement("canvas"); cv.width=IW; cv.height=IH; const g=cv.getContext("2d");
   const r=seedRnd(8181);
@@ -9358,7 +9371,7 @@ function buildRookieTrack(){
   for(let y=0;y<IH;y+=84){ g.fillStyle="rgba(255,255,255,.04)"; g.fillRect(0,y,IW,42); }        // pokošeni pasovi
   for(let k=0;k<3200;k++){ g.fillStyle=r()<.5?"rgba(38,86,28,.16)":"rgba(150,200,95,.13)"; g.beginPath(); g.arc(r()*IW,r()*IH,1.5+r()*6,0,6.28); g.fill(); }
   // drevesa ob robu (le slika)
-  for(let k=0;k<70;k++){ const x=r()*IW, y=r()*IH; if(rkAxisDist(x,y)<R+HW+60) continue;
+  for(let k=0;k<Math.round(70*IW/941);k++){ const x=r()*IW, y=r()*IH; if(rkAxisDist(x,y)<Rc+HW+60) continue;
     const s=14+r()*16; g.fillStyle="rgba(0,0,0,.22)"; g.beginPath(); g.arc(x+5,y+6,s,0,6.28); g.fill();
     g.fillStyle="#2f6b2c"; g.beginPath(); g.arc(x,y,s,0,6.28); g.fill(); g.fillStyle="#3f8a38"; g.beginPath(); g.arc(x-s*.25,y-s*.25,s*.62,0,6.28); g.fill(); }
   // robniki (zunaj asfalta)
@@ -9374,16 +9387,16 @@ function buildRookieTrack(){
   // parkirišče (peskovnik)
   rkStadiumPath(g,LOT+5); g.fillStyle="#e9e9e9"; g.fill();
   rkStadiumPath(g,LOT); g.fillStyle="#565a61"; g.fill();
-  for(let k=0;k<2200;k++){ const x=CX+(r()*2-1)*LOT, y=CY+(r()*2-1)*(A+LOT); if(rkAxisDist(x,y)>LOT-3) continue; g.fillStyle=r()<.5?"rgba(255,255,255,.05)":"rgba(0,0,0,.08)"; g.fillRect(x,y,2,2); }
+  for(let k=0;k<2200;k++){ const x=CX+(r()*2-1)*LW, y=CY+(r()*2-1)*LH; if(rkAxisDist(x,y)>LOT-3) continue; g.fillStyle=r()<.5?"rgba(255,255,255,.05)":"rgba(0,0,0,.08)"; g.fillRect(x,y,2,2); }
   g.strokeStyle="rgba(245,245,245,.8)"; g.lineWidth=3;
-  for(let y=CY-A+30;y<=CY+A-30;y+=46){ for(const sd of [-1,1]){ g.beginPath(); g.moveTo(CX+sd*(LOT-6),y); g.lineTo(CX+sd*(LOT-56),y); g.stroke(); } }
+  for(let y=CY-A+30;y<=CY+A-30;y+=46){ for(const sd of [-1,1]){ g.beginPath(); g.moveTo(CX+sd*(LW-6),y); g.lineTo(CX+sd*(LW-56),y); g.stroke(); } }
   // drsni krog na sredini
   g.strokeStyle="#ffcc26"; g.lineWidth=5; g.setLineDash([16,12]); g.beginPath(); g.arc(CX,CY,64,0,6.28); g.stroke(); g.setLineDash([]);
   // znak P
-  for(const yy of [CY-A-60, CY+A+60]){ g.fillStyle="#2f80ed"; g.beginPath(); g.roundRect?g.roundRect(CX-26,yy-26,52,52,10):g.rect(CX-26,yy-26,52,52); g.fill();
+  for(const yy of [CY-LH+52, CY+LH-52]){ g.fillStyle="#2f80ed"; g.beginPath(); g.roundRect?g.roundRect(CX-26,yy-26,52,52,10):g.rect(CX-26,yy-26,52,52); g.fill();
     g.fillStyle="#fff"; g.font="900 38px system-ui,sans-serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillText("P",CX,yy+2); }
   // puščice na povezavah
-  g.fillStyle="#ffcc26"; for(const y of CONN){ const x0=CX-R+HW+4; g.beginPath(); g.moveTo(x0+30,y); g.lineTo(x0+10,y-12); g.lineTo(x0+10,y+12); g.closePath(); g.fill(); }
+  g.fillStyle="#ffcc26"; for(const y of CONN){ const x0=CX-W+HW+4; g.beginPath(); g.moveTo(x0+30,y); g.lineTo(x0+10,y-12); g.lineTo(x0+10,y+12); g.closePath(); g.fill(); }
   const img=cv.toDataURL("image/jpeg",0.86);
   // --- MASKA ---
   const mc=document.createElement("canvas"); mc.width=IW; mc.height=IH; const m=mc.getContext("2d");
@@ -9417,20 +9430,20 @@ function rookiePreview(){ const t=TRACKS[ROOKIE]; return {name:TT("name"),desc:T
 
 /* ----- peskovnik: predmeti in mehaniki na parkirišču ----- */
 function genRookieProps(){
-  const {CX,CY,A}=RK;
+  const {CX,CY}=RK, sx=RK.LW/140;
   const P=(k,x,y,sz,ex)=>{ const s=PROP_SPEC[k]||PROP_SPEC.rock; cones.push(Object.assign({x,y,state:"up",prop:true,kind:k,hr:s.hr*(sz||1),sz:sz||1,ang:0,vx:0,vy:0,spin:0,cd:0,tree:false,sandbox:true},ex||{})); };
-  for(let k=0;k<7;k++) P("rcone", CX+(k%2?26:-26), CY-300+k*58, 1.3);                     // slalom
-  [[0,0],[-19,0],[19,0],[-9.5,-17],[9.5,-17],[0,-34]].forEach(([dx,dy])=>P("rbarrel",CX-72+dx,CY+300+dy,1.1));   // piramida sodov
-  [[CX+70,CY+250],[CX+92,CY+290],[CX+62,CY+330]].forEach(([x,y])=>P("tires",x,y,1));        // gume
-  for(let k=0;k<4;k++) P("crate",CX-44+k*29,CY-440,1);                                       // zid zabojev
-  P("hay",CX+84,CY-140,1); P("hay",CX-88,CY+60,1); P("sign",CX+96,CY+430,1);
-  P("flag",CX-98,CY-500,1); P("flag",CX+98,CY-500,1);
+  for(let k=0;k<7;k++) P("rcone", CX+(k%2?26:-26)*sx, CY-300+k*58, 1.3);                     // slalom
+  [[0,0],[-19,0],[19,0],[-9.5,-17],[9.5,-17],[0,-34]].forEach(([dx,dy])=>P("rbarrel",CX-72*sx+dx,CY+300+dy,1.1));   // piramida sodov
+  [[CX+70*sx,CY+250],[CX+92*sx,CY+290],[CX+62*sx,CY+330]].forEach(([x,y])=>P("tires",x,y,1));        // gume
+  for(let k=0;k<4;k++) P("crate",CX-44*sx+k*29,CY-440,1);                                       // zid zabojev
+  P("hay",CX+84*sx,CY-140,1); P("hay",CX-88*sx,CY+60,1); P("sign",CX+96*sx,CY+430,1);
+  P("flag",CX-98*sx,CY-500,1); P("flag",CX+98*sx,CY-500,1);
   for(let k=0;k<8;k++){ const a=k/8*6.28; P("rcone",CX+Math.cos(a)*64,CY+Math.sin(a)*64,1); }  // krog stožcev
 }
 let rkMechs=[], rkHeyCd=0;
 function genRookieMechs(){
-  rkMechs=[]; const {CX,CY}=RK;
-  const homes=[[CX-62,CY-160],[CX+66,CY+40],[CX-50,CY+170],[CX+52,CY-300]], cols=["#FFB547","#38A8F0","#FF6B81","#A78BFA"];
+  rkMechs=[]; const {CX,CY}=RK, sx=RK.LW/140;
+  const homes=[[CX-62*sx,CY-160],[CX+66*sx,CY+40],[CX-50*sx,CY+170],[CX+52*sx,CY-300]], cols=["#FFB547","#38A8F0","#FF6B81","#A78BFA"];
   homes.forEach(([x,y],k)=>rkMechs.push({x,y,hx:x,hy:y,tx:x,ty:y,c:cols[k],ph:Math.random()*6.28,st:"idle",t:1+Math.random()*2,vx:0,vy:0,rot:0,spin:0,hey:0,face:1,hits:0}));
 }
 function updateRookieMechs(dt){
@@ -9453,7 +9466,7 @@ function updateRookieMechs(dt){
         if(TUT.on) TUT.mechHits=(TUT.mechHits||0)+1;
       }
     }
-    if(rkAxisDist(m.x,m.y)>RK.LOT-10){ const {CX,CY,A}=RK, yy=Math.max(CY-A,Math.min(CY+A,m.y)), dx=m.x-CX, dy=m.y-yy, d=Math.hypot(dx,dy)||1; m.x=CX+dx/d*(RK.LOT-10); m.y=yy+dy/d*(RK.LOT-10); m.vx*=-0.4; m.vy*=-0.4; }
+    if(rkAxisDist(m.x,m.y)>RK.LOT-10){ const {CX,CY,A,B}=RK, qx=Math.max(CX-B,Math.min(CX+B,m.x)), qy=Math.max(CY-A,Math.min(CY+A,m.y)), dx=m.x-qx, dy=m.y-qy, d=Math.hypot(dx,dy)||1; m.x=qx+dx/d*(RK.LOT-10); m.y=qy+dy/d*(RK.LOT-10); m.vx*=-0.4; m.vy*=-0.4; }
   }
 }
 function drawRookieMechs(c,u){
