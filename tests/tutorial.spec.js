@@ -169,7 +169,7 @@ test.describe('Rookie Ring tutorial track', () => {
     expect(res.stoppedAfterBack).toBe(true);
   });
 
-  test('interactive slipstream lesson spawns waiting rival car ahead, starts moving, and heals damage in slipstream', async ({ page }) => {
+  test('interactive slipstream lesson spawns waiting rival on sideline, merges onto track, supports double-distance slipstream, accelerates after first lap, and heals damage', async ({ page }) => {
     await boot(page, { tutSeen: true, introSeen: true, lang: 'sl', sound: false });
     await page.waitForSelector('#menu.on', { timeout: 15000 });
     await installDriver(page);
@@ -182,16 +182,44 @@ test.describe('Rookie Ring tutorial track', () => {
       tutTick(1.0); // triggers step 8 Card 8 and spawns rival
       const coachSpawned = !!TUT.coachRacer;
       const initialV = TUT.coachRacer ? TUT.coachRacer.v : -1;
+      const isSidelineInitial = TUT.coachRacer ? TUT.coachRacer.isSideline : false;
+      const gridLatInitial = TUT.coachRacer ? TUT.coachRacer.gridLat : 0;
       const racerCount = racers.length;
+
       tutCloseCard(); // user taps "Got it!"
       state = 'racing';
       pointer.down = true;
       const activeAfterClose = TUT.draftActive;
       const initialDmg = player.dmg;
       const coachVAfterClose = TUT.coachRacer ? TUT.coachRacer.v : -1;
+      const isSidelineAfterClose = TUT.coachRacer ? TUT.coachRacer.isSideline : true;
+      const mergeTAfterClose = TUT.coachRacer ? TUT.coachRacer.mergeT : 0;
       const hlType = TUT.hl && TUT.hl.type;
 
-      // Position coach 50px ahead on centerline, then drive with __step
+      // Check double-distance drafting: place coach 320px ahead on track and drive with __step
+      __drv.spd = 250;
+      let doubleDistDraftActive = false;
+      for (let k = 0; k < 25; k++) {
+        TUT.coachRacer.s = wrapS(player.s + 320);
+        const cpD = posAt(TUT.coachRacer.s, 0);
+        TUT.coachRacer.px = cpD.x; TUT.coachRacer.py = cpD.y;
+        __step();
+        if (draftOn) { doubleDistDraftActive = true; break; }
+      }
+
+      // Speed progression test:
+      // Lap 0 (lapNum = 0) with full damage vs healed damage
+      player.dmg = 0.45;
+      tutTick(0.05);
+      const lap0Speed = TUT.coachRacer.v;
+      // Lap 1+ (lapNum = 1) after crossing finish line
+      TUT.coachRacer.crossings = (TUT.coachRacer.baseC0 || 0) + 1;
+      for (let k = 0; k < 30; k++) tutTick(0.05);
+      const lap1Speed = TUT.coachRacer.v;
+
+      // Reset for tutorial healing progression
+      TUT.coachRacer.crossings = TUT.coachRacer.baseC0;
+      player.dmg = 0.45;
       TUT.coachRacer.s = wrapS(player.s + 50);
       const cp = posAt(TUT.coachRacer.s, 0);
       TUT.coachRacer.px = cp.x; TUT.coachRacer.py = cp.y;
@@ -207,15 +235,25 @@ test.describe('Rookie Ring tutorial track', () => {
       }
       const nextStep = TUT.step;
       const healedDmg = player.dmg;
-      return { coachSpawned, initialV, racerCount, activeAfterClose, initialDmg, coachVAfterClose, hlType, draftingDetected, nextStep, healedDmg };
+      return {
+        coachSpawned, initialV, isSidelineInitial, gridLatInitial, racerCount,
+        activeAfterClose, initialDmg, coachVAfterClose, isSidelineAfterClose, mergeTAfterClose,
+        hlType, doubleDistDraftActive, lap0Speed, lap1Speed, draftingDetected, nextStep, healedDmg
+      };
     });
     expect(res.coachSpawned).toBe(true);
     expect(res.initialV).toBe(0);
+    expect(res.isSidelineInitial).toBe(true);
+    expect(res.gridLatInitial).toBeGreaterThan(40);
     expect(res.racerCount).toBe(1);
     expect(res.activeAfterClose).toBe(1);
     expect(res.initialDmg).toBeGreaterThanOrEqual(0.45);
     expect(res.coachVAfterClose).toBeGreaterThan(0);
+    expect(res.isSidelineAfterClose).toBe(false);
+    expect(res.mergeTAfterClose).toBeGreaterThan(0);
     expect(res.hlType).toBe('car');
+    expect(res.doubleDistDraftActive).toBe(true);
+    expect(res.lap1Speed).toBeGreaterThan(res.lap0Speed + 40);
     expect(res.draftingDetected).toBe(true);
     expect(res.nextStep).toBe(9);
     expect(res.healedDmg).toBeLessThan(res.initialDmg);
