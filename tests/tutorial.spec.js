@@ -132,4 +132,40 @@ test.describe('Rookie Ring tutorial track', () => {
     await expect(page.locator('#tutCard')).toBeVisible();
     await expect(page.locator('#tutCTitle')).toContainText('Pit');
   });
+
+  test('tutorial card 8 explains slipstream drafting with animation scene 8 and 11 pill indicators', async ({ page }) => {
+    await boot(page, { tutSeen: true, introSeen: true, lang: 'sl', sound: false });
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    const res = await page.evaluate(() => {
+      startTutorial();
+      tutCard(8);
+      const pills = document.querySelectorAll('#tutPills i').length;
+      const title = $('tutCTitle').textContent;
+      const hasScene8 = !!TA_SCENES[8];
+      const hasDraftScene = !!TA_SCENES.draft;
+      const isAnimRunning = !!TA.raf;
+      return { pills, title, hasScene8, hasDraftScene, isAnimRunning };
+    });
+    expect(res.pills).toBe(11);
+    expect(res.title).toContain('Moč zavetrja');
+    expect(res.hasScene8).toBe(true);
+    expect(res.hasDraftScene).toBe(true);
+    expect(res.isAnimRunning).toBe(true);
+  });
+
+  test('training step 2 dialog displays and runs slipstream draft animation', async ({ page }) => {
+    await boot(page, { tutSeen: true, introSeen: true, lang: 'sl', sound: false, training: { s1: 1 } });
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    const res = await page.evaluate(() => {
+      openTrainInfo(2);
+      const animActive = !!TA.raf;
+      const sceneMatches = TA.scene === TA_SCENES[8];
+      $('btnTrainInfoBack').click();
+      const stoppedAfterBack = !TA.raf;
+      return { animActive, sceneMatches, stoppedAfterBack };
+    });
+    expect(res.animActive).toBe(true);
+    expect(res.sceneMatches).toBe(true);
+    expect(res.stoppedAfterBack).toBe(true);
+  });
 });
