@@ -258,4 +258,61 @@ test.describe('Rookie Ring tutorial track', () => {
     expect(res.nextStep).toBe(9);
     expect(res.healedDmg).toBeLessThan(res.initialDmg);
   });
+
+  test('stranding on track with 0% fuel triggers tutorial rescue card, shows cartoon animation and pill badge, and mechanic rescues kart', async ({ page }) => {
+    await boot(page, { tutSeen: true, introSeen: true, lang: 'en', sound: false });
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    await installDriver(page);
+
+    const res = await page.evaluate(() => {
+      startTutorial();
+      state = 'racing';
+      tutCloseCard(); // close initial welcome card if open
+      state = 'racing';
+      player.fuel = 0; // run out of fuel on track
+      startRescue('fuel');
+
+      const cardShown = TUT.card;
+      const rescueShownFlag = TUT.rescueShown;
+      const pillsContent = $('tutPills') ? $('tutPills').innerHTML : '';
+      const titleContent = $('tutCTitle') ? $('tutCTitle').textContent : '';
+      const animScene = TA.scene === TA_SCENES.rescue;
+      const animRunning = !!TA.raf;
+
+      // Close the rescue card
+      tutCloseCard();
+      const goalAfterClose = $('tutGoal') ? $('tutGoal').textContent : '';
+      const hasFuelRescue = !!fuelRescue;
+
+      // Simulate rescue mechanic arriving and working
+      if (fuelRescue) {
+        fuelRescue.phase = 'work';
+        fuelRescue.mode = 'fuel';
+        player.fuel = 0.19;
+        updateRescue(0.1); // finishes work -> phase = 'leave', gives 20%
+      }
+
+      const playerFuelAfter = player.fuel;
+      const goalAfterRescue = $('tutGoal') ? $('tutGoal').textContent : '';
+      const hlAfterRescue = TUT.hl && TUT.hl.type;
+
+      return {
+        cardShown, rescueShownFlag, pillsContent, titleContent,
+        animScene, animRunning, goalAfterClose, hasFuelRescue,
+        playerFuelAfter, goalAfterRescue, hlAfterRescue
+      };
+    });
+
+    expect(res.cardShown).toBe('rescue');
+    expect(res.rescueShownFlag).toBe(true);
+    expect(res.pillsContent).toContain('RESCUE 🏃');
+    expect(res.titleContent).toContain('Emergency Trackside Rescue');
+    expect(res.animScene).toBe(true);
+    expect(res.animRunning).toBe(true);
+    expect(res.goalAfterClose).toContain('Wait for the mechanic to reach you');
+    expect(res.hasFuelRescue).toBe(true);
+    expect(res.playerFuelAfter).toBeGreaterThanOrEqual(0.20);
+    expect(res.goalAfterRescue).toContain('Stop in the blue pit box');
+    expect(res.hlAfterRescue).toBe('pit');
+  });
 });

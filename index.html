@@ -4892,6 +4892,12 @@ function startRescue(mode){
     });
   }
   try{ showComment(mode==="repair"?"🔧 Vozilo ne vozi več! Mehanik teče do tebe ob robu proge...":"⛽ Zmanjkalo goriva! Mehanik teče do tebe s kanistrom...",0); }catch(e){}
+  if(typeof TUT !== "undefined" && TUT && TUT.on && !TUT.rescueShown){
+    TUT.rescueShown = true;
+    tutCard("rescue", () => {
+      tutSetGoal("grescue");
+    });
+  }
 }
 function _rescStartFromPit(fr){ const side=_rescSide(), ms=pitMidS(), i=idxOf(ms), hw=HW[i]||40, p=posAt(ms, side*(hw+12)); fr.x=p.x; fr.y=p.y; fr.s=ms; fr.side=side; fr.phase="come"; fr.run=true; }
 function _mechRunOver(fr){
@@ -4917,7 +4923,8 @@ function _stepEdge(fr,targetS,dt,spd){
 }
 function updateRescue(dt){
   if(!fuelRescue) return; const fr=fuelRescue;
-  if(state!=="racing"){ fuelRescue=null; return; }
+  if(state!=="racing" && state!=="rejoin" && state!=="tutpause"){ fuelRescue=null; return; }
+  if(state==="tutpause") return;
   if(fr.phase==="come"){
     if(_mechRunOver(fr)) return;
     let ds=((player.s-fr.s)%L+L)%L; if(ds>L/2) ds-=L;
@@ -4934,12 +4941,14 @@ function updateRescue(dt){
       if(player.dmg<=0.8+1e-3){ player.dmg=0.8; fr.phase="leave";
         const isEn = (save.lang === "en");
         updateStuckAlertStatus(isEn ? "✅ Emergency repairs done (20%)! Head to the PIT LANE 🔧" : "✅ Zasilno popravljeno (20%)! Zapelji v BOKSE 🔧", true);
-        try{ showComment("✅ Zasilno popravljeno (20%) — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){} } }
+        try{ showComment("✅ Zasilno popravljeno (20%) — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){}
+        if(typeof TUT!=="undefined"&&TUT&&TUT.on){ tutSetGoal("g6"); TUT.hl={type:"pit"}; } } }
     else { player.fuel=Math.min(0.20,(player.fuel||0)+0.28*dt);
       if(player.fuel>=0.20-1e-3){ player.fuel=0.20; player._fuelOut=0; player._fuelW25=0; player._fuelW12=0; player.fuelWarn=false; player.fuelWarn2=false; fr.phase="leave";
         const isEn = (save.lang === "en");
         updateStuckAlertStatus(isEn ? "✅ Emergency refuel done (20%)! Head to the PIT LANE ⛽" : "✅ Zasilno nalito 20%! Zapelji v BOKSE ⛽", true);
-        try{ showComment("✅ Nalito 20% — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){} } }
+        try{ showComment("✅ Nalito 20% — do boksov je dovolj!",0); Snd.fixed&&Snd.fixed(); }catch(e){}
+        if(typeof TUT!=="undefined"&&TUT&&TUT.on){ tutSetGoal("g6"); TUT.hl={type:"pit"}; } } }
   } else {
     if(_mechRunOver(fr)) return;
     let ds=((pitMidS()-fr.s)%L+L)%L; if(ds>L/2) ds-=L;
@@ -6802,7 +6811,7 @@ function update(dt){
     if(state==="racing") updatePasture(dt);
 
     if(state==="racing"||state==="crashed") updatePitCrew(dt);
-    if(state==="racing") updateRescue(dt);
+    if(state==="racing"||state==="rejoin") updateRescue(dt);
     if(state==="racing"||state==="finished"){
       if(!player.dnf) spawnDmgSmoke(player.x,player.y,player.dmg||0,Math.atan2(TYa[player.idx]||0,TXa[player.idx]||1),player,dt);
       for(const rc of racers){ if(rc.px!=null&&!rc.wrecked&&!rc.inPit) spawnDmgSmoke(rc.px,rc.py,rc.dmg||0,rc.ang,rc,dt); }
@@ -9364,7 +9373,8 @@ const TUT_STR={
     t8:"Slipstream Power 🚗💨",b8:"Pit stops aren't the only way to heal! Drive right <b>behind</b> a rival and their slipstream <b>repairs damage on the fly</b> (recharges energy). The closer you stay, the faster it heals. <b>Catch the red car ahead and drive in its slipstream!</b>",g8:"🚗💨 Catch the slipstream",
     t9:"Laps & checkpoints",b9:"Finish a full lap. The track has hidden <b>checkpoints</b> — cut a corner and the lap won't count (a red line shows where to go back).",g9:"🏁 Complete one full lap",
     t10:"Welcome to the sandbox!",b10:"The parking lot in the middle is your playground: smash cones, barrels and tires, and bump the mechanics (they survive, mostly). Damage here is reduced. Tap <b>↩ Back to track</b> any time.",g10:"🧪 Play in the parking lot — or tap ‘I'm ready’",
-    t11:"Real race time!",b11:"2 laps against 3 rivals — and like every rookie you start <b>at the back</b>. Use everything you learned. Good luck!"},
+    t11:"Real race time!",b11:"2 laps against 3 rivals — and like every rookie you start <b>at the back</b>. Use everything you learned. Good luck!",
+    trescue:"Emergency Trackside Rescue 🏃🔧⛽",brescue:"Stranded on track! When fuel drops to <b>0%</b> or damage reaches <b>100%</b>, your car stops dead. Don't worry — your pit mechanic sprints across the track with emergency supplies (<b>+20%</b>) so you can restart and limp to the pit lane!",grescue:"🏃 Wait for the mechanic to reach you"},
   sl:{skip:"Preskoči vadnico ⏭",gotIt:"Razumem!",back:"↩ Nazaj na progo",ready:"🏁 Pripravljen na dirko!",finger:"Postavi prst na krog",hey:"🔧 HEJ! Glej, kam voziš, novinec!",missed:"😅 Zgrešil! Sodi so spet tu — poskusi znova!",name:"Novinčev krog · Vadnica",desc:"Preprosta O-proga s parkiriščem-peskovnikom na sredini. Vse se naučiš v 2 minutah — preskočiš lahko kadarkoli.",dmgL:"POŠKODBA",fuelL:"GORIVO",badge:"VADNICA",full:"⛽ Poln tank! Odpelji in dokončaj krog 🏁",introBtn:"🎓 Odpri vadnico na progi",
     t1:"Dobrodošel, novinec!",b1:"Postavi prst na svetleči krog pod avtom in ga <b>drži</b> med odštevanjem. Prezgodnji dvig = napačen štart!",g1:"👆 Drži prst na štartnem krogu",
     t2:"Vozi s prstom",b2:"Avto natančno sledi prstu — tako hitro, kot ga premikaš. <b>Dvigneš prst in avto se takoj ustavi.</b> Brez drsenja, brez izgovorov.",g2:"🏎️ Vozi po progi",
@@ -9376,7 +9386,8 @@ const TUT_STR={
     t8:"Moč zavetrja 🚗💨",b8:"Boksi niso edina rešitev za poškodbo! Vozi tik <b>za</b> tekmecem in v njegovem zavetrju se ti <b>poškodba sproti popravlja</b> (energija se polni). Bolj ko si blizu, hitreje teče obnova. <b>Ujemi rdeči avto pred seboj in vozi v njegovem zavetrju!</b>",g8:"🚗💨 Vozi v zavetrju za tekmecem",
     t9:"Krogi in checkpointi",b9:"Prevozi cel krog. Proga ima skrite <b>checkpointe</b> — če sekaš ovinek, krog ne šteje (rdeča črta pokaže, kam se vrniti).",g9:"🏁 Prevozi cel krog",
     t10:"Dobrodošel v peskovniku!",b10:"Parkirišče na sredini je tvoje igrišče: razbijaj stožce, sode in gume ter zadeni mehanike (večinoma preživijo). Poškodbe so tu manjše. Kadarkoli tapni <b>↩ Nazaj na progo</b>.",g10:"🧪 Igraj se na parkirišču — ali tapni ‘Pripravljen’",
-    t11:"Čas za pravo dirko!",b11:"2 kroga proti 3 tekmecem — in kot vsak novinec startaš <b>z zadnjega mesta</b>. Uporabi vse, kar si se naučil. Srečno!"},
+    t11:"Čas za pravo dirko!",b11:"2 kroga proti 3 tekmecem — in kot vsak novinec startaš <b>z zadnjega mesta</b>. Uporabi vse, kar si se naučil. Srečno!",
+    trescue:"Reševalni mehanik na progi 🏃🔧⛽",brescue:"Obstal na progi! Ko ti zmanjka goriva (<b>0%</b>) ali škoda doseže <b>100%</b>, vozilo obstane. Brez panike — tvoj mehanik že teče iz boksov z zasilno pomočjo (<b>+20%</b>), da se lahko odpelješ do boksov!",grescue:"🏃 Počakaj, da mehanik priteče do tebe"},
   de:{skip:"Tutorial überspringen ⏭",gotIt:"Verstanden!",back:"↩ Zurück zur Strecke",ready:"🏁 Bereit zum Rennen!",finger:"Finger auf den Kreis legen",hey:"🔧 HEY! Pass doch auf, Anfänger!",missed:"😅 Verfehlt! Die Fässer sind zurück — nochmal!",name:"Rookie Ring · Tutorial",desc:"Einfache O-Strecke mit Parkplatz-Spielwiese in der Mitte. Lerne alles in 2 Minuten — jederzeit überspringbar.",dmgL:"SCHADEN",fuelL:"BENZIN",badge:"TUTORIAL",full:"⛽ Tank voll! Fahr weiter und beende die Runde 🏁",introBtn:"🎓 Tutorial-Strecke spielen",
     t1:"Willkommen, Rookie!",b1:"Lege deinen Finger auf den leuchtenden Kreis unter deinem Auto und <b>halte ihn</b> während des Countdowns. Zu früh loslassen = Fehlstart!",g1:"👆 Halte den Startkreis",
     t2:"Fahren mit dem Finger",b2:"Dein Auto folgt genau deinem Finger — so schnell du ihn bewegst. <b>Finger hoch und das Auto steht sofort.</b> Kein Ausrollen, keine Ausreden.",g2:"🏎️ Fahr die Strecke entlang",
@@ -9388,7 +9399,8 @@ const TUT_STR={
     t8:"Windschatten-Power 🚗💨",b8:"Die Box ist nicht die einzige Rettung! Fahre dicht <b>hinter</b> einem Gegner und sein Windschatten <b>repariert den Schaden während der Fahrt</b> (lädt Energie auf). Je näher du bist, desto schneller heilt es. <b>Hole das rote Auto vor dir ein und fahre in seinem Windschatten!</b>",g8:"🚗💨 Nutze den Windschatten",
     t9:"Runden & Checkpoints",b9:"Fahre eine ganze Runde. Die Strecke hat versteckte <b>Checkpoints</b> — wer abkürzt, dessen Runde zählt nicht (eine rote Linie zeigt, wohin zurück).",g9:"🏁 Fahre eine ganze Runde",
     t10:"Willkommen im Sandkasten!",b10:"Der Parkplatz in der Mitte ist dein Spielplatz: Hütchen, Fässer und Reifen umfahren, Mechaniker anrempeln (die überleben das meistens). Schaden ist hier reduziert. Tippe jederzeit auf <b>↩ Zurück zur Strecke</b>.",g10:"🧪 Spiel auf dem Parkplatz — oder tippe ‘Bereit’",
-    t11:"Zeit für ein echtes Rennen!",b11:"2 Runden gegen 3 Gegner — und wie jeder Rookie startest du <b>ganz hinten</b>. Nutze alles, was du gelernt hast. Viel Glück!"},
+    t11:"Zeit für ein echtes Rennen!",b11:"2 Runden gegen 3 Gegner — und wie jeder Rookie startest du <b>ganz hinten</b>. Nutze alles, was du gelernt hast. Viel Glück!",
+    trescue:"Pannenhelfer auf der Strecke 🏃🔧⛽",brescue:"Liegengeblieben! Bei <b>0%</b> Benzin oder <b>100%</b> Schaden bleibt dein Auto stehen. Keine Panik — dein Mechaniker sprintet mit Notfallhilfe (<b>+20%</b>) zu dir, damit du zur Box rollen kannst!",grescue:"🏃 Warte, bis der Mechaniker bei dir ist"},
   it:{skip:"Salta tutorial ⏭",gotIt:"Capito!",back:"↩ Torna in pista",ready:"🏁 Pronto a correre!",finger:"Metti il dito sul cerchio",hey:"🔧 EHI! Guarda dove guidi, novellino!",missed:"😅 Mancati! I barili sono tornati — riprova!",name:"Rookie Ring · Tutorial",desc:"Semplice pista a O con un parcheggio-sandbox al centro. Impari tutto in 2 minuti — puoi saltare quando vuoi.",dmgL:"DANNI",fuelL:"BENZINA",badge:"TUTORIAL",full:"⛽ Pieno fatto! Riparti e completa il giro 🏁",introBtn:"🎓 Gioca la pista tutorial",
     t1:"Benvenuto, novellino!",b1:"Metti il dito sul cerchio luminoso sotto l'auto e <b>tienilo premuto</b> durante il conto alla rovescia. Alzarlo troppo presto = falsa partenza!",g1:"👆 Tieni premuto il cerchio di partenza",
     t2:"Guida con il dito",b2:"L'auto segue esattamente il tuo dito — veloce quanto lo muovi. <b>Alzi il dito e l'auto si ferma di colpo.</b> Niente inerzia, niente scuse.",g2:"🏎️ Guida lungo la pista",
@@ -9400,7 +9412,8 @@ const TUT_STR={
     t8:"Scia vincente 🚗💨",b8:"I box non sono l'unica salvezza! Guida proprio <b>dietro</b> a un rivale e la sua scia <b>ripara i danni al volo</b> (ricarica l'energia). Più sei vicino, più veloce si ripara. <b>Raggiungi l'auto rossa davanti a te e resta nella sua scia!</b>",g8:"🚗💨 Prendi la scia del rivale",
     t9:"Giri e checkpoint",b9:"Completa un giro intero. La pista ha <b>checkpoint</b> nascosti — se tagli una curva il giro non conta (una linea rossa mostra dove tornare).",g9:"🏁 Completa un giro intero",
     t10:"Benvenuto nella sandbox!",b10:"Il parcheggio al centro è il tuo parco giochi: abbatti coni, barili e gomme, e urta i meccanici (sopravvivono, quasi sempre). Qui i danni sono ridotti. Tocca <b>↩ Torna in pista</b> quando vuoi.",g10:"🧪 Gioca nel parcheggio — o tocca ‘Pronto’",
-    t11:"È ora di una vera gara!",b11:"2 giri contro 3 avversari — e come ogni novellino parti <b>dal fondo</b>. Usa tutto ciò che hai imparato. Buona fortuna!"},
+    t11:"È ora di una vera gara!",b11:"2 giri contro 3 avversari — e come ogni novellino parti <b>dal fondo</b>. Usa tutto ciò che hai imparato. Buona fortuna!",
+    trescue:"Soccorso in pista 🏃🔧⛽",brescue:"Fermo in pista! A <b>0%</b> di carburante o al <b>100%</b> di danni l'auto si ferma. Niente panico: il tuo meccanico sta correndo dai box con rifornimento di emergenza (<b>+20%</b>) per farti raggiungere la pit lane!",grescue:"🏃 Aspetta l'arrivo del meccanico"},
   fr:{skip:"Passer le tutoriel ⏭",gotIt:"Compris !",back:"↩ Retour sur la piste",ready:"🏁 Prêt à courir !",finger:"Pose ton doigt sur le cercle",hey:"🔧 HÉ ! Regarde où tu roules, débutant !",missed:"😅 Raté ! Les barils sont revenus — réessaie !",name:"Rookie Ring · Tutoriel",desc:"Piste ovale simple avec un parking-bac à sable au centre. Tout apprendre en 2 minutes — passable à tout moment.",dmgL:"DÉGÂTS",fuelL:"ESSENCE",badge:"TUTORIEL",full:"⛽ Plein fait ! Repars et termine le tour 🏁",introBtn:"🎓 Jouer la piste tutoriel",
     t1:"Bienvenue, débutant !",b1:"Pose ton doigt sur le cercle lumineux sous ta voiture et <b>maintiens-le</b> pendant le compte à rebours. Lever trop tôt = faux départ !",g1:"👆 Maintiens le cercle de départ",
     t2:"Conduis avec ton doigt",b2:"Ta voiture suit exactement ton doigt — aussi vite que tu le bouges. <b>Lève le doigt et la voiture s'arrête net.</b> Pas de roue libre, pas d'excuses.",g2:"🏎️ Roule le long de la piste",
@@ -9412,7 +9425,8 @@ const TUT_STR={
     t8:"La force de l'aspiration 🚗💨",b8:"Les stands ne sont pas le seul moyen de réparer ! Roule juste <b>derrière</b> un rival et son aspiration <b>répare les dégâts en roulant</b> (recharge l'énergie). Plus tu es près, plus la réparation est rapide. <b>Rattrape la voiture rouge devant toi et reste dans son aspiration !</b>",g8:"🚗💨 Prends l'aspiration du rival",
     t9:"Tours et checkpoints",b9:"Fais un tour complet. La piste a des <b>checkpoints</b> cachés — coupe un virage et le tour ne compte pas (une ligne rouge montre où revenir).",g9:"🏁 Fais un tour complet",
     t10:"Bienvenue dans le bac à sable !",b10:"Le parking au centre est ton terrain de jeu : renverse cônes, barils et pneus, et bouscule les mécanos (ils survivent, en général). Ici les dégâts sont réduits. Touche <b>↩ Retour sur la piste</b> à tout moment.",g10:"🧪 Joue sur le parking — ou touche ‘Prêt’",
-    t11:"Place à une vraie course !",b11:"2 tours contre 3 rivaux — et comme tout débutant, tu pars <b>en dernière position</b>. Utilise tout ce que tu as appris. Bonne chance !"},
+    t11:"Place à une vraie course !",b11:"2 tours contre 3 rivaux — et comme tout débutant, tu pars <b>en dernière position</b>. Utilise tout ce que tu as appris. Bonne chance !",
+    trescue:"Dépannage sur la piste 🏃🔧⛽",brescue:"En panne sur la piste ! À <b>0%</b> de carburant ou <b>100%</b> de dégâts, ta voiture s'arrête net. Pas de panique : ton mécano sprinte depuis les stands avec un dépannage d'urgence (<b>+20%</b>) pour rejoindre les stands !",grescue:"🏃 Attends que le mécanicien arrive"},
   es:{skip:"Saltar tutorial ⏭",gotIt:"¡Entendido!",back:"↩ Volver a la pista",ready:"🏁 ¡Listo para correr!",finger:"Pon el dedo en el círculo",hey:"🔧 ¡EH! ¡Mira por dónde conduces, novato!",missed:"😅 ¡Fallaste! Los barriles han vuelto — ¡inténtalo otra vez!",name:"Rookie Ring · Tutorial",desc:"Pista ovalada sencilla con un aparcamiento-sandbox en el centro. Aprende todo en 2 minutos — puedes saltarlo cuando quieras.",dmgL:"DAÑO",fuelL:"GASOLINA",badge:"TUTORIAL",full:"⛽ ¡Depósito lleno! Sigue y termina la vuelta 🏁",introBtn:"🎓 Jugar la pista tutorial",
     t1:"¡Bienvenido, novato!",b1:"Pon el dedo en el círculo brillante bajo tu coche y <b>mantenlo</b> durante la cuenta atrás. ¡Levantarlo antes = salida falsa!",g1:"👆 Mantén el círculo de salida",
     t2:"Conduce con el dedo",b2:"Tu coche sigue exactamente tu dedo — tan rápido como lo muevas. <b>Levanta el dedo y el coche se detiene en seco.</b> Sin inercia, sin excusas.",g2:"🏎️ Conduce por la pista",
@@ -9424,7 +9438,8 @@ const TUT_STR={
     t8:"El poder del rebufo 🚗💨",b8:"¡Los boxes no son la única solución! Conduce justo <b>detrás</b> de un rival y su rebufo <b>repara el daño sobre la marcha</b> (recarga energía). Cuanto más cerca vayas, más rápido se repara. <b>¡Alcanza al coche rojo que tienes delante y rueda en su rebufo!</b>",g8:"🚗💨 Aprovecha el rebufo",
     t9:"Vueltas y checkpoints",b9:"Completa una vuelta entera. La pista tiene <b>checkpoints</b> ocultos — si atajas una curva la vuelta no cuenta (una línea roja indica adónde volver).",g9:"🏁 Completa una vuelta entera",
     t10:"¡Bienvenido al sandbox!",b10:"El aparcamiento del centro es tu patio de juegos: derriba conos, barriles y neumáticos, y empuja a los mecánicos (casi siempre sobreviven). Aquí el daño es menor. Toca <b>↩ Volver a la pista</b> cuando quieras.",g10:"🧪 Juega en el aparcamiento — o toca ‘Listo’",
-    t11:"¡Hora de una carrera de verdad!",b11:"2 vueltas contra 3 rivales — y como todo novato sales <b>desde el final</b>. Usa todo lo que has aprendido. ¡Suerte!"},
+    t11:"¡Hora de una carrera de verdad!",b11:"2 vueltas contra 3 rivales — y como todo novato sales <b>desde el final</b>. Usa todo lo que has aprendido. ¡Suerte!",
+    trescue:"Rescate en pista 🏃🔧⛽",brescue:"¡Varado en la pista! Al <b>0%</b> de gasolina o <b>100%</b> de daño, el coche se detiene por completo. No te preocupes: tu mecánico corre desde el pit lane con auxilio de emergencia (<b>+20%</b>) para que puedas llegar a boxes.",grescue:"🏃 Espera a que llegue el mecánico"},
   hr:{skip:"Preskoči vodič ⏭",gotIt:"Razumijem!",back:"↩ Natrag na stazu",ready:"🏁 Spreman za utrku!",finger:"Stavi prst na krug",hey:"🔧 HEJ! Pazi kamo voziš, početniče!",missed:"😅 Promašaj! Bačve su opet tu — pokušaj ponovno!",name:"Rookie Ring · Vodič",desc:"Jednostavna O-staza s parkiralištem-pješčanikom u sredini. Nauči sve za 2 minute — preskoči bilo kada.",dmgL:"OŠTEĆENJE",fuelL:"GORIVO",badge:"VODIČ",full:"⛽ Pun spremnik! Vozi dalje i završi krug 🏁",introBtn:"🎓 Igraj stazu s vodičem",
     t1:"Dobrodošao, početniče!",b1:"Stavi prst na svijetleći krug ispod auta i <b>drži ga</b> tijekom odbrojavanja. Prerano dizanje = lažni start!",g1:"👆 Drži startni krug",
     t2:"Vozi prstom",b2:"Auto točno prati tvoj prst — brzo koliko ga pomičeš. <b>Podigneš prst i auto se odmah zaustavi.</b> Bez klizanja, bez isprika.",g2:"🏎️ Vozi po stazi",
@@ -9436,7 +9451,8 @@ const TUT_STR={
     t8:"Snaga zavjetrine 🚗💨",b8:"Boksovi nisu jedino rješenje za štetu! Vozi točno <b>iza</b> suparnika i u njegovoj zavjetrini <b>šteta se odmah popravlja</b> (energija se puni). Što si bliže, obnova je brža. <b>Uhvati crveni auto ispred sebe i vozi u njegovoj zavjetrini!</b>",g8:"🚗💨 Vozi u zavjetrini iza rivala",
     t9:"Krugovi i checkpointi",b9:"Odvozi cijeli krug. Staza ima skrivene <b>checkpointe</b> — presiječeš li zavoj, krug se ne broji (crvena crta pokazuje kamo se vratiti).",g9:"🏁 Odvozi cijeli krug",
     t10:"Dobrodošao u pješčanik!",b10:"Parkiralište u sredini je tvoje igralište: ruši čunjeve, bačve i gume te gurni mehaničare (uglavnom prežive). Ovdje je oštećenje manje. Bilo kada dodirni <b>↩ Natrag na stazu</b>.",g10:"🧪 Igraj se na parkiralištu — ili dodirni ‘Spreman’",
-    t11:"Vrijeme za pravu utrku!",b11:"2 kruga protiv 3 suparnika — i kao svaki početnik krećeš <b>sa začelja</b>. Iskoristi sve što si naučio. Sretno!"}
+    t11:"Vrijeme za pravu utrku!",b11:"2 kruga protiv 3 suparnika — i kao svaki početnik krećeš <b>sa začelja</b>. Iskoristi sve što si naučio. Sretno!",
+    trescue:"Pomoć na stazi 🏃🔧⛽",brescue:"Zastoj na stazi! Kad ostaneš na <b>0%</b> goriva ili dosegneš <b>100%</b> štete, auto se zaustavlja. Bez panike — tvoj mehaničar trči iz boksa s hitnom pomoći (<b>+20%</b>) da se možeš dovesti do boksa!",grescue:"🏃 Pričekaj da mehaničar dotrči do tebe"}
 };
 function TT(k){ const lang=(typeof save!=="undefined"&&save&&save.lang)||"en"; const L=TUT_STR[lang]||TUT_STR.en; return (L[k]!=null?L[k]:TUT_STR.en[k])||""; }
 
@@ -9731,7 +9747,13 @@ function tutCard(n,after,bar){
   const el=$("tutCard"); if(!el) return;
   $("tutCTitle").innerHTML=TT("t"+n); $("tutCBody").innerHTML=TT("b"+n);
   $("tutCGo").textContent=TT("gotIt"); $("tutCSkip").textContent=TT("skip");
-  { const pl=$("tutPills"); let h=""; for(let i=1;i<=11;i++) h+='<i class="'+(i===n?"on":(i<n?"done":""))+'"></i>'; pl.innerHTML=h; }
+  { const pl=$("tutPills");
+    if(n==="rescue"){
+      pl.innerHTML='<span style="font-size:11px;font-weight:900;letter-spacing:1px;color:#ffd166;padding:2px 8px;border-radius:10px;background:rgba(255,209,102,.15);border:1px solid rgba(255,209,102,.4)">RESCUE 🏃</span>';
+    } else {
+      let h=""; for(let i=1;i<=11;i++) h+='<i class="'+(i===n?"on":(i<n?"done":""))+'"></i>'; pl.innerHTML=h;
+    }
+  }
   el.style.display="flex"; requestAnimationFrame(()=>el.classList.add("on"));
   taStart($("tutArt"),TA_SCENES[n]||TA_SCENES[1]);
   tutBarArrow(bar||null);
@@ -9791,7 +9813,7 @@ function startTutorial(){
   aiParams={SKILLS:[1],base:BASE1,NAI:0};
   vRef=Math.max(60,BASE1*MEANFAC); qPos=1; raceStarted=false;
   if(TUT.coachRacer){ const idx=racers.indexOf(TUT.coachRacer); if(idx>=0) racers.splice(idx,1); TUT.coachRacer=null; }
-  Object.assign(TUT,{on:true,step:1,prev:null,card:0,seen:{},hl:null,dist:0,lastS:0,t:0,obsS:sAt(RK.CX-RK.W,RK.CY,-1).s,armed:0,miss:0,c0:null,after:null,mechHits:0,hitT:0,lessonDone:0,fullT:0,lapCard:0,draftCard:0,draftActive:0,draftTime:0,draftSaid:0,coachRacer:null});
+  Object.assign(TUT,{on:true,step:1,prev:null,card:0,seen:{},hl:null,dist:0,lastS:0,t:0,obsS:sAt(RK.CX-RK.W,RK.CY,-1).s,armed:0,miss:0,c0:null,after:null,mechHits:0,hitT:0,lessonDone:0,fullT:0,lapCard:0,draftCard:0,draftActive:0,draftTime:0,draftSaid:0,coachRacer:null,rescueShown:false});
   TUT.starting=true; try{ startRace(); } finally { TUT.starting=false; }
   tutPlaceObstacles(false);
   TUT.lastS=player.s;
@@ -9949,7 +9971,15 @@ function taCone(c,x,y,rot){ c.save(); c.translate(x,y); if(rot) c.rotate(rot); c
 function taMech(c,x,y,o){ o=o||{}; const col=o.col||TAC.warn; c.save(); c.translate(x,y); if(o.rot) c.rotate(o.rot); if(o.flip) c.scale(-1,1);
   if(!o.noShadow) taEll(c,0,24,10,2.6,"rgba(0,0,0,.25)");
   c.strokeStyle=TAC.tire; c.lineWidth=4; const tap=o.tap||0;
-  c.beginPath(); c.moveTo(-3.5,14); c.lineTo(-4,23); c.moveTo(3.5,14); c.lineTo(4+tap*2,23-tap*3); c.stroke();
+  if(o.stride!=null){
+    const st=Math.sin(o.stride)*8, lt=Math.cos(o.stride)*5;
+    c.beginPath();
+    c.moveTo(-3.5,14); c.lineTo(-4+st,22-Math.max(0,lt));
+    c.moveTo(3.5,14); c.lineTo(4-st,22-Math.max(0,-lt));
+    c.stroke();
+  } else {
+    c.beginPath(); c.moveTo(-3.5,14); c.lineTo(-4,23); c.moveTo(3.5,14); c.lineTo(4+tap*2,23-tap*3); c.stroke();
+  }
   c.fillStyle="rgba(0,0,0,.15)"; taRR(c,-9,-6,18,22,7); c.fill(); c.fillStyle=col; taRR(c,-9,-7,17,22,7); c.fill();
   c.fillStyle="#fff"; c.fillRect(-4,-3,7,5);
   taCirc(c,0,-15,9,TAC.skin);
@@ -9959,6 +9989,7 @@ function taMech(c,x,y,o){ o=o||{}; const col=o.col||TAC.warn; c.save(); c.transl
   const aa=o.armA||0; const hx=7+Math.cos(aa)*9, hy=-3+Math.sin(aa)*9;
   taLimb(c,[[5,-3],[hx,hy]],3.6);
   if(o.wrench){ c.strokeStyle="#BFC2D4"; c.lineWidth=3; c.beginPath(); c.moveTo(hx,hy); c.lineTo(hx+Math.cos(aa-0.6)*9,hy+Math.sin(aa-0.6)*9); c.stroke(); taCirc(c,hx+Math.cos(aa-0.6)*10,hy+Math.sin(aa-0.6)*10,2.6,"#BFC2D4"); }
+  if(o.canister){ c.fillStyle=TAC.red; taRR(c,hx-4,hy-2,11,14,2.5); c.fill(); c.fillStyle="#B22F2F"; c.fillRect(hx-2,hy-5,5,3); }
   if(o.thumb){ taCirc(c,hx,hy-2,2.4,TAC.skin); }
   c.restore(); }
 function taFinger(c,x,y,a){ if(a<=0) return; c.globalAlpha=a; c.lineCap="round";
@@ -10187,9 +10218,57 @@ const TA_SCENES={
     if(go>0) taSpeed(c,130+off,140,1-go*0.5);
     taConfetti(c,1.95,t);
     taChip(c,160,90,"GO!",TAC.ok,taPop(t,1.9));
+  }},
+  rescue:{T:4.8,draw(c,t){
+    taBG(c);
+    const kx=225, ky=150;
+    const runIn=taSeg(t,0,2.3), mx=-30+taIOQ(runIn)*205;
+    const servicing=t>=2.3&&t<3.7, done=t>=3.7;
+
+    // Stranded kart and driver
+    const wob=(!done)?Math.sin(t*25)*0.5:0;
+    taKart(c,kx,ky+wob,{mood:done?"cheer":(servicing?"happy":"startled"),t});
+
+    // Smoke and distress indicators before repair completion
+    if(!done){
+      if(t<2.3){
+        for(let q=0;q<3;q++) taSmoke(c,kx-18+q*8,ky-12,((t*1.8)+q*0.33)%1,0.75);
+      } else {
+        const smkFade=Math.max(0,(3.7-t)/1.4)*0.5;
+        for(let q=0;q<2;q++) taSmoke(c,kx-14+q*10,ky-12,((t*1.2)+q*0.5)%1,smkFade);
+      }
+      taSweat(c,kx+10,ky-38,(t*1.2)%1);
+      taChip(c,kx,92,"⚠️ STRANDED",TAC.danger,1);
+    }
+
+    // Phase 1: Sprinting mechanic across track
+    if(t<2.3){
+      taSpeed(c,mx-25,ky-16,1);
+      const armSwing=Math.sin(t*24)*0.55;
+      taMech(c,mx,ky-16,{col:TAC.warn,mood:"determined",t,stride:t*24,armA:armSwing,canister:true});
+      taBubble(c,Math.min(170,mx+15),ky-52,"🏃 ON MY WAY!",taPop(t,0.25)*(t<2.1?1:0));
+    } else if(servicing){
+      // Phase 2: Refueling & quick trackside repairs
+      const workArm=Math.sin(t*20)*0.7;
+      taMech(c,175,ky-16,{col:TAC.warn,mood:"determined",t,wrench:true,armA:workArm});
+      taStars(c,kx-14,ky-24,t,0.9);
+      for(let q=0;q<2;q++){
+        taSparkle(c,kx-6+q*20,ky-18+q*8,taPulse(t,2.5+q*0.5,0.5));
+      }
+      taChip(c,175,ky-54,"⛽ + 🔧 FIXING...",TAC.yellow,1);
+    } else {
+      // Phase 3: Emergency assistance complete (+20% rescue)
+      taMech(c,175,ky-16,{col:TAC.warn,mood:"cheer",t,thumb:true,armA:-1.3});
+      taSparkle(c,kx-12,ky-22,taPulse(t,3.7,0.6)*1.4);
+      taSparkle(c,kx+16,ky-16,taPulse(t,3.9,0.6)*1.4);
+      taConfetti(c,3.7,t);
+      taChip(c,200,44,"+20% RESCUE ✓",TAC.ok,taPop(t,3.7));
+      taBubble(c,175,ky-52,"ALL SET!",taPop(t,3.85));
+    }
   }}
 };
 TA_SCENES.draft = TA_SCENES[8];
+TA_SCENES[12] = TA_SCENES.rescue;
 
 function openSingle(){
   const isEn = (save.lang === "en");
