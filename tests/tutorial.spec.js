@@ -168,4 +168,56 @@ test.describe('Rookie Ring tutorial track', () => {
     expect(res.sceneMatches).toBe(true);
     expect(res.stoppedAfterBack).toBe(true);
   });
+
+  test('interactive slipstream lesson spawns waiting rival car ahead, starts moving, and heals damage in slipstream', async ({ page }) => {
+    await boot(page, { tutSeen: true, introSeen: true, lang: 'sl', sound: false });
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    await installDriver(page);
+    const res = await page.evaluate(() => {
+      startTutorial();
+      state = 'racing';
+      TUT.step = 7;
+      player.fuel = 1;
+      tutTick(1.0); // step 7 -> step 8
+      tutTick(1.0); // triggers step 8 Card 8 and spawns rival
+      const coachSpawned = !!TUT.coachRacer;
+      const initialV = TUT.coachRacer ? TUT.coachRacer.v : -1;
+      const racerCount = racers.length;
+      tutCloseCard(); // user taps "Got it!"
+      state = 'racing';
+      pointer.down = true;
+      const activeAfterClose = TUT.draftActive;
+      const initialDmg = player.dmg;
+      const coachVAfterClose = TUT.coachRacer ? TUT.coachRacer.v : -1;
+      const hlType = TUT.hl && TUT.hl.type;
+
+      // Position coach 50px ahead on centerline, then drive with __step
+      TUT.coachRacer.s = wrapS(player.s + 50);
+      const cp = posAt(TUT.coachRacer.s, 0);
+      TUT.coachRacer.px = cp.x; TUT.coachRacer.py = cp.y;
+      __drv.spd = 300;
+      let draftingDetected = false;
+      for (let i = 0; i < 220; i++) {
+        TUT.coachRacer.s = wrapS(player.s + 50);
+        const p2 = posAt(TUT.coachRacer.s, 0);
+        TUT.coachRacer.px = p2.x; TUT.coachRacer.py = p2.y;
+        __step();
+        if (draftOn) draftingDetected = true;
+        if (TUT.step === 9) break;
+      }
+      const nextStep = TUT.step;
+      const healedDmg = player.dmg;
+      return { coachSpawned, initialV, racerCount, activeAfterClose, initialDmg, coachVAfterClose, hlType, draftingDetected, nextStep, healedDmg };
+    });
+    expect(res.coachSpawned).toBe(true);
+    expect(res.initialV).toBe(0);
+    expect(res.racerCount).toBe(1);
+    expect(res.activeAfterClose).toBe(1);
+    expect(res.initialDmg).toBeGreaterThanOrEqual(0.45);
+    expect(res.coachVAfterClose).toBeGreaterThan(0);
+    expect(res.hlType).toBe('car');
+    expect(res.draftingDetected).toBe(true);
+    expect(res.nextStep).toBe(9);
+    expect(res.healedDmg).toBeLessThan(res.initialDmg);
+  });
 });
