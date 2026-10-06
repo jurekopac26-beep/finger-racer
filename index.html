@@ -6546,7 +6546,7 @@ function update(dt){
       }
       rc.idx=idxOf(rc.s);
       const blend=Math.min(1,rc.dist/300);
-      const raceLat=rc.gridLat*(1-blend)+HW[rc.idx]*rc.latAmp*Math.sin(rc.s*6.283/rc.latPer+rc.latPh)*blend;
+      const raceLat=rc.isCoach ? rc.gridLat : (rc.gridLat*(1-blend)+HW[rc.idx]*rc.latAmp*Math.sin(rc.s*6.283/rc.latPer+rc.latPh)*blend);
       let lat=raceLat;
       // BRANJENJE POZICIJE: če je igralec tik zadaj, se AI premakne na njegovo stran
       if(!rc.finished&&!rc.inPit&&state==="racing"){
@@ -6728,7 +6728,7 @@ function update(dt){
             if(rc.wrecked||rc.finished||rc.inPit) continue;                     // ne za vozili v boksih
             let ds=rc.s+rc.crossings*L-(player.s+player.crossings*L);
             if(ds>-L/2&&ds<L/2){} else { ds=rc.s-player.s; if(ds<-L/2)ds+=L; if(ds>L/2)ds-=L; }
-            if(ds>6&&ds<230&&Math.hypot(nx-rc.px,ny-rc.py)<RAD*7){ draftOn=true; draftCar=rc; draftDs=ds; break; }
+            if(ds>6&&ds<460&&Math.hypot(nx-rc.px,ny-rc.py)<Math.max(RAD*7,ds*1.2)){ draftOn=true; draftCar=rc; draftDs=ds; break; }
           }
           if(!draftOn && mpMode && mp){
             const checkPeerDraft = (peer) => {
@@ -6739,7 +6739,7 @@ function update(dt){
               let pcross = peer.crossings != null ? peer.crossings : (peer.p != null ? Math.floor(peer.p / L) : player.crossings);
               let ds = ps + pcross * L - (player.s + player.crossings * L);
               if(!(ds > -L / 2 && ds < L / 2)){ ds = ps - player.s; if(ds < -L / 2) ds += L; if(ds > L / 2) ds -= L; }
-              if(ds > 4 && ds < 260 && Math.hypot(nx - px, ny - py) < RAD * 8.5){
+              if(ds > 4 && ds < 460 && Math.hypot(nx - px, ny - py) < Math.max(RAD * 8.5, ds * 1.2)){
                 draftOn = true;
                 draftCar = { s: ps, px: px, py: py, crossings: pcross };
                 draftDs = ds;
@@ -6757,12 +6757,12 @@ function update(dt){
           }
           if(!draftOn && safetyCar){                                              // ZAVETRJE VARNOSTNEGA AVTA (polnjenje)
             let ds=safetyCar.s-player.s; if(ds<-L/2)ds+=L; if(ds>L/2)ds-=L;
-            if(ds>6&&ds<260&&Math.hypot(nx-safetyCar.x,ny-safetyCar.y)<RAD*8){ draftOn=true; draftCar={s:safetyCar.s,px:safetyCar.x,py:safetyCar.y,isSC:true,crossings:player.crossings}; draftDs=ds; }
+            if(ds>6&&ds<460&&Math.hypot(nx-safetyCar.x,ny-safetyCar.y)<Math.max(RAD*8,ds*1.2)){ draftOn=true; draftCar={s:safetyCar.s,px:safetyCar.x,py:safetyCar.y,isSC:true,crossings:player.crossings}; draftDs=ds; }
           }
         }
         if((training&&TRAIN_STEPS[training-1]&&TRAIN_STEPS[training-1].noDraft)||raceRules.noDraft) draftOn=false;   // trening: dirka brez zavetrja
         if(draftOn&&player.dmg>0){
-          const near=1-Math.min(1,Math.max(0,(draftDs-6)/(230-6)));   // 1 tik za avtom, 0 na robu
+          const near=1-Math.min(1,Math.max(0,(draftDs-6)/(460-6)));   // 1 tik za avtom, 0 na robu
           const rate=PIT_RATE*0.45*(0.3+0.7*near)*((draftCar&&draftCar.isSC)?1.8:1)*(fastFillDraftRace?2:1);   // ~14s za 100%; za varnostnim avtom hitreje
           const before=player.dmg;
           { const d=Math.min(player.dmg,(rate/(R_MAX-R0))*dt); player.dmg-=d; player.repDraft=(player.repDraft||0)+d; player.draftTime=(player.draftTime||0)+dt; }
@@ -7746,19 +7746,21 @@ function drawTag(c,x,y,line1,name,color,pct,pctCol){
 }
 function hexRGB(h){ h=(h||"#3dff8e").replace("#",""); if(h.length===3)h=h.split("").map(x=>x+x).join("");
   return [parseInt(h.slice(0,2),16)||61,parseInt(h.slice(2,4),16)||255,parseInt(h.slice(4,6),16)||142]; }
-function drawDraftZone(c,leadS,color){
+function drawDraftZone(c,leadS,color,intensity=1.0){
  try{
-  const t2=performance.now()/1000, back=RAD*2*3, st=SP*1.5, carHW=RAD*0.5, pulse=0.06*Math.sin(t2*7);
+  if(intensity<=0.01) return;
+  const t2=performance.now()/1000, back=RAD*13, st=SP*1.2, carHW=RAD*0.55, pulse=0.06*Math.sin(t2*7);
   const rgb=hexRGB(color);
   c.save();
   for(let d=0; d<back; d+=st){
     const s0=((leadS-d)%L+L)%L, s1=((leadS-d-st)%L+L)%L;
     const i0=idxOf(s0), i1=idxOf(s1);
-    const w0=Math.min(HW[i0], carHW+(HW[i0]-carHW)*(d/back));
-    const w1=Math.min(HW[i1], carHW+(HW[i1]-carHW)*Math.min(1,(d+st)/back));
-    const a=posAt(s0,-w0), b2=posAt(s1,-w1), e=posAt(s1,w1), f=posAt(s0,w0);
-    const fade=1-d/back;
-    c.fillStyle="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+(0.05+(0.42+pulse)*fade).toFixed(3)+")";
+    const spread0=Math.min(HW[i0]*0.9, carHW+(HW[i0]*0.75-carHW)*(d/back));
+    const spread1=Math.min(HW[i1]*0.9, carHW+(HW[i1]*0.75-carHW)*Math.min(1,(d+st)/back));
+    const a=posAt(s0,-spread0), b2=posAt(s1,-spread1), e=posAt(s1,spread1), f=posAt(s0,spread0);
+    const fade=Math.pow(1-d/back, 1.4);
+    const alpha=((0.04+(0.44+pulse)*fade)*intensity).toFixed(3);
+    c.fillStyle="rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+alpha+")";
     c.beginPath(); c.moveTo(a.x,a.y); c.lineTo(b2.x,b2.y); c.lineTo(e.x,e.y); c.lineTo(f.x,f.y); c.closePath(); c.fill();
   }
   c.restore();
@@ -7960,16 +7962,64 @@ function drawCore(){
   drawGroundMarks(c);        // sledi koles (mivka/trava), bledijo čez dirko
   if(deathMarks.length) drawDeathMarks(c,1/scale);   // rdeč flek + sled tam, kjer je bil povožen mehanik
   if(quakeCracks.length) drawQuakeCracks(c,1/scale);   // razpoke od potresa (do konca dirke)
-  // ZAVETRJE cone: za VSAK avto, za katerim se kdo fila (v barvi vodilnega avta)
-  {
-    const leads=new Map();   // s -> barva
-    if(draftOn&&draftCar&&draftCar.s!=null) leads.set(draftCar.s, draftCar.color||"#ffffff");  // igralec se fila za draftCar
+  // ZAVETRJE cone: za avtomobile spredaj (zvezno bledenje z razdaljo) ter za tekmece v zavetrju
+  if(state==="racing"||state==="crashed"){
+    const leads=new Map();
+    const setLead=(key,s,color,intensity)=>{
+      const cur=leads.get(key);
+      if(!cur || intensity>cur.intensity){
+        leads.set(key, {s, color:color||"#ffffff", intensity:Math.max(0, Math.min(1, intensity))});
+      }
+    };
+    if(!pitOn && !inPitZone(player.x,player.y,player.s)){
+      for(const rc of racers){
+        if(rc.wrecked||rc.finished||rc.inPit) continue;
+        let ds=rc.s+rc.crossings*L-(player.s+player.crossings*L);
+        if(ds>-L/2&&ds<L/2){} else { ds=rc.s-player.s; if(ds<-L/2)ds+=L; if(ds>L/2)ds-=L; }
+        if(ds>6 && ds<520){
+          const prox=1-Math.min(1,Math.max(0,(ds-10)/510));
+          const intensity=(draftOn&&draftCar===rc)?1.0:(0.15+0.70*Math.pow(prox,1.2));
+          setLead(rc, rc.s, rc.color, intensity);
+        }
+      }
+      if(safetyCar){
+        let ds=safetyCar.s-player.s; if(ds<-L/2)ds+=L; if(ds>L/2)ds-=L;
+        if(ds>6 && ds<520){
+          const prox=1-Math.min(1,Math.max(0,(ds-10)/510));
+          const intensity=(draftOn&&draftCar&&draftCar.isSC)?1.0:(0.15+0.70*Math.pow(prox,1.2));
+          setLead("sc", safetyCar.s, "#ffe640", intensity);
+        }
+      }
+      if(mpMode && mp){
+        const checkPeer=(peer)=>{
+          if(!peer||peer.finished||peer.dnf) return;
+          const px=peer.x, py=peer.y;
+          if(px==null||py==null) return;
+          let ps=peer.s!=null?peer.s:(peer.p!=null?(peer.p%L):idxOfPos(px,py));
+          let pcross=peer.crossings!=null?peer.crossings:(peer.p!=null?Math.floor(peer.p/L):player.crossings);
+          let ds=ps+pcross*L-(player.s+player.crossings*L);
+          if(!(ds>-L/2&&ds<L/2)){ ds=ps-player.s; if(ds<-L/2)ds+=L; if(ds>L/2)ds-=L; }
+          if(ds>6 && ds<520){
+            const prox=1-Math.min(1,Math.max(0,(ds-10)/510));
+            const intensity=(draftOn&&draftCar&&draftCar.s===ps)?1.0:(0.15+0.70*Math.pow(prox,1.2));
+            setLead(peer, ps, peer.color, intensity);
+          }
+        };
+        if(mp.peers&&mp.peers.size>0){
+          for(const p of mp.peers.values()) checkPeer(p);
+        } else if(mp.opp){
+          checkPeer(mp.opp);
+        }
+      }
+    }
     for(const rc of racers){
       if(!rc.drafting||!rc.draftLead) continue;
-      if(rc.draftLead==="player"){ if(!player.finished) leads.set(player.s+0.0001,playerColor()); }  // za mano
-      else if(rc.draftLead.s!=null) leads.set(rc.draftLead.s, rc.draftLead.color||"#ffffff");
+      if(rc.draftLead==="player"){ if(!player.finished) setLead("me", player.s+0.0001, playerColor(), 1.0); }
+      else if(rc.draftLead.s!=null){ setLead(rc.draftLead, rc.draftLead.s, rc.draftLead.color, 1.0); }
     }
-    for(const [ls,col] of leads){ if(state==="racing"||state==="crashed") drawDraftZone(c,ls,col); }
+    for(const info of leads.values()){
+      drawDraftZone(c, info.s, info.color, info.intensity);
+    }
   }
   if(animOn("finishline")) drawFinishLine(c);
   if(pitCrew.length && (state==="racing"||state==="crashed"||state==="countdown"||state==="prestart"||state==="finished"||state==="rejoin")) drawPitCrew(c,1/scale);
@@ -9605,21 +9655,38 @@ function tutTick(dt){
       TUT.draftSaid=0;
       tutSetGoal("g8");
       if(TUT.coachRacer){
-        TUT.coachRacer.v=110;
+        TUT.coachRacer.v=100;
+        TUT.coachRacer.isSideline=false;
+        TUT.coachRacer.mergeT=1.8;
         TUT.hl={type:"car",racer:TUT.coachRacer};
       }
     });
     return;
   }
+  if(TUT.coachRacer && !TUT.coachRacer.finished){
+    const rc=TUT.coachRacer;
+    if(rc.isSideline){
+      rc.v=0;
+    } else {
+      if(rc.mergeT>0){
+        rc.mergeT-=dt;
+        rc.gridLat=(rc.sideLat||0)*Math.max(0,rc.mergeT/1.8);
+      } else {
+        rc.gridLat=0;
+      }
+      let ds=rc.s-player.s; if(ds<-L/2)ds+=L; else if(ds>L/2)ds-=L;
+      const lapNum=Math.max(0,(rc.crossings||0)-(rc.baseC0||0));
+      const healProgress=Math.min(1,Math.max(0,1-(player.dmg||0)));
+      let baseTv=(lapNum===0)?(125+healProgress*55):(230+Math.min(30,(lapNum-1)*20));
+      let tv=baseTv;
+      if(ds>240) tv=Math.max(95,baseTv-45);
+      else if(ds<40&&ds>=0) tv=baseTv+25;
+      else if(ds<0&&ds>-250) tv=baseTv+40;
+      rc.v+=(tv-rc.v)*Math.min(1,dt*2.8);
+    }
+  }
   if(TUT.step===8&&TUT.draftActive&&TUT.coachRacer){
     const rc=TUT.coachRacer;
-    let ds=rc.s-player.s; if(ds<-L/2)ds+=L; else if(ds>L/2)ds-=L;
-    let tv=175;
-    if(ds>140) tv=105;
-    else if(ds<32) tv=215;
-    else if(ds<0&&ds>-250) tv=240;
-    rc.v+=(tv-rc.v)*Math.min(1,dt*2.8);
-
     if(draftOn&&draftCar===rc){
       TUT.draftTime=(TUT.draftTime||0)+dt;
       if(TUT.draftTime>0.6&&!TUT.draftSaid){
@@ -9698,12 +9765,13 @@ function tutShowUI(on){
 }
 function tutSpawnDraftRival(){
   if(TUT.coachRacer && racers.includes(TUT.coachRacer)) return TUT.coachRacer;
-  const leadS=wrapS(player.s+110), leadIdx=idxOf(leadS);
-  const p=posAt(leadS,0), ang=Math.atan2(TYa[leadIdx],TXa[leadIdx]);
+  const leadS=wrapS(player.s+130), leadIdx=idxOf(leadS);
+  const sideLat=(HW[leadIdx]||60)*0.82;
+  const p=posAt(leadS,sideLat), ang=Math.atan2(TYa[leadIdx],TXa[leadIdx]);
   const coach={
     name:"Rival",color:"#ff4747",num:2,
-    s:leadS,idx:leadIdx,crossings:player.crossings,finished:false,finishTime:0,
-    v:0,targetV:0,gridLat:0,dist:0,
+    s:leadS,idx:leadIdx,crossings:player.crossings,baseC0:player.crossings,finished:false,finishTime:0,
+    v:0,targetV:0,gridLat:sideLat,sideLat:sideLat,isSideline:true,dist:0,mergeT:0,
     nzW:1,nzP:0,latPer:1000,latPh:0,latAmp:0,
     dmg:0,px:p.x,py:p.y,ang,rank:1,trail:[],wrecked:false,
     mkBase:999,mkVar:0,mT:999,mkT:0,mkDur:0,mkSide:0,
