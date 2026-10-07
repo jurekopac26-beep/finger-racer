@@ -34,10 +34,108 @@ async function installDriver(page) {
 
 test.describe('Rookie Ring tutorial track', () => {
 
-  test('first run: OK on the welcome screen starts the tutorial on the O-track with no rivals', async ({ page }) => {
-    await boot(page, { tutSeen: false, sound: false });
-    await page.waitForSelector('#tutorial.on', { timeout: 15000 });
-    await page.locator('#btnTutOk').click();
+  test('first run lands directly on Rookie Ring with a 3-choice welcome card (no text screen)', async ({ page }) => {
+    await boot(page, { sound: false });
+    await expect(page.locator('#tutCard')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#tutorial')).not.toHaveClass(/\bon\b/);
+    const info = await page.evaluate(() => ({ curTrack, tutOn: TUT.on, card: TUT.card, state, racers: racers.length, seen: !!save.tutSeen }));
+    expect(info.curTrack).toBe(8);
+    expect(info.tutOn).toBe(true);
+    expect(info.card).toBe('welcome');
+    expect(info.state).toBe('tutpause');
+    expect(info.racers).toBe(0);
+    expect(info.seen).toBe(false);   // saved only once the player picks an option
+    await expect(page.locator('#tutCTitle')).toHaveText('Welcome to Finger Racer!');
+    await expect(page.locator('#tutCGo')).toHaveText('▶ Start tutorial');
+    await expect(page.locator('#tutCSkip')).toHaveText('🏁 Skip — race now');
+    await expect(page.locator('#tutCMenu')).toBeVisible();
+    await expect(page.locator('#tutCLang')).toBeVisible();
+    await expect(page.locator('#hFps')).toBeHidden();
+  });
+
+  test('welcome: Main menu leaves the track and next launch opens the menu', async ({ page }) => {
+    await boot(page, { sound: false });
+    await expect(page.locator('#tutCard')).toBeVisible({ timeout: 15000 });
+    await page.locator('#tutCMenu').click();
+    await page.waitForSelector('#menu.on', { timeout: 5000 });
+    const s = await page.evaluate(() => ({ seen: save.tutSeen, done: !!save.tutorialDone, tutOn: TUT.on }));
+    expect(s).toEqual({ seen: true, done: false, tutOn: false });
+    await page.reload();
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    await expect(page.locator('#tutCard')).toBeHidden();
+  });
+
+  test('welcome: Skip starts a Rookie Ring race with rivals', async ({ page }) => {
+    await boot(page, { sound: false });
+    await expect(page.locator('#tutCard')).toBeVisible({ timeout: 15000 });
+    await page.locator('#tutCSkip').click();
+    const info = await page.evaluate(() => ({ tutOn: TUT.on, curTrack, racers: racers.length, done: save.tutorialDone, seen: save.tutSeen, state }));
+    expect(info).toMatchObject({ tutOn: false, curTrack: 8, done: true, seen: true, state: 'prestart' });
+    expect(info.racers).toBeGreaterThan(0);
+    await expect(page.locator('#tutCard')).toBeHidden();
+  });
+
+  test('welcome: browser language is auto-detected and the language chip switches it', async ({ browser }) => {
+    const ctx = await browser.newContext({ locale: 'de-DE' });
+    const page = await ctx.newPage();
+    await boot(page, { sound: false });
+    await expect(page.locator('#tutCard')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#tutCTitle')).toHaveText('Willkommen bei Finger Racer!');
+    await page.locator('#tutCLang').click();
+    await expect(page.locator('#countryPickerModal')).toBeVisible();
+    await page.locator('#countryListGrid .countryItem[data-code="it"]').click();
+    await expect(page.locator('#tutCTitle')).toHaveText('Benvenuto in Finger Racer!');
+    await expect(page.locator('#tutCGo')).toHaveText('▶ Inizia tutorial');
+    await ctx.close();
+  });
+
+  test('mid-tutorial Skip asks first: Continue resumes, Skip races', async ({ page }) => {
+    await boot(page, { tutSeen: true, introSeen: true, lang: 'en', sound: false });
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    await page.evaluate(() => startTutorial());
+    await expect(page.locator('#tutCard')).toBeVisible({ timeout: 5000 });
+    // a lesson card is open → Skip shows the "leave" card, Continue re-opens the same lesson
+    await page.locator('#tutCSkip').click();
+    expect(await page.evaluate(() => TUT.card)).toBe('leave');
+    await expect(page.locator('#tutCTitle')).toHaveText('Leave the tutorial?');
+    await expect(page.locator('#tutCGo')).toHaveText('▶ Continue tutorial');
+    await page.locator('#tutCGo').click();
+    expect(await page.evaluate(() => ({ card: TUT.card, on: TUT.on }))).toEqual({ card: 1, on: true });
+    await page.locator('#tutCGo').click();
+    expect(await page.evaluate(() => TUT.card)).toBe(0);
+    // while driving: the Skip pill asks too; Continue keeps the tutorial running
+    await page.locator('#tutSkipPill').click();
+    expect(await page.evaluate(() => TUT.card)).toBe('leave');
+    await page.locator('#tutCGo').click();
+    expect(await page.evaluate(() => ({ card: TUT.card, on: TUT.on }))).toEqual({ card: 0, on: true });
+    // ...and Skip on the leave card goes racing
+    await page.locator('#tutSkipPill').click();
+    await page.locator('#tutCSkip').click();
+    const info = await page.evaluate(() => ({ tutOn: TUT.on, racers: racers.length, state }));
+    expect(info.tutOn).toBe(false);
+    expect(info.racers).toBeGreaterThan(0);
+    expect(info.state).toBe('prestart');
+  });
+
+  test('start marker label is localized (no Slovenian "PRST SEM" in English)', async ({ page }) => {
+    await boot(page, { tutSeen: true, introSeen: true, lang: 'en', sound: false });
+    await page.waitForSelector('#menu.on', { timeout: 15000 });
+    expect(await page.evaluate(() => [TT('holdHere'), TT('holdBang'), TT('holdSec')])).toEqual(['FINGER HERE', 'HOLD!', 'HOLD {s} s']);
+    const labels = await page.evaluate(async () => {
+      const seen = new Set(); const orig = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t, ...r) { seen.add(String(t)); return orig.call(this, t, ...r); };
+      startSingle(ROOKIE);
+      await new Promise(r => setTimeout(r, 600));
+      CanvasRenderingContext2D.prototype.fillText = orig;
+      return [...seen];
+    });
+    expect(labels).not.toContain('PRST SEM');
+  });
+
+  test('Start tutorial on the welcome card opens lesson 1 on the O-track with no rivals', async ({ page }) => {
+    await boot(page, { sound: false });
+    await expect(page.locator('#tutCard')).toBeVisible({ timeout: 15000 });
+    await page.locator('#tutCGo').click();
     await expect(page.locator('#tutCard')).toBeVisible({ timeout: 5000 });
     const info = await page.evaluate(() => ({
       curTrack,
@@ -66,7 +164,8 @@ test.describe('Rookie Ring tutorial track', () => {
     await page.waitForSelector('#menu.on', { timeout: 15000 });
     await page.evaluate(() => startTutorial());
     await expect(page.locator('#tutCard')).toBeVisible({ timeout: 5000 });
-    await page.locator('#tutCSkip').click();
+    await page.locator('#tutCSkip').click();   // lesson card → "leave" card
+    await page.locator('#tutCSkip').click();   // leave card → race
     const info = await page.evaluate(() => ({ tutOn: TUT.on, curTrack, racers: racers.length, done: save.tutorialDone, state }));
     expect(info.tutOn).toBe(false);
     expect(info.curTrack).toBe(8);
