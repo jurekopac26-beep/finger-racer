@@ -5,125 +5,44 @@ const FILE_URL = 'file://' + path.resolve(__dirname, '../index.html').replace(/\
 
 test.describe('Beginning Language Selector & Dropdown', () => {
 
-  test('New player sees English by default with dropdown on tutorial screen', async ({ page }) => {
+  // First run: no text screen — the language chip lives on the Rookie Ring welcome card
+  async function firstRun(page) {
     await page.goto(FILE_URL);
-    await page.evaluate(() => {
-      localStorage.clear();
-      localStorage.setItem('prstna-dirka', JSON.stringify({ tutSeen: false, sound: false }));
-    });
+    await page.evaluate(() => { localStorage.clear(); localStorage.setItem('prstna-dirka', JSON.stringify({ sound: false })); });
     await page.goto(FILE_URL);
-    await page.waitForSelector('#tutorial.on', { timeout: 15000 });
+    await page.waitForFunction(() => typeof TUT !== 'undefined' && TUT.card === 'welcome', null, { timeout: 15000 });
+  }
 
-    // Verify language dropdown trigger exists
-    const tutDropdownBtn = page.locator('#tutLangDropdownBtn');
-    await expect(tutDropdownBtn).toBeVisible();
-
-    // Default should be English
-    const curName = page.locator('#tutLangCurName');
-    await expect(curName).toHaveText('English');
-
-    const curSub = page.locator('#tutLangCurSub');
-    await expect(curSub).toHaveText(/UK \/ International/);
-
-    // Verify SVG flag is inside curFlag
-    const curFlagSvg = page.locator('#tutLangCurFlag svg');
-    await expect(curFlagSvg).toBeVisible();
-
-    // Tutorial text should be in English
-    const tutTitle = page.locator('#tutTitle');
-    await expect(tutTitle).toContainText('How to play');
-
-    const tutBtnText = page.locator('#tutBtnText');
-    await expect(tutBtnText).toContainText("Got it! Let's Race");
-
-    // Dropdown list should initially not be visible
-    const tutList = page.locator('#tutLangList');
-    await expect(tutList).toBeHidden();
+  test('New player sees English by default with a language chip on the welcome card', async ({ page }) => {
+    await firstRun(page);
+    const chip = page.locator('#tutCLang');
+    await expect(chip).toBeVisible();
+    await expect(chip).toContainText('Change');
+    await expect(page.locator('#tutCLang svg')).toBeVisible();
+    await expect(page.locator('#tutCTitle')).toHaveText('Welcome to Finger Racer!');
+    await expect(page.locator('#countryPickerModal')).toBeHidden();
   });
 
-  test('Clicking dropdown reveals all 7 countries', async ({ page }) => {
-    await page.goto(FILE_URL);
-    await page.evaluate(() => {
-      localStorage.clear();
-      localStorage.setItem('prstna-dirka', JSON.stringify({ tutSeen: false, sound: false }));
-    });
-    await page.goto(FILE_URL);
-    await page.waitForSelector('#tutorial.on', { timeout: 15000 });
-
-    const tutDropdownBtn = page.locator('#tutLangDropdownBtn');
-    await tutDropdownBtn.click();
-
-    const tutList = page.locator('#tutLangList');
-    await expect(tutList).toBeVisible();
-
-    const items = tutList.locator('.langDropdownItem');
+  test('Language chip opens the picker with all 7 countries', async ({ page }) => {
+    await firstRun(page);
+    await page.locator('#tutCLang').click();
+    await expect(page.locator('#countryPickerModal')).toBeVisible();
+    const items = page.locator('#countryListGrid .countryItem');
     await expect(items).toHaveCount(7);
-
-    // Verify English is marked as selected
-    const enItem = items.nth(0);
-    await expect(enItem).toHaveClass(/sel/);
-    await expect(enItem).toContainText('English');
-
-    // Verify other languages exist in the list
-    await expect(items.filter({ hasText: 'Slovenščina' })).toHaveCount(1);
-    await expect(items.filter({ hasText: 'Deutsch' })).toHaveCount(1);
-    await expect(items.filter({ hasText: 'Italiano' })).toHaveCount(1);
-    await expect(items.filter({ hasText: 'Français' })).toHaveCount(1);
-    await expect(items.filter({ hasText: 'Español' })).toHaveCount(1);
-    await expect(items.filter({ hasText: 'Hrvatski' })).toHaveCount(1);
+    await expect(items.filter({ hasText: 'English' })).toHaveClass(/sel/);
+    for (const n of ['Slovenščina', 'Deutsch', 'Italiano', 'Français', 'Español', 'Hrvatski'])
+      await expect(items.filter({ hasText: n })).toHaveCount(1);
   });
 
-  test('Selecting a different country switches language immediately and closes dropdown', async ({ page }) => {
-    await page.goto(FILE_URL);
-    await page.evaluate(() => {
-      localStorage.clear();
-      localStorage.setItem('prstna-dirka', JSON.stringify({ tutSeen: false, sound: false }));
-    });
-    await page.goto(FILE_URL);
-    await page.waitForSelector('#tutorial.on', { timeout: 15000 });
-
-    // Open dropdown
-    await page.locator('#tutLangDropdownBtn').click();
-    const tutList = page.locator('#tutLangList');
-    await expect(tutList).toBeVisible();
-
-    // Select Deutsch
-    const deItem = tutList.locator('.langDropdownItem').filter({ hasText: 'Deutsch' });
-    await deItem.click();
-
-    // Dropdown should close
-    await expect(tutList).toBeHidden();
-
-    // Trigger should update to Deutsch
-    await expect(page.locator('#tutLangCurName')).toHaveText('Deutsch');
-
-    // Tutorial content should update to German
-    await expect(page.locator('#tutTitle')).toContainText('So wird gespielt');
-    await expect(page.locator('#tutBtnText')).toContainText("Verstanden! Los geht's");
-
-    // save in localStorage should be updated
-    const savedLang = await page.evaluate(() => window.save.lang);
-    const savedCountry = await page.evaluate(() => window.save.country);
-    expect(savedLang).toBe('de');
-    expect(savedCountry).toBe('DE');
-  });
-
-  test('Clicking outside closes the tutorial language dropdown', async ({ page }) => {
-    await page.goto(FILE_URL);
-    await page.evaluate(() => {
-      localStorage.clear();
-      localStorage.setItem('prstna-dirka', JSON.stringify({ tutSeen: false, sound: false }));
-    });
-    await page.goto(FILE_URL);
-    await page.waitForSelector('#tutorial.on', { timeout: 15000 });
-
-    await page.locator('#tutLangDropdownBtn').click();
-    const tutList = page.locator('#tutLangList');
-    await expect(tutList).toBeVisible();
-
-    // Click outside on the background panel / top margin
-    await page.mouse.click(10, 10);
-    await expect(tutList).toBeHidden();
+  test('Selecting a different country switches the welcome card language immediately', async ({ page }) => {
+    await firstRun(page);
+    await page.locator('#tutCLang').click();
+    await page.locator('#countryListGrid .countryItem').filter({ hasText: 'Deutsch' }).click();
+    await expect(page.locator('#countryPickerModal')).toBeHidden();
+    await expect(page.locator('#tutCTitle')).toHaveText('Willkommen bei Finger Racer!');
+    await expect(page.locator('#tutCGo')).toHaveText('▶ Tutorial starten');
+    await expect(page.locator('#tutCLang')).toContainText('Ändern');
+    expect(await page.evaluate(() => [save.lang, save.country])).toEqual(['de', 'DE']);
   });
 
   test('Settings country picker modal also includes all 7 countries and syncs', async ({ page }) => {
