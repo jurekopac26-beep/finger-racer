@@ -151,7 +151,7 @@ canvas.tIll{position:static;inset:auto;touch-action:auto}
   text-shadow:0 6px 0 rgba(0,0,0,.55), 0 0 44px rgba(255,204,38,.35);z-index:25;pointer-events:none;display:none}
 #count.go{color:var(--green);text-shadow:0 6px 0 rgba(0,0,0,.55),0 0 44px rgba(61,255,142,.5)}
 @keyframes pop{0%{transform:scale(1.7);opacity:0}30%{transform:scale(1);opacity:1}100%{transform:scale(.92);opacity:1}}
-#count.pop{animation:pop .5s ease-out}
+#count.pop{animation:pop .38s ease-out}
 
 /* ---------- Screens ---------- */
 .screen{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;
@@ -3096,6 +3096,7 @@ const save={unlocked:3,best:{},sound:true,diff:0,diffMode:"easy",fingerOff:0,lan
 window.save = save;
 const DIFFS=[{n:"lahko",m:.82},{n:"normalno",m:1},{n:"težko",m:1.22},{n:"Xtra Hard",m:1.42}];
 const AI_BOOST=1.08;   // splošno hitrejši AI (srednje)
+const COUNTDOWN_SPEED=1.4; // 40% hitrejše odštevanje pred štartom
 
 let state="loading", level=1, raceTime=0, cdT=0, cdShown=-1, raceStarted=false;
 let shake=0, crashAnimT=0, holdT=0, banTO=null, _exhT=0, _heartCd=0;
@@ -6504,7 +6505,7 @@ function update(dt){
   if(state==="countdown"){
     const sPos=getFingerSlotPos(startSlot);
     if(!mpMode && (!pointer.down||Math.hypot(pointer.x-sPos.x,pointer.y-sPos.y)>R_START*1.45)){ falseStart(); return; }
-    cdT-=dt;
+    cdT-=dt*COUNTDOWN_SPEED;
     const n=Math.ceil(cdT);
     if(n!==cdShown&&n>0){ cdShown=n; $("count").textContent=n; bumpCount(); Snd.count(); speak2({3:"Three...",2:"Two...",1:"One...",}[n], 1); }
     if(cdShown===3 && !careerEvDone._pa){ careerEvDone._pa=1; try{Snd.pa&&Snd.pa();}catch(e){} const arc=careerLv?careerCfg(careerLv).arcName:"dirka"; showComment("📢 Dobrodošli na "+(careerLv?("dirko "+careerLv+" — "+arc):"dirko")+"!",0); }
