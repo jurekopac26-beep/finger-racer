@@ -9758,6 +9758,15 @@ function genRookieProps(){
   P("hay",X(84),Y(-140),1); P("hay",X(-88),Y(60),1); P("sign",X(96),Y(430),1);
   P("flag",X(-98),Y(-500),1); P("flag",X(98),Y(-500),1);
   for(let k=0;k<8;k++){ const a=k/8*6.28; P("rcone",CX+Math.cos(a)*64,CY+Math.sin(a)*64,1); }  // krog stožcev
+  // stožci ob zunanjem in notranjem robu proge — takoj se vidi, kje je kdo zapeljal s proge
+  if(typeof L!=="undefined"&&L>0&&PX&&PX.length){
+    const {HW,W,LW,CONN,CONNW}=RK, off=HW+22, x0=CX-W+HW-10-14, x1=CX-LW+12+14;
+    for(let s=0;s<L;s+=80) for(const side of [-1,1]){
+      const p=posAt(s,side*off);
+      if(p.x<x1&&p.x>x0&&CONN.some(y=>Math.abs(p.y-y)<CONNW/2+14)) continue;   // ne zapiraj povezav do parkirišča
+      P("rcone",p.x,p.y,2.2,{edge:true});
+    }
+  }
 }
 let rkMechs=[], rkHeyCd=0;
 function genRookieMechs(){
