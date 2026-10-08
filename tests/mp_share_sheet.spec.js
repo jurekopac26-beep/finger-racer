@@ -97,3 +97,37 @@ test.describe('Multiplayer invite sheet', () => {
     expect(await page.evaluate(() => mp.roomId)).toBe('PRIV-XYZ12');
   });
 });
+
+test.describe('Multiplayer invite sheet — public rooms', () => {
+
+  test('Public room shows the Invite button and its link carries pub=1', async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (data) => { window.__shared = data; return Promise.resolve(); };
+    });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    await page.evaluate(() => { openMP(); mpCreateRoom({ isPublic: true }, 'Public Test'); });
+    await expect(page.locator('#mpLobby')).toHaveClass(/on/);
+    await expect(page.locator('#mpPublicTag')).toBeVisible();
+    await expect(page.locator('#btnMpShare')).toBeVisible();
+
+    const code = await page.evaluate(() => mp.code);
+    await page.click('#btnMpShare');
+    await page.click('#btnMpShareNative');
+    const shared = await page.evaluate(() => window.__shared);
+    expect(shared.url).toContain('?room=' + code + '&pub=1');
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2);
+    expect(overflow).toBe(false);
+  });
+
+  test('Opening ?room=CODE&pub=1 joins the PUBLIC room', async ({ page }) => {
+    await bootWithSave(page, { playerName: 'Bojan', lang: 'en' }, FILE_URL + '?room=PUB77&pub=1');
+    await expect(page.locator('#mpLobby')).toHaveClass(/on/, { timeout: 10000 });
+    const st = await page.evaluate(() => ({ roomId: mp.roomId, isPublic: mp.isPublic, search: location.search }));
+    expect(st.roomId).toBe('PUB-PUB77');
+    expect(st.isPublic).toBe(true);
+    expect(st.search).not.toContain('pub=');
+  });
+});

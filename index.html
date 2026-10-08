@@ -13410,7 +13410,7 @@ function mpJoinByCode(customCode){
 /* ---------- ROOM INVITE: share sheet (native share / QR / copy link) + ?room= deep link ---------- */
 function mpRoomInviteUrl(){
   if(!mp || !mp.code) return "";
-  return location.href.split(/[?#]/)[0] + "?room=" + encodeURIComponent(mp.code);
+  return location.href.split(/[?#]/)[0] + "?room=" + encodeURIComponent(mp.code) + (mp.isPublic ? "&pub=1" : "");
 }
 
 function mpDrawInviteQr(url){
@@ -13485,15 +13485,16 @@ function mpCopyInviteLink(){
   }catch(e){ showBanner(isEn ? "Copy failed" : "Kopiranje ni uspelo", 1800, true); }
 }
 
-// Opened via a private-room invite link (?room=CODE): skip intro/tutorial, ask for a name if needed, join the room.
-// Returns true when it took over the landing screen.
+// Opened via an invite link (?room=CODE, plus &pub=1 for a public room): skip intro/tutorial,
+// ask for a name if needed, join the room. Returns true when it took over the landing screen.
 function mpTakeRoomFromUrl(){
-  let code = "";
+  let code = "", pub = false;
   try{
     const q = new URLSearchParams(location.search);
     if(!q.has("room")) return false;
     code = (q.get("room") || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
-    q.delete("room");
+    pub = q.get("pub") === "1";
+    q.delete("room"); q.delete("pub");
     const rest = q.toString();
     try{ history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); }catch(e){}   // a reload must not rejoin
   }catch(e){ return false; }
@@ -13501,7 +13502,11 @@ function mpTakeRoomFromUrl(){
 
   const isEn = (save.lang === "en");
   toMenu();
-  const go = () => { openMP(); mpJoinCode(code); };
+  const go = () => {
+    openMP();
+    if(pub) mpJoinPublicSlot("PUB-" + code, (isEn ? "Room #" : "Soba #") + code, false);
+    else mpJoinCode(code);
+  };
   if(hasCustomPlayerName()) go();
   else showNameOnboarding({
     icon: "🏁📲",
@@ -13965,7 +13970,8 @@ function mpUpdateRoomView(){
       pubTag.style.display = "inline-block";
       pubTag.textContent = isEn ? "🌐 PUBLIC ROOM" : "🌐 JAVNA SOBA";
     }
-    if(codeBox) codeBox.style.display = "none";
+    if(codeBox) codeBox.style.display = "flex";   // public rooms can be shared too (📨 invite)
+    if(cd) cd.textContent = mp.code;
   } else {
     if(rh) rh.innerHTML = `${esc(mp.title || (isEn ? 'PRIVATE ROOM' : 'ZASEBNA SOBA'))} <span>#${esc(mp.code)}</span>`;
     if(pubTag) pubTag.style.display = "none";
