@@ -1,18 +1,37 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ROLLOUT SWITCH. false = transitional: records without an `owner` (written by old, cached
+    // clients that don't sign in yet) are still accepted. Flip to true once most players run the
+    // new version: then every record must come from the signed-in owner of its racer id.
+    function strictOwnership() { return false; }
+
+    // Racer id claims: players/{racerId}.owner = Firebase Auth uid (anonymous or linked).
+    // First signed-in device to claim an id owns it; claims can't be moved or deleted from the client.
+    match /players/{racerId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && racerId.matches('^[A-Za-z0-9_]{3,40}$')
+        && request.resource.data.keys().hasOnly(['owner', 'createdAt'])
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
     // Global Single Race records: tracks/{1..8}/records/{uid}_{timeMs}
-    // Anonymous players (no auth), so rules can't prove ownership — they only
-    // enforce a sane shape and forbid deleting or rewriting existing times.
     match /tracks/{trackId}/records/{recId} {
       allow read: if true;
 
-      allow create: if validTrack() && validRecord(request.resource.data);
+      allow create: if validTrack() && validRecord(request.resource.data)
+        && ownerOk(request.resource.data);
 
       // submitGlobalRecord uses set(..., {merge:true}); a re-sync may refresh name/flag, never the time or owner
       allow update: if validTrack() && validRecord(request.resource.data)
         && request.resource.data.uid == resource.data.uid
-        && request.resource.data.time == resource.data.time;
+        && request.resource.data.time == resource.data.time
+        && (!('owner' in resource.data) || request.resource.data.owner == resource.data.owner)
+        && ownerOk(request.resource.data);
 
       allow delete: if false;
 
@@ -20,14 +39,23 @@ service cloud.firestore {
         return trackId in ['1', '2', '3', '4', '5', '6', '7', '8'];
       }
 
+      // `owner`, when present, must be the caller and the registered owner of the racer id
+      function ownerOk(d) {
+        return ('owner' in d)
+          ? (request.auth != null && d.owner == request.auth.uid
+             && get(/databases/$(database)/documents/players/$(d.uid)).data.owner == request.auth.uid)
+          : !strictOwnership();
+      }
+
       function validRecord(d) {
-        return d.keys().hasOnly(['uid', 'name', 'time', 'flag', 'updatedAt'])
+        return d.keys().hasOnly(['uid', 'name', 'time', 'flag', 'updatedAt', 'owner'])
           && d.keys().hasAll(['uid', 'name', 'time', 'updatedAt'])
           && d.uid is string && d.uid.matches('^[A-Za-z0-9_]{3,40}$')
           && recId.matches('^' + d.uid + '_[0-9]{1,7}$')
           && d.name is string && d.name.size() >= 1 && d.name.size() <= 14
           && d.time is number && d.time >= 8 && d.time <= 900
           && (!('flag' in d) || (d.flag is string && d.flag.size() <= 16))
+          && (!('owner' in d) || d.owner is string)
           && d.updatedAt == request.time;
       }
     }

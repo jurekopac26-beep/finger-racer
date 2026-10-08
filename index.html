@@ -18,6 +18,7 @@ if(typeof Paho === "undefined"){
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 :root{
   --asphalt:#14171a; --paper:#f4efe3; --red:#d6402b; --deep:#0d1408;
@@ -3082,14 +3083,49 @@ const firebaseConfig = {
   measurementId: "G-28WGBKXZQX"
 };
 
-let db = null;
+let db = null, fbAuth = null;
 try {
   if (typeof firebase !== "undefined") {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    if (firebase.auth) fbAuth = firebase.auth();
   }
 } catch(e) {
   console.warn("Firebase init failed:", e);
+}
+
+/* Anonymous Firebase Auth: invisible to the player, but gives every device a real, server-verified uid.
+   save.uid stays the public racer id (old records use it); the auth uid "owns" it via players/{save.uid}. */
+let _authP = null;
+function ensureAuth() {
+  if (!fbAuth) return Promise.resolve(null);
+  if (!_authP) {
+    _authP = new Promise(resolve => {
+      const stop = fbAuth.onAuthStateChanged(u => {
+        stop();
+        if (u) return resolve(u);
+        fbAuth.signInAnonymously().then(c => resolve(c.user)).catch(e => { console.warn("Anonymous sign-in failed:", e && e.code); resolve(null); });
+      }, () => resolve(null));
+    }).then(u => { if (!u) _authP = null; return u; });   // failed → try again on the next call
+  }
+  return _authP;
+}
+
+// Claim save.uid for this auth user once (players/{save.uid}.owner). Returns true when this user owns it.
+async function ensurePlayerClaim(user) {
+  if (!user || !db || !save.uid) return false;
+  if (save.claimedBy === user.uid) return true;
+  try {
+    const ref = db.collection("players").doc(save.uid);
+    const snap = await ref.get();
+    if (snap.exists) {
+      if ((snap.data() || {}).owner !== user.uid) { console.warn("Racer id is owned by another sign-in"); return false; }
+    } else {
+      await ref.set({ owner: user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+    save.claimedBy = user.uid; persist();
+    return true;
+  } catch(e) { console.warn("Player claim error:", e && e.code); return false; }
 }
 
 const save={unlocked:3,best:{},sound:true,diff:0,diffMode:"easy",fingerOff:0,lang:"en",country:"GB",countryFlag:"🇬🇧",countryName:"English",freemiumMode:false,ghostMode:"off",showFps:false};
@@ -9005,13 +9041,24 @@ async function submitGlobalRecord(trackId, timeSeconds) {
     // (up to top 50) and avoids duplicate rows if the same time is synced again.
     const recordDocId = save.uid + '_' + Math.round(roundTime * 1000);
     const docRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(recordDocId);
-    await docRef.set({
+    const rec = {
       uid: save.uid,
       name: name,
       time: roundTime,
       flag: flag,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    };
+    // Signed-in owner of save.uid → stamp the record so rules can verify who wrote it
+    const user = await ensureAuth();
+    if (user && await ensurePlayerClaim(user)) rec.owner = user.uid;
+    try {
+      await docRef.set(rec, { merge: true });
+    } catch(e) {
+      // Rules deployed before the ownership update reject the unknown `owner` field; keep the record anyway
+      if (!rec.owner || !e || e.code !== "permission-denied") throw e;
+      delete rec.owner;
+      await docRef.set(rec, { merge: true });
+    }
   } catch(err) {
     console.warn("Global record submit error:", err);
   }
@@ -15524,6 +15571,7 @@ function boot(){
         toMenu();
       }
       try{ tryLoadChallenge(); }catch(e){}
+      try{ ensureAuth().then(u=>u&&ensurePlayerClaim(u)); }catch(e){}   // background sign-in, ready before the first record
       requestAnimationFrame(loop);
     });
   };
