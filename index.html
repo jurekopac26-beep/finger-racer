@@ -319,6 +319,30 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .lbFoot{display:flex;gap:10px;margin-top:10px}
 .lbFoot .btn{margin:4px 0;white-space:nowrap}
 .lbRow.flash{animation:lbFlash 1.4s ease-out 2}
+/* three tabs (Single · World Cup · Buddies) must fit at 360px */
+.lbSegBtn{font-size:clamp(12px,3.6vw,15px);padding:10px 4px;white-space:nowrap}
+/* Buddies tab */
+.bdBar{display:flex;gap:6px;padding:6px 8px 4px}
+.bdAdd{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;border:none;border-radius:11px;cursor:pointer;
+  background:linear-gradient(180deg,#ffd84d,#ffb81f);color:#1a1300;font:inherit;font-size:14px;font-weight:900;font-style:italic;box-shadow:0 3px 0 #b9800a}
+.bdAdd:active{transform:translateY(2px);box-shadow:0 1px 0 #b9800a}
+.bdQr{flex:none;width:48px;min-height:42px;border-radius:11px;cursor:pointer;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.25);color:#fff;font:inherit;font-size:10px;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.bdQr .ico{font-size:17px;line-height:1}
+.lbRow .bdGap{flex:none;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums}
+.lbRow .bdGap.ahead{color:#ff8a80}
+.lbRow .bdGap.behind{color:var(--green)}
+.lbRow .bdX{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#cfd8bd;font-size:11px;cursor:pointer;padding:0}
+.bdEmpty{padding:22px 14px;text-align:center;color:#cfd8bd;font-size:13.5px;font-weight:700;line-height:1.5}
+.bdEmpty .big{font-size:38px;display:block;margin-bottom:6px}
+#buddyToast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:9000;width:min(440px,calc(100vw - 20px));box-sizing:border-box;
+  display:flex;align-items:center;gap:8px;padding:10px 10px 10px 14px;border-radius:14px;background:rgba(20,24,30,.97);border:2px solid #ff8a3d;box-shadow:0 10px 30px rgba(0,0,0,.6);animation:btIn .35s ease-out}
+@keyframes btIn{from{transform:translate(-50%,-30px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+#buddyToast .btTxt{flex:1;min-width:0}
+#buddyToast .btTitle{font-size:13.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#buddyToast .btTitle b{color:#ffb15c}
+#buddyToast .btSub{font-size:11.5px;color:#cfd8bd;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#buddyToast .btGo{flex:none;border:none;border-radius:10px;padding:9px 11px;background:linear-gradient(180deg,#5dffa0,#2fdd7a);color:#0a1a0e;font:inherit;font-size:12.5px;font-weight:900;cursor:pointer;white-space:nowrap}
+#buddyToast .btX{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:#cfd8bd;cursor:pointer;padding:0}
 @keyframes lbFlash{0%,100%{box-shadow:none}40%{box-shadow:0 0 0 3px rgba(61,255,142,.55),0 0 18px rgba(61,255,142,.45)}}
 /* Global rank card (results screen) */
 .resWorld{margin:8px auto 0;font-size:15px;font-weight:800;color:#dfe6cf;animation:scrIn .3s ease-out}
@@ -1932,6 +1956,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <div class="lbSeg" role="tablist">
         <button class="lbSegBtn on" id="btnLbTabSingle" role="tab"><span>⏱️ Single Race</span></button>
         <button class="lbSegBtn" id="btnLbTabWC" role="tab"><span>🏆 World Cup</span></button>
+        <button class="lbSegBtn" id="btnLbTabBuddies" role="tab"><span>👥 Buddies</span></button>
       </div>
       <div class="lbCard">
         <div id="lbTrackBar" class="lbTrackBar">
@@ -1952,6 +1977,29 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <button class="btn disp small" id="btnLbShare"><span>Deli rezultat 📤</span></button>
       </div>
     </div>
+  </div>
+
+  <!-- Buddies: confirm modal (add / remove) -->
+  <div id="buddyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--asphalt,#14171a);border:2px solid var(--green,#3dff8e);border-radius:18px;max-width:360px;width:100%;padding:22px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.8);">
+      <div id="buddyModalIcon" style="font-size:36px;margin-bottom:8px">👥</div>
+      <h2 class="disp" id="buddyModalTitle" style="font-size:22px;color:var(--green,#3dff8e);margin-bottom:8px">ADD BUDDY?</h2>
+      <p id="buddyModalDesc" style="font-size:13px;opacity:0.85;margin-bottom:18px;line-height:1.4"></p>
+      <div style="display:flex;gap:8px">
+        <button class="btn disp" id="btnBuddyModalOk" style="flex:1"><span>ADD</span></button>
+        <button class="btn ghost disp" id="btnBuddyModalCancel" style="flex:1"><span>NOT NOW</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buddies: "a buddy beat your time" toast -->
+  <div id="buddyToast" style="display:none">
+    <div class="btTxt">
+      <div class="btTitle" id="buddyToastTitle">🔥 A buddy beat your time!</div>
+      <div class="btSub" id="buddyToastSub"></div>
+    </div>
+    <button class="btGo" id="btnBuddyToastGo">Take it back 🏁</button>
+    <button class="btX" id="btnBuddyToastClose" aria-label="Close">✕</button>
   </div>
 
   <!-- Onboarding modal for player name -->
@@ -3208,6 +3256,273 @@ async function ensurePlayerClaim(user) {
   } catch(e) { console.warn("Player claim error:", e && e.code); return false; }
 }
 
+/* ================= BUDDIES =================
+   players/{racerId}                 public profile: name, flag, color (owner-only writes)
+   players/{racerId}/buddies/{id}    buddy list, mutual: both sides are written when a link is accepted
+   invites/{racerId}.key             private key in the owner's buddy link; lets the invitee add themselves
+   Best times come from the existing tracks/{t}/records (uid == racer id). */
+const BUDDY_RE = /^[A-Za-z0-9_]{3,40}$/;
+let _buddyIds = null;                  // cached list of buddy racer ids (null = not loaded yet)
+
+async function buddyAuthReady(){
+  if(!db || !save.uid) return null;
+  const u = await ensureAuth();
+  return (u && await ensurePlayerClaim(u)) ? u : null;
+}
+
+function buddyProfileData(){
+  return {
+    name: ((save.playerName || "Racer").trim().slice(0, 14)) || "Racer",
+    flag: String(save.countryFlag || "").slice(0, 16),
+    color: String(mpGetColor() || "").slice(0, 24)
+  };
+}
+
+// Keep players/{save.uid} name/flag/color in sync, so buddies see renames. Cheap no-op when unchanged.
+let _profSyncT = null;
+function buddyQueueProfileSync(){
+  clearTimeout(_profSyncT);
+  _profSyncT = setTimeout(() => { buddySyncProfile().catch(() => {}); }, 2500);
+}
+async function buddySyncProfile(){
+  if(!db || !save.uid) return;
+  const p = buddyProfileData(), sig = JSON.stringify(p);
+  if(save._profSig === sig) return;
+  if(!await buddyAuthReady()) return;
+  try{
+    await db.collection("players").doc(save.uid).update(Object.assign({ updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, p));
+    save._profSig = sig; persist();
+  }catch(e){ console.warn("Profile sync error:", e && e.code); }
+}
+
+// Private key that makes my buddy link work (created once, kept in invites/{save.uid})
+async function buddyInviteKey(){
+  if(save.buddyKey) return save.buddyKey;
+  if(!await buddyAuthReady()) return null;
+  const A = "abcdefghijkmnpqrstuvwxyz23456789";
+  let key = "";
+  const rnd = new Uint32Array(18);
+  (window.crypto || {}).getRandomValues ? crypto.getRandomValues(rnd) : rnd.forEach((_, i) => rnd[i] = Math.random() * 1e9);
+  rnd.forEach(n => key += A[n % A.length]);
+  try{
+    await db.collection("invites").doc(save.uid).set({ key });
+    save.buddyKey = key; persist();
+    return key;
+  }catch(e){ console.warn("Invite key error:", e && e.code); return null; }
+}
+
+async function buddyShareCtx(){
+  const key = await buddyInviteKey();
+  if(!key) return null;
+  const isEn = (save.lang === "en");
+  const nm = buddyProfileData().name;
+  buddySyncProfile().catch(() => {});
+  const url = location.href.split(/[?#]/)[0] + "?buddy=" + encodeURIComponent(save.uid) + "&k=" + key + "&n=" + encodeURIComponent(nm);
+  return {
+    url, screen: "leaderboard",
+    title: isEn ? "Scan to add me" : "Skeniraj in me dodaj",
+    hint: isEn ? "Your friend scans this and you become buddies: compare times and race each other."
+               : "Prijatelj skenira kodo in postaneta prijatelja: primerjajta čase in dirkajta drug proti drugemu.",
+    text: isEn ? ("🏎️ Add me as a buddy in Finger Racer (" + nm + ") and try to beat my times:")
+               : ("🏎️ Dodaj me med prijatelje v Finger Racerju (" + nm + ") in poskusi premagati moje čase:")
+  };
+}
+
+// 👥 Add buddy button: phone share menu / QR sheet with my buddy link
+async function buddyInvite(asQr){
+  const isEn = (save.lang === "en");
+  showBanner(isEn ? "Preparing your buddy link… 🔗" : "Pripravljam povezavo… 🔗", 1200, true);
+  const ctx = await buddyShareCtx();
+  if(!ctx){ showBanner(isEn ? "Can't connect right now. Try again in a moment." : "Povezava trenutno ni mogoča. Poskusi znova.", 2400, true); return; }
+  if(asQr) openShareSheet(ctx); else shareInvite(ctx);
+}
+
+// List of buddy racer ids (my side of the pair)
+async function buddyLoadList(force){
+  if(_buddyIds && !force) return _buddyIds;
+  if(!await buddyAuthReady()){ return _buddyIds || (save.buddyCache ? Object.keys(save.buddyCache) : []); }
+  try{
+    const snap = await db.collection("players").doc(save.uid).collection("buddies").get();
+    _buddyIds = snap.docs.map(d => d.id).filter(id => BUDDY_RE.test(id) && id !== save.uid);
+    await buddyLoadProfiles(_buddyIds);
+    return _buddyIds;
+  }catch(e){ console.warn("Buddy list error:", e && e.code); return _buddyIds || []; }
+}
+
+// Name/flag/color of each buddy, cached locally for offline display
+async function buddyLoadProfiles(ids){
+  if(!save.buddyCache) save.buddyCache = {};
+  const fresh = {};
+  await Promise.all(ids.map(async id => {
+    try{
+      const d = await db.collection("players").doc(id).get();
+      const p = d.exists ? (d.data() || {}) : {};
+      fresh[id] = { name: String(p.name || (save.buddyCache[id] || {}).name || "Racer").slice(0, 14), flag: String(p.flag || "").slice(0, 16), color: String(p.color || "") };
+    }catch(e){ fresh[id] = save.buddyCache[id] || { name: "Racer", flag: "" }; }
+  }));
+  save.buddyCache = fresh; persist();
+}
+
+function buddyName(id){
+  if(id === save.uid) return buddyProfileData().name;
+  const p = (save.buddyCache || {})[id];
+  return p ? p.name : "Racer";
+}
+
+async function buddyAdd(id, key){
+  const isEn = (save.lang === "en");
+  if(!BUDDY_RE.test(id) || id === save.uid) return false;
+  if(!await buddyAuthReady()){ showBanner(isEn ? "Can't connect right now. Try again later." : "Povezava ni mogoča. Poskusi kasneje.", 2400, true); return false; }
+  const ts = firebase.firestore.FieldValue.serverTimestamp();
+  try{
+    await db.collection("players").doc(save.uid).collection("buddies").doc(id).set({ since: ts });
+    // Their side: allowed by the key from their link (fails harmlessly if the pair already exists)
+    try{ await db.collection("players").doc(id).collection("buddies").doc(save.uid).set({ since: ts, key: String(key || "") }); }
+    catch(e){ console.warn("Buddy back-link:", e && e.code); }
+    _buddyIds = null;
+    await buddyLoadList(true);
+    buddySyncProfile().catch(() => {});
+    return true;
+  }catch(e){
+    console.warn("Buddy add error:", e && e.code);
+    showBanner(isEn ? "Couldn't add buddy. Try again." : "Prijatelja ni bilo mogoče dodati.", 2400, true);
+    return false;
+  }
+}
+
+async function buddyRemove(id){
+  if(!await buddyAuthReady()) return false;
+  try{
+    await db.collection("players").doc(save.uid).collection("buddies").doc(id).delete();
+    try{ await db.collection("players").doc(id).collection("buddies").doc(save.uid).delete(); }catch(e){}
+    _buddyIds = (_buddyIds || []).filter(x => x !== id);
+    if(save.buddyCache) delete save.buddyCache[id];
+    persist();
+    return true;
+  }catch(e){ console.warn("Buddy remove error:", e && e.code); return false; }
+}
+
+// Best time per racer id on a track, from the global records (Firestore "in" takes ≤ 30 values)
+async function buddyBestTimes(trackNum, ids){
+  const best = {};
+  const col = db.collection("tracks").doc(String(trackNum)).collection("records");
+  for(let i = 0; i < ids.length; i += 30){
+    const snap = await col.where("uid", "in", ids.slice(i, i + 30)).get();
+    snap.forEach(doc => {
+      const d = doc.data();
+      if(d && typeof d.time === "number" && (!best[d.uid] || d.time < best[d.uid])) best[d.uid] = d.time;
+    });
+  }
+  return best;
+}
+
+// Opened via a buddy link (?buddy=ID&k=KEY&n=NAME): confirm, ask for a name if needed, add both ways.
+function buddyTakeFromUrl(){
+  let id = "", key = "", nm = "";
+  try{
+    const q = new URLSearchParams(location.search);
+    if(!q.has("buddy")) return false;
+    id = (q.get("buddy") || "").trim();
+    key = (q.get("k") || "").replace(/[^a-z0-9]/g, "").slice(0, 40);
+    nm = (q.get("n") || "").trim().slice(0, 14);
+    ["buddy", "k", "n"].forEach(k => q.delete(k));
+    const rest = q.toString();
+    try{ history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); }catch(e){}
+  }catch(e){ return false; }
+  if(!BUDDY_RE.test(id) || id === save.uid) return false;
+
+  const isEn = (save.lang === "en");
+  toMenu();
+  const who = nm || (isEn ? "this racer" : "tega dirkača");
+  showBuddyModal({
+    icon: "👥🏎️",
+    title: isEn ? "ADD BUDDY?" : "DODAM PRIJATELJA?",
+    desc: isEn ? ("Add " + who + " as your buddy? You'll see each other's times on the Buddies leaderboard.")
+               : ("Dodaš " + who + " med prijatelje? Videla bosta čase drug drugega na lestvici prijateljev."),
+    ok: isEn ? "ADD BUDDY 👥" : "DODAJ 👥",
+    cancel: isEn ? "NOT NOW" : "NE ZDAJ"
+  }, () => {
+    const go = async () => {
+      if(await buddyAdd(id, key)){
+        showBanner((isEn ? "👥 You and " : "👥 S ") + buddyName(id) + (isEn ? " are now buddies!" : " sta zdaj prijatelja!"), 2600, true);
+        lbFrom = "menu"; currentLbTrack = currentLbTrack || 1;
+        openLeaderboard("buddies");
+      }
+    };
+    if(hasCustomPlayerName()) go();
+    else showNameOnboarding({
+      icon: "👥🏎️",
+      title: isEn ? "YOUR RACER NAME" : "TVOJE DIRKAŠKO IME",
+      desc: isEn ? "Your buddy will see this name next to your times:" : "Prijatelj bo videl to ime ob tvojih časih:",
+      saveBtn: isEn ? "SAVE 🏁" : "SHRANI 🏁"
+    }, go);
+  });
+  return true;
+}
+
+// Small confirm modal (shared by buddy add / remove)
+function showBuddyModal(o, onOk){
+  const m = $("buddyModal");
+  if(!m) return;
+  $("buddyModalIcon").textContent = o.icon || "👥";
+  $("buddyModalTitle").textContent = o.title || "";
+  $("buddyModalDesc").textContent = o.desc || "";
+  $("btnBuddyModalOk").querySelector("span").textContent = o.ok || "OK";
+  $("btnBuddyModalCancel").querySelector("span").textContent = o.cancel || "Cancel";
+  const close = () => { m.style.display = "none"; };
+  $("btnBuddyModalOk").onclick = () => { close(); if(onOk) onOk(); };
+  $("btnBuddyModalCancel").onclick = close;
+  m.style.display = "flex";
+}
+
+// On app open: did a buddy beat one of my track records since I last looked?
+async function buddyCheckBeaten(){
+  if(!db || !save.trackBest) return;
+  const ids = await buddyLoadList();
+  if(!ids.length) return;
+  if(!save.buddySeen) save.buddySeen = {};
+  let top = null;
+  for(let t = 1; t <= LB_TRACKS; t++){
+    const mine = save.trackBest[t];
+    if(!mine) continue;
+    let best;
+    try{ best = await buddyBestTimes(t, ids); }catch(e){ continue; }
+    ids.forEach(id => {
+      const bt = best[id];
+      if(!bt || bt >= mine) return;
+      const k = t + ":" + id;
+      if(save.buddySeen[k] === bt) return;          // already told about this exact time
+      save.buddySeen[k] = bt;
+      const gap = mine - bt;
+      if(!top || gap > top.gap) top = { id, t, gap, bt };
+    });
+  }
+  persist();
+  if(top && $("menu") && $("menu").classList.contains("on")) showBuddyBeatenToast(top);
+}
+
+function showBuddyBeatenToast(b){
+  const el = $("buddyToast");
+  if(!el) return;
+  const isEn = (save.lang === "en");
+  const p = PREVIEWS[b.t - 1];
+  const tName = p ? p.name.split(" · ").slice(1).join(" · ") || p.name : ("Track " + b.t);
+  $("buddyToastTitle").innerHTML = "🔥 <b>" + lbEsc(buddyName(b.id)) + "</b> " + (isEn ? "beat your time!" : "je premagal tvoj čas!");
+  $("buddyToastSub").textContent = tName + " · " + fmt(b.bt) + " (−" + b.gap.toFixed(2) + "s)";
+  $("btnBuddyToastGo").textContent = isEn ? "Take it back 🏁" : "Vrni mu 🏁";
+  $("btnBuddyToastGo").onclick = () => {
+    el.style.display = "none";
+    Snd.unlock && Snd.unlock();
+    const idx = b.t - 1;
+    if(isFreemiumActive() && idx > 0){ openPaywall("track", b.t); return; }
+    startSingle(idx);
+  };
+  $("btnBuddyToastClose").onclick = () => { el.style.display = "none"; };
+  el.style.display = "flex";
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = "none"; }, 12000);
+}
+
 const save={unlocked:3,best:{},sound:true,diff:0,diffMode:"easy",fingerOff:0,lang:"en",country:"GB",countryFlag:"🇬🇧",countryName:"English",freemiumMode:false,ghostMode:"off",showFps:false};
 window.save = save;
 const DIFFS=[{n:"lahko",m:.82},{n:"normalno",m:1},{n:"težko",m:1.22},{n:"Xtra Hard",m:1.42}];
@@ -3371,7 +3686,7 @@ let W=0,H=0,dpr=1,scale=1,offX=0,offY=0,followCam=false,camScaleFixed=null,camZo
 let trackImg=null;
 
 function setScreen(id){
-  if(id!=="mpLobby") closeMpShareSheet();   // the invite sheet belongs to the room screen only
+  if(_shareCtx && _shareCtx.screen!==id) closeMpShareSheet();   // a share sheet belongs to the screen that opened it
   // The global rank card belongs to the current results screen only (it survives a trip to the leaderboard)
   if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; if($("resWorld")) $("resWorld").style.display="none"; if($("resRaceHead")) $("resRaceHead").style.display="none"; }
   ["menu","levels","help","intro","wcName","wcPreview","singlePick","ttOpp","tutorial","career","leaderboard","wcRaceIntro","wcStand","settings","pause","results","loading","training","trainInfo","clevels","cinfo","repairQ","garage","achScreen","mpHome","mpLobby","langPicker"].forEach(s=>$(s)&&$(s).classList.toggle("on",s===id));
@@ -4296,7 +4611,8 @@ function applyLang(l){
   if($("btnLbAch")) { $("btnLbAch").title = tr.achTab; $("btnLbAch").setAttribute("aria-label", tr.achTab); }
   if($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = tr.shareResult;
   if($("btnLbBack")) $("btnLbBack").querySelector("span").textContent = tr.back;
-  if(typeof currentLbTab !== "undefined" && currentLbTab === "single" && typeof updateTrackTitle === "function") updateTrackTitle();
+  if(typeof currentLbTab !== "undefined" && (currentLbTab === "single" || currentLbTab === "buddies") && typeof updateTrackTitle === "function") updateTrackTitle();
+  if($("btnLbTabBuddies")) $("btnLbTabBuddies").querySelector("span").textContent = l === "en" ? "👥 Buddies" : "👥 Prijatelji";
 
   // Settings (#settings)
   if($("settingsTitleH")) $("settingsTitleH").innerHTML = "<span>" + (isEn ? "Settings" : "Nastavitve") + "</span>";
@@ -4774,6 +5090,7 @@ function persist(){
     if(window.storage) window.storage.set("prstna-dirka",JSON.stringify(save),false).catch?.(()=>{});
     else if(window.localStorage) localStorage.setItem("prstna-dirka",JSON.stringify(save));
   }catch(e){}
+  try{ if(save.uid && db) buddyQueueProfileSync(); }catch(e){}   // name/flag/color changes reach buddies
 }
 
 /* ================= RACE SETUP ================= */
@@ -9201,7 +9518,76 @@ function lbStepTrack(dir) {
     void l.offsetWidth;
     l.classList.add(dir > 0 ? "lbSlideL" : "lbSlideR");
   }
-  loadGlobalTrackLeaderboard(currentLbTrack);
+  if (currentLbTab === "buddies") loadBuddyTrackLeaderboard(currentLbTrack);
+  else loadGlobalTrackLeaderboard(currentLbTrack);
+}
+
+// Buddies tab: me + my buddies on one track, sorted by best time, with the gap to my time
+async function loadBuddyTrackLeaderboard(trackNum) {
+  const l = $("lbList");
+  if (!l) return;
+  const isEn = (save.lang === "en");
+  const myBest = save.trackBest && save.trackBest[trackNum];
+  lbSetMine(isEn ? "Your best on this track" : "Tvoj rekord na tej progi", myBest ? fmt(myBest) + " ⏱️" : "", null, trackNum);
+  const bar = '<div class="bdBar"><button class="bdAdd" id="btnBdAdd">👥 ' + (isEn ? "ADD BUDDY" : "DODAJ PRIJATELJA") + '</button>' +
+    '<button class="bdQr" id="btnBdQr" title="QR"><span class="ico">🔳</span><span>QR</span></button></div>';
+  const bindBar = () => {
+    if ($("btnBdAdd")) $("btnBdAdd").onclick = () => { Snd.click && Snd.click(); buddyInvite(false); };
+    if ($("btnBdQr")) $("btnBdQr").onclick = () => { Snd.click && Snd.click(); buddyInvite(true); };
+  };
+  l.innerHTML = bar + '<div class="lbEmpty">' + (isEn ? "Loading buddies… ⏳" : "Nalagam prijatelje… ⏳") + '</div>';
+  bindBar();
+  if (!db) { l.innerHTML = bar + '<div class="lbEmpty" style="color:#ff8a80">' + (isEn ? "Database connection not available" : "Povezava z bazo ni na voljo") + '</div>'; bindBar(); return; }
+
+  const stale = () => currentLbTab !== "buddies" || currentLbTrack !== trackNum;
+  let ids;
+  try { ids = await buddyLoadList(); } catch(e) { ids = []; }
+  if (stale()) return;
+  if (!ids.length) {
+    l.innerHTML = bar + '<div class="bdEmpty"><span class="big">👥</span>' +
+      (isEn ? "No buddies yet.<br>Send your buddy link to a friend: you'll see each other's times here and get a heads-up when they beat yours."
+            : "Še nimaš prijateljev.<br>Pošlji povezavo prijatelju: tukaj bosta videla čase drug drugega in dobila obvestilo, ko te premaga.") +
+      '</div>';
+    bindBar();
+    return;
+  }
+
+  let best = {};
+  try { best = await buddyBestTimes(trackNum, [save.uid].concat(ids)); } catch(e) { console.warn("Buddy times error:", e); }
+  if (stale()) return;
+  // My local best counts even if it hasn't synced yet
+  if (myBest && (!best[save.uid] || myBest < best[save.uid])) best[save.uid] = myBest;
+
+  const rows = [save.uid].concat(ids).map(id => ({ id, t: best[id] || null }));
+  rows.sort((a, b) => (a.t == null) - (b.t == null) || (a.t || 0) - (b.t || 0));
+  l.innerHTML = bar;
+  bindBar();
+  const mine = best[save.uid] || null;
+  rows.forEach((r, i) => {
+    const isMe = r.id === save.uid;
+    const p = isMe ? { flag: save.countryFlag } : ((save.buddyCache || {})[r.id] || {});
+    const name = (p.flag ? lbEsc(p.flag) + " " : "") + lbEsc(buddyName(r.id));
+    let gap = "";
+    if (!isMe && r.t && mine) {
+      const d = r.t - mine;
+      gap = '<span class="bdGap ' + (d < 0 ? "ahead" : "behind") + '">' + (d < 0 ? "−" : "+") + Math.abs(d).toFixed(2) + "s</span>";
+    }
+    const row = lbRow(r.t ? i : 99, name, "", r.t ? fmt(r.t) : (isEn ? "no time" : "brez časa"), isMe);
+    if (!r.t) row.querySelector(".lbRk").textContent = "–";
+    if (gap) row.querySelector(".lbTm").insertAdjacentHTML("beforebegin", gap);
+    if (!isMe) {
+      const x = document.createElement("button");
+      x.className = "bdX"; x.textContent = "✕"; x.title = isEn ? "Remove buddy" : "Odstrani prijatelja";
+      x.onclick = () => showBuddyModal({
+        icon: "👋", title: isEn ? "REMOVE BUDDY?" : "ODSTRANIM PRIJATELJA?",
+        desc: isEn ? ("Remove " + buddyName(r.id) + " from your buddies? You'll both disappear from each other's list.")
+                   : ("Odstraniš " + buddyName(r.id) + " iz prijateljev? Izginila bosta drug drugemu s seznama."),
+        ok: isEn ? "REMOVE" : "ODSTRANI", cancel: isEn ? "CANCEL" : "PREKLIČI"
+      }, async () => { if (await buddyRemove(r.id)) loadBuddyTrackLeaderboard(currentLbTrack); });
+      row.appendChild(x);
+    }
+    l.appendChild(row);
+  });
 }
 
 function lbEsc(s) {
@@ -9461,12 +9847,21 @@ function openLeaderboard(tabOverride){
   // Segmented control state
   if ($("btnLbTabSingle")) { $("btnLbTabSingle").classList.toggle("on", tab === "single"); $("btnLbTabSingle").setAttribute("aria-selected", tab === "single"); }
   if ($("btnLbTabWC")) { $("btnLbTabWC").classList.toggle("on", tab === "wc"); $("btnLbTabWC").setAttribute("aria-selected", tab === "wc"); }
+  if ($("btnLbTabBuddies")) { $("btnLbTabBuddies").classList.toggle("on", tab === "buddies"); $("btnLbTabBuddies").setAttribute("aria-selected", tab === "buddies"); }
 
   // Track selector visibility
-  if ($("lbTrackBar")) $("lbTrackBar").style.display = (tab === "single" ? "flex" : "none");
+  if ($("lbTrackBar")) $("lbTrackBar").style.display = (tab === "single" || tab === "buddies" ? "flex" : "none");
+  if ($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = tab === "buddies"
+    ? (isEn ? "Invite buddy 👥" : "Povabi prijatelja 👥")
+    : (I18N[isEn ? "en" : "sl"] || {}).shareResult || (isEn ? "Share Result 📤" : "Deli rezultat 📤");
 
-  if (tab === "single") {
-    if ($("lbHint")) $("lbHint").textContent = isEn ? "🌍 Top 50 fastest times worldwide" : "🌍 Top 50 najhitrejših časov na svetu";
+  if (tab === "buddies") {
+    if ($("lbHint")) $("lbHint").textContent = isEn ? "👥 You vs your buddies on this track" : "👥 Ti proti prijateljem na tej progi";
+    updateTrackTitle();
+    loadBuddyTrackLeaderboard(currentLbTrack);
+    try { syncLocalRecordsToGlobal(); } catch(e){}
+  } else if (tab === "single") {
+    if ($("lbHint")) $("lbHint").textContent = isEn ? "🌍 Top 100 fastest times worldwide" : "🌍 Top 100 najhitrejših časov na svetu";
     updateTrackTitle();
     loadGlobalTrackLeaderboard(currentLbTrack);
     // Background sync of player's local records if any
@@ -13491,27 +13886,53 @@ function mpDrawInviteQr(url){
   }catch(e){ console.warn("QR draw error:", e); return false; }
 }
 
-function openMpShareSheet(){
-  const modal = $("mpShareModal"), url = mpRoomInviteUrl();
-  if(!modal || !url) return;
+/* Generic share: native share menu, or a sheet with QR + copy link.
+   ctx = { url, text, code, title, hint, screen } — screen: the sheet closes when the game leaves it */
+let _shareCtx = null;
+function openShareSheet(ctx){
+  const modal = $("mpShareModal");
+  if(!modal || !ctx || !ctx.url) return;
   const isEn = (save.lang === "en");
-  const qrOk = mpDrawInviteQr(url);
-  $("mpShareTitle").textContent = qrOk ? (isEn ? "Scan to join" : "Skeniraj in pridruži se") : (isEn ? "Invite friends" : "Povabi prijatelje");
-  $("mpShareCode").textContent = mp.code;
-  $("mpShareHint").textContent = isEn ? "Your friend points their phone camera here and lands straight in this room."
-                                      : "Prijatelj usmeri kamero telefona sem in pristane naravnost v tej sobi.";
+  _shareCtx = ctx;
+  const qrOk = mpDrawInviteQr(ctx.url);
+  $("mpShareTitle").textContent = qrOk ? ctx.title : (isEn ? "Invite friends" : "Povabi prijatelje");
+  $("mpShareCode").textContent = ctx.code || "";
+  $("mpShareCode").style.display = ctx.code ? "" : "none";
+  $("mpShareHint").textContent = ctx.hint || "";
   $("mpShareNativeTxt").textContent = isEn ? "Send link…" : "Pošlji povezavo…";
   $("mpShareCopyTxt").textContent = isEn ? "Copy link" : "Kopiraj povezavo";
   $("btnMpShareNative").style.display = navigator.share ? "" : "none";
   $("mpShareQr").classList.toggle("on", qrOk);
-  $("mpShareHint").style.display = qrOk ? "" : "none";
+  $("mpShareHint").style.display = (qrOk && ctx.hint) ? "" : "none";
   modal.style.display = "flex";
 }
 
-// Big 📨 INVITE button / empty slots: the phone's own share menu if it has one, otherwise the QR + link sheet
-function mpInviteFriends(){
-  if(navigator.share) mpShareInviteNative();
-  else openMpShareSheet();
+function shareNative(ctx){
+  if(!ctx || !ctx.url) return;
+  const isEn = (save.lang === "en");
+  try{
+    if(navigator.share){
+      navigator.share({ title: "Finger Racer", text: ctx.text, url: ctx.url }).catch(() => {});
+    } else if(navigator.clipboard){
+      navigator.clipboard.writeText(ctx.text + "\n" + ctx.url);
+      showBanner(isEn ? "Invite copied! 📋" : "Vabilo kopirano v odložišče! 📋", 1800, true);
+    }
+  }catch(e){}
+}
+
+function shareCopyLink(ctx){
+  if(!ctx || !ctx.url) return;
+  const isEn = (save.lang === "en");
+  try{
+    navigator.clipboard.writeText(ctx.url);
+    showBanner(isEn ? "Link copied! 🔗" : "Povezava kopirana! 🔗", 1800, true);
+  }catch(e){ showBanner(isEn ? "Copy failed" : "Kopiranje ni uspelo", 1800, true); }
+}
+
+// Phone share menu if there is one, otherwise the QR + link sheet
+function shareInvite(ctx){
+  if(navigator.share) shareNative(ctx);
+  else openShareSheet(ctx);
 }
 
 function closeMpShareSheet(){
@@ -13519,31 +13940,23 @@ function closeMpShareSheet(){
   if(modal) modal.style.display = "none";
 }
 
-function mpShareInviteNative(){
+// Room invite context (private or public room)
+function mpRoomShareCtx(){
   const url = mpRoomInviteUrl();
-  if(!url) return;
+  if(!url) return null;
   const isEn = (save.lang === "en");
-  const txt = isEn ? ("🏁 Race me in Finger Racer! Join my room " + mp.code + ":")
-                   : ("🏁 Pridruži se moji dirki v Finger Racerju! Soba " + mp.code + ":");
-  try{
-    if(navigator.share){
-      navigator.share({ title: "Finger Racer", text: txt, url }).catch(() => {});
-    } else if(navigator.clipboard){
-      navigator.clipboard.writeText(txt + "\n" + url);
-      showBanner(isEn ? "Invite copied! 📋" : "Vabilo kopirano v odložišče! 📋", 1800, true);
-    }
-  }catch(e){}
+  return {
+    url, code: mp.code, screen: "mpLobby",
+    title: isEn ? "Scan to join" : "Skeniraj in pridruži se",
+    hint: isEn ? "Your friend points their phone camera here and lands straight in this room."
+               : "Prijatelj usmeri kamero telefona sem in pristane naravnost v tej sobi.",
+    text: isEn ? ("🏁 Race me in Finger Racer! Join my room " + mp.code + ":")
+               : ("🏁 Pridruži se moji dirki v Finger Racerju! Soba " + mp.code + ":")
+  };
 }
-
-function mpCopyInviteLink(){
-  const url = mpRoomInviteUrl();
-  if(!url) return;
-  const isEn = (save.lang === "en");
-  try{
-    navigator.clipboard.writeText(url);
-    showBanner(isEn ? "Room link copied! 🔗" : "Povezava do sobe kopirana! 🔗", 1800, true);
-  }catch(e){ showBanner(isEn ? "Copy failed" : "Kopiranje ni uspelo", 1800, true); }
-}
+function openMpShareSheet(){ openShareSheet(mpRoomShareCtx()); }
+// Big 📨 INVITE button / empty slots
+function mpInviteFriends(){ shareInvite(mpRoomShareCtx()); }
 
 // Opened via an invite link (?room=CODE, plus &pub=1 for a public room): skip intro/tutorial,
 // ask for a name if needed, join the room. Returns true when it took over the landing screen.
@@ -15357,6 +15770,7 @@ function bindUI(){
   $("btnLeaderboard").addEventListener("click", () => { lbFrom = "menu"; openLeaderboard("single"); });
   if($("btnLbTabSingle")) $("btnLbTabSingle").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("single"); });
   if($("btnLbTabWC")) $("btnLbTabWC").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("wc"); });
+  if($("btnLbTabBuddies")) $("btnLbTabBuddies").addEventListener("click", () => { Snd.click&&Snd.click(); openLeaderboard("buddies"); });
   if($("btnLbTrackPrev")) $("btnLbTrackPrev").addEventListener("click", () => lbStepTrack(-1));
   if($("btnLbTrackNext")) $("btnLbTrackNext").addEventListener("click", () => lbStepTrack(1));
   // Swipe left/right on the records card to change track (Single Race only)
@@ -15368,7 +15782,7 @@ function bindUI(){
     card.addEventListener("pointerup", e => {
       if (sx === null) return;
       const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
-      if (currentLbTab === "single" && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbStepTrack(dx < 0 ? 1 : -1);
+      if ((currentLbTab === "single" || currentLbTab === "buddies") && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbStepTrack(dx < 0 ? 1 : -1);
     });
   }
   $("btnLbBack").addEventListener("click",()=>{ const to=lbFrom||"menu"; lbFrom="menu"; setScreen(to); });
@@ -15415,6 +15829,7 @@ function bindUI(){
   document.querySelectorAll(".setTab").forEach(tb=>tb.addEventListener("click",()=>selectSettingsTab(tb.dataset.tab)));
   $("btnLbShare").addEventListener("click",()=>{
     const isEn = (save.lang === "en");
+    if (typeof currentLbTab !== "undefined" && currentLbTab === "buddies") { buddyInvite(false); return; }   // share = invite a buddy
     if (typeof currentLbTab !== "undefined" && currentLbTab === "single") {
       const myTime = (save.trackBest && save.trackBest[currentLbTrack]);
       const tIdx = (currentLbTrack - 1);
@@ -15566,8 +15981,8 @@ function bindUI(){
   });
   $("btnMpShare").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpInviteFriends(); });
   $("btnMpQr").addEventListener("click",()=>{ Snd.click&&Snd.click(); openMpShareSheet(); });
-  $("btnMpShareNative").addEventListener("click",()=>mpShareInviteNative());
-  $("btnMpShareCopy").addEventListener("click",()=>mpCopyInviteLink());
+  $("btnMpShareNative").addEventListener("click",()=>shareNative(_shareCtx));
+  $("btnMpShareCopy").addEventListener("click",()=>shareCopyLink(_shareCtx));
   $("btnMpShareClose").addEventListener("click",()=>closeMpShareSheet());
   $("mpShareModal").addEventListener("click",(e)=>{ if(e.target===$("mpShareModal")) closeMpShareSheet(); });
   $("btnMpReadyToggle").addEventListener("click",()=>{
@@ -15739,7 +16154,7 @@ function boot(){
       layout();
       applyLang(save.lang || "en");
       let viaInvite=false;
-      try{ viaInvite=mpTakeRoomFromUrl(); }catch(e){ console.warn("Room link error:",e); }
+      try{ viaInvite=mpTakeRoomFromUrl() || buddyTakeFromUrl(); }catch(e){ console.warn("Invite link error:",e); }
       if(viaInvite){
         // opened from a room invite (QR / shared link): straight into multiplayer
       } else if(!save.tutSeen){
@@ -15748,14 +16163,15 @@ function boot(){
         toMenu();
       }
       try{ tryLoadChallenge(); }catch(e){}
-      try{ ensureAuth().then(u=>u&&ensurePlayerClaim(u)); }catch(e){}   // background sign-in, ready before the first record
+      try{ ensureAuth().then(u=>u&&ensurePlayerClaim(u)).then(ok=>{ if(ok) buddySyncProfile(); }); }catch(e){}   // background sign-in, ready before the first record
+      setTimeout(()=>{ try{ buddyCheckBeaten(); }catch(e){} }, 4000);   // "🔥 a buddy beat your time" on the menu
       requestAnimationFrame(loop);
     });
   };
   // varovalka: če se nalaganje ne konča v 8 s, vseeno zaženi
   setTimeout(()=>{ if(!booted){ booted=true; toLoad=0;
     loadTrack(0); drawBG();
-    loadSave().then(()=>{ Snd.on=save.sound!==false; layout(); applyLang(save.lang || "en"); let viaInvite=false; try{ viaInvite=mpTakeRoomFromUrl(); }catch(e){} if(!viaInvite){ if(!save.tutSeen){ firstRunStart(); } else { toMenu(); } } requestAnimationFrame(loop); });
+    loadSave().then(()=>{ Snd.on=save.sound!==false; layout(); applyLang(save.lang || "en"); let viaInvite=false; try{ viaInvite=mpTakeRoomFromUrl() || buddyTakeFromUrl(); }catch(e){} if(!viaInvite){ if(!save.tutSeen){ firstRunStart(); } else { toMenu(); } } requestAnimationFrame(loop); });
   } },8000);
   TRACKS.forEach(t=>{
     prepTrack(t);

@@ -7,8 +7,14 @@ service cloud.firestore {
     // new version: then every record must come from the signed-in owner of its racer id.
     function strictOwnership() { return false; }
 
-    // Racer id claims: players/{racerId}.owner = Firebase Auth uid (anonymous or linked).
-    // First signed-in device to claim an id owns it; claims can't be moved or deleted from the client.
+    // Caller is the signed-in owner of racer id `id`
+    function ownsRacer(id) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/players/$(id)).data.owner == request.auth.uid;
+    }
+
+    // Racer id claims + public profile: players/{racerId}.owner = Firebase Auth uid (anonymous or linked).
+    // First signed-in device to claim an id owns it; the owner can update name/flag/color, never the owner.
     match /players/{racerId} {
       allow read: if true;
       allow create: if request.auth != null
@@ -16,7 +22,41 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['owner', 'createdAt'])
         && request.resource.data.owner == request.auth.uid
         && request.resource.data.createdAt == request.time;
-      allow update, delete: if false;
+      allow update: if resource.data.owner == request.auth.uid
+        && request.resource.data.owner == resource.data.owner
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.keys().hasOnly(['owner', 'createdAt', 'name', 'flag', 'color', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 14
+        && (!('flag' in request.resource.data) || (request.resource.data.flag is string && request.resource.data.flag.size() <= 16))
+        && (!('color' in request.resource.data) || (request.resource.data.color is string && request.resource.data.color.size() <= 24))
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+
+      // Buddy list: players/{racerId}/buddies/{buddyId}. Visible to the list owner and to that buddy.
+      // The owner adds buddies to their own list; a buddy can add THEMSELVES to this list only with
+      // the owner's invite key (from the owner's invite link). Either side can remove the pair.
+      match /buddies/{buddyId} {
+        allow read: if ownsRacer(racerId) || ownsRacer(buddyId);
+        allow create: if buddyId != racerId
+          && buddyId.matches('^[A-Za-z0-9_]{3,40}$')
+          && request.resource.data.since == request.time
+          && (
+            (ownsRacer(racerId) && request.resource.data.keys().hasOnly(['since']))
+            || (ownsRacer(buddyId) && request.resource.data.keys().hasOnly(['since', 'key'])
+                && request.resource.data.key == get(/databases/$(database)/documents/invites/$(racerId)).data.key)
+          );
+        allow update: if false;
+        allow delete: if ownsRacer(racerId) || ownsRacer(buddyId);
+      }
+    }
+
+    // Private buddy-invite key per racer (only the owner can read or change it)
+    match /invites/{racerId} {
+      allow read: if ownsRacer(racerId);
+      allow create, update: if ownsRacer(racerId)
+        && request.resource.data.keys().hasOnly(['key'])
+        && request.resource.data.key is string && request.resource.data.key.size() >= 12 && request.resource.data.key.size() <= 40;
+      allow delete: if false;
     }
 
     // Global Single Race records: tracks/{1..8}/records/{uid}_{timeMs}
