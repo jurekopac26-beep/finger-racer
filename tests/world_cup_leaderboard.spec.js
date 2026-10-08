@@ -129,4 +129,71 @@ test.describe('World Cup Standardized Laps & Cumulative Time Leaderboard', () =>
     expect(lbRender.mine).toContain("Your best Cup time");
     expect(lbRender.mine).toMatch(/(07|7):00\.500/);
   });
+
+  test('openLeaderboard single race tab displays Top 100 hint in English and Slovenian', async ({ page }) => {
+    const hints = await page.evaluate(() => {
+      save.lang = "en";
+      openLeaderboard("single");
+      const enHint = document.getElementById("lbHint") ? document.getElementById("lbHint").textContent : "";
+
+      save.lang = "sl";
+      openLeaderboard("single");
+      const slHint = document.getElementById("lbHint") ? document.getElementById("lbHint").textContent : "";
+
+      return { enHint, slHint };
+    });
+
+    expect(hints.enHint).toContain("Top 100");
+    expect(hints.slHint).toContain("Top 100");
+  });
+
+  test('showWCStand caps leaderboard records at top 100 (not 50)', async ({ page }) => {
+    const lbCount = await page.evaluate(() => {
+      // Seed leaderboard with 105 records
+      save.leaderboard = [];
+      for (let i = 0; i < 105; i++) {
+        save.leaderboard.push({
+          name: "Racer" + i,
+          pts: 100,
+          totalTime: 500 + i,
+          allFinished: true,
+          diff: 0,
+          diffMode: "easy",
+          ts: Date.now() - i * 1000
+        });
+      }
+
+      wc = {
+        name: "NewRacer",
+        race: 6,
+        order: [0, 1, 2, 3, 4, 5, 6],
+        pts: [10, 10, 10, 10, 10, 175],
+        ents: [
+          { name: "AI 1", color: "#f00", me: false },
+          { name: "AI 2", color: "#0f0", me: false },
+          { name: "AI 3", color: "#00f", me: false },
+          { name: "AI 4", color: "#ff0", me: false },
+          { name: "AI 5", color: "#0ff", me: false },
+          { name: "NewRacer", color: "#3dff8e", me: true }
+        ],
+        recs: [
+          { time: 60, pos: 1, gained: 25, track: 0 },
+          { time: 60, pos: 1, gained: 25, track: 1 },
+          { time: 60, pos: 1, gained: 25, track: 2 },
+          { time: 60, pos: 1, gained: 25, track: 3 },
+          { time: 60, pos: 1, gained: 25, track: 4 },
+          { time: 60, pos: 1, gained: 25, track: 5 },
+          { time: 60, pos: 1, gained: 25, track: 6 }
+        ],
+        savedToLb: false,
+        stats: { pits: 0, dmg: 0, draftRep: 0, pitRep: 0, wins: 7, podiums: 7, crashes: 0, bestLap: 10, bestLapName: "NewRacer", bestTime: 60, bestPos: 1 }
+      };
+
+      showWCStand(true, [0, 0, 0, 0, 0, 25]);
+      return save.leaderboard.length;
+    });
+
+    expect(lbCount).toBe(100);
+  });
 });
+
