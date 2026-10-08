@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#070b04">
 <script src="paho-mqtt.js"></script>
+<script src="qrcode.js"></script>
 <script>
 if(typeof Paho === "undefined"){
   document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"><\/script>');
@@ -1059,6 +1060,19 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpPill.sel { background:rgba(61,255,142,.16); border-color:var(--green); color:var(--green); }
 .mpModalActions { display:flex; gap:8px; margin-top:14px; }
 .mpModalActions button { margin:0; flex:1; }
+/* Invite sheet (room share: native share / QR / copy link) */
+#mpShareModal .mpModalContent { position:relative; text-align:center; }
+.mpShareClose { position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:#fff; font-size:15px; cursor:pointer; }
+.mpShareCode { display:inline-block; font-size:26px; font-weight:900; letter-spacing:4px; color:#ffd21f; background:rgba(255,210,31,.08); border:1.5px dashed rgba(255,210,31,.45); border-radius:12px; padding:6px 16px; margin:2px 0 6px; }
+.mpShareHint { font-size:12px; opacity:.75; margin-bottom:12px; line-height:1.35; }
+.mpShareOpts { display:flex; flex-direction:column; gap:8px; }
+.mpShareOpt { display:flex; align-items:center; gap:10px; width:100%; padding:11px 14px; border-radius:12px; border:1.5px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:#fff; font-size:14px; font-weight:800; cursor:pointer; text-align:left; }
+.mpShareOpt .ico { font-size:20px; width:26px; text-align:center; }
+.mpShareOpt.primary { background:rgba(61,255,142,.14); border-color:var(--green); color:var(--green); }
+.mpShareOpt:active { transform:scale(.97); }
+.mpShareQr { display:none; margin:10px auto 2px; padding:10px; background:#fff; border-radius:12px; width:max-content; max-width:100%; }
+.mpShareQr.on { display:block; }
+.mpShareQr canvas { position:static; inset:auto; display:block; width:200px; height:200px; image-rendering:pixelated; }
 .mpFooter { margin-top:10px; flex:none; }
 
 /* Room stage (mpLobby) */
@@ -1706,7 +1720,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
           <span style="font-size:10px;opacity:.7">CODE:</span>
           <span id="mpCode" class="mpCodeTag">-----</span>
           <button class="mpBtnMini" id="btnMpCopy" title="Copy code">📋</button>
-          <button class="mpBtnMini" id="btnMpShare" title="Share room">📤</button>
+          <button class="mpBtnMini" id="btnMpShare" title="Invite friends">📨</button>
         </div>
         <div class="mpPillStatus" id="mpPublicTag" style="display:none;font-size:11px">🌐 PUBLIC ROOM</div>
       </div>
@@ -1911,6 +1925,22 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <div class="mpModalActions">
         <button class="btn ghost small disp" id="btnMpTrackPickClose"><span>Cancel</span></button>
       </div>
+    </div>
+  </div>
+
+  <!-- Multiplayer: invite sheet (native share / QR / copy link) -->
+  <div id="mpShareModal" class="mpModal" style="display:none">
+    <div class="mpModalContent">
+      <button class="mpShareClose" id="btnMpShareClose" aria-label="Close">✕</button>
+      <div class="mpModalTitle" id="mpShareTitle">Invite friends</div>
+      <div class="mpShareCode" id="mpShareCode">-----</div>
+      <div class="mpShareHint" id="mpShareHint">Friends open the link or scan the QR and join this room.</div>
+      <div class="mpShareOpts">
+        <button class="mpShareOpt primary" id="btnMpShareNative"><span class="ico">📲</span><span id="mpShareNativeTxt">Share via… (WhatsApp, Messenger…)</span></button>
+        <button class="mpShareOpt" id="btnMpShareQr"><span class="ico">🔳</span><span id="mpShareQrTxt">Show QR code</span></button>
+        <button class="mpShareOpt" id="btnMpShareCopy"><span class="ico">🔗</span><span id="mpShareCopyTxt">Copy link</span></button>
+      </div>
+      <div class="mpShareQr" id="mpShareQr"><canvas id="mpShareQrCanvas" width="200" height="200"></canvas></div>
     </div>
   </div>
 
@@ -3255,6 +3285,7 @@ let W=0,H=0,dpr=1,scale=1,offX=0,offY=0,followCam=false,camScaleFixed=null,camZo
 let trackImg=null;
 
 function setScreen(id){
+  if(id!=="mpLobby") closeMpShareSheet();   // the invite sheet belongs to the room screen only
   // The global rank card belongs to the current results screen only (it survives a trip to the leaderboard)
   if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; if($("resWorld")) $("resWorld").style.display="none"; if($("resRaceHead")) $("resRaceHead").style.display="none"; }
   ["menu","levels","help","intro","wcName","wcPreview","singlePick","ttOpp","tutorial","career","leaderboard","wcRaceIntro","wcStand","settings","pause","results","loading","training","trainInfo","clevels","cinfo","repairQ","garage","achScreen","mpHome","mpLobby","langPicker"].forEach(s=>$(s)&&$(s).classList.toggle("on",s===id));
@@ -13329,6 +13360,111 @@ function mpJoinByCode(customCode){
   }
 }
 
+/* ---------- ROOM INVITE: share sheet (native share / QR / copy link) + ?room= deep link ---------- */
+function mpRoomInviteUrl(){
+  if(!mp || !mp.code) return "";
+  return location.href.split(/[?#]/)[0] + "?room=" + encodeURIComponent(mp.code);
+}
+
+function mpDrawInviteQr(url){
+  const cv = $("mpShareQrCanvas");
+  if(!cv || typeof qrcode !== "function") return false;
+  try{
+    const qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    const n = qr.getModuleCount(), s = Math.max(2, Math.ceil(400 / n));
+    cv.width = cv.height = n * s;
+    const c = cv.getContext("2d");
+    c.fillStyle = "#fff"; c.fillRect(0, 0, cv.width, cv.height);
+    c.fillStyle = "#000";
+    for(let r = 0; r < n; r++) for(let q = 0; q < n; q++) if(qr.isDark(r, q)) c.fillRect(q * s, r * s, s, s);
+    return true;
+  }catch(e){ console.warn("QR draw error:", e); return false; }
+}
+
+function openMpShareSheet(){
+  const modal = $("mpShareModal"), url = mpRoomInviteUrl();
+  if(!modal || !url) return;
+  const isEn = (save.lang === "en");
+  const canShare = !!navigator.share;
+  const qrOk = mpDrawInviteQr(url);
+  $("mpShareTitle").textContent = isEn ? "Invite friends" : "Povabi prijatelje";
+  $("mpShareCode").textContent = mp.code;
+  $("mpShareHint").textContent = isEn ? "Friends open the link or scan the QR and land straight in this room." : "Prijatelji odprejo povezavo ali skenirajo QR in pristanejo naravnost v tej sobi.";
+  $("mpShareNativeTxt").textContent = isEn ? "Share via… (WhatsApp, Messenger…)" : "Deli prek… (WhatsApp, Messenger…)";
+  $("mpShareCopyTxt").textContent = isEn ? "Copy link" : "Kopiraj povezavo";
+  $("btnMpShareNative").style.display = canShare ? "" : "none";
+  $("btnMpShareQr").style.display = qrOk ? "" : "none";
+  // No native share sheet (desktop): show the QR right away so a phone can scan it
+  mpSetShareQr(qrOk && !canShare);
+  modal.style.display = "flex";
+}
+
+function mpSetShareQr(on){
+  const isEn = (save.lang === "en");
+  $("mpShareQr").classList.toggle("on", !!on);
+  $("mpShareQrTxt").textContent = on ? (isEn ? "Hide QR code" : "Skrij QR kodo") : (isEn ? "Show QR code" : "Pokaži QR kodo");
+}
+
+function closeMpShareSheet(){
+  const modal = $("mpShareModal");
+  if(modal) modal.style.display = "none";
+}
+
+function mpShareInviteNative(){
+  const url = mpRoomInviteUrl();
+  if(!url) return;
+  const isEn = (save.lang === "en");
+  const txt = isEn ? ("🏁 Race me in Finger Racer! Join my room " + mp.code + ":")
+                   : ("🏁 Pridruži se moji dirki v Finger Racerju! Soba " + mp.code + ":");
+  try{
+    if(navigator.share){
+      navigator.share({ title: "Finger Racer", text: txt, url }).catch(() => {});
+    } else if(navigator.clipboard){
+      navigator.clipboard.writeText(txt + "\n" + url);
+      showBanner(isEn ? "Invite copied! 📋" : "Vabilo kopirano v odložišče! 📋", 1800, true);
+    }
+  }catch(e){}
+}
+
+function mpCopyInviteLink(){
+  const url = mpRoomInviteUrl();
+  if(!url) return;
+  const isEn = (save.lang === "en");
+  try{
+    navigator.clipboard.writeText(url);
+    showBanner(isEn ? "Room link copied! 🔗" : "Povezava do sobe kopirana! 🔗", 1800, true);
+  }catch(e){ showBanner(isEn ? "Copy failed" : "Kopiranje ni uspelo", 1800, true); }
+}
+
+// Opened via a private-room invite link (?room=CODE): skip intro/tutorial, ask for a name if needed, join the room.
+// Returns true when it took over the landing screen.
+function mpTakeRoomFromUrl(){
+  let code = "";
+  try{
+    const q = new URLSearchParams(location.search);
+    if(!q.has("room")) return false;
+    code = (q.get("room") || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    q.delete("room");
+    const rest = q.toString();
+    try{ history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); }catch(e){}   // a reload must not rejoin
+  }catch(e){ return false; }
+  if(code.length < 4) return false;
+
+  const isEn = (save.lang === "en");
+  toMenu();
+  const go = () => { openMP(); mpJoinCode(code); };
+  if(hasCustomPlayerName()) go();
+  else showNameOnboarding({
+    icon: "🏁📲",
+    title: isEn ? "JOIN YOUR FRIEND'S RACE!" : "PRIDRUŽI SE DIRKI!",
+    desc: isEn ? ("You've been invited to room " + code + ". Choose your racer name:") : ("Povabljen si v sobo " + code + ". Izberi svoje dirkaško ime:"),
+    saveBtn: isEn ? "JOIN 🏁" : "VSTOPI 🏁"
+  }, go);
+  return true;
+}
+
 function mpSend(o){
   if(!mp || !mp.roomId) return;
   o.sender = MP_CLIENT_ID;
@@ -15337,19 +15473,12 @@ function bindUI(){
       showBanner("Koda sobe "+code+" kopirana! 📋",1600,true);
     }catch(e){}
   });
-  $("btnMpShare").addEventListener("click",()=>{
-    const code=mp&&mp.code||"";
-    if(!code) return;
-    const txt="🏁 Pridruži se moji dirki v Finger Racerju!\nKoda sobe: "+code+"\n\nIgraj zdaj!";
-    try{
-      if(navigator.share){
-        navigator.share({title:"Finger Racer Soba",text:txt}).catch(()=>{});
-      } else if(navigator.clipboard){
-        navigator.clipboard.writeText(txt);
-        showBanner("Vabilo kopirano v odložišče! 📋",1800,true);
-      }
-    }catch(e){}
-  });
+  $("btnMpShare").addEventListener("click",()=>{ Snd.click&&Snd.click(); openMpShareSheet(); });
+  $("btnMpShareNative").addEventListener("click",()=>mpShareInviteNative());
+  $("btnMpShareQr").addEventListener("click",()=>mpSetShareQr(!$("mpShareQr").classList.contains("on")));
+  $("btnMpShareCopy").addEventListener("click",()=>mpCopyInviteLink());
+  $("btnMpShareClose").addEventListener("click",()=>closeMpShareSheet());
+  $("mpShareModal").addEventListener("click",(e)=>{ if(e.target===$("mpShareModal")) closeMpShareSheet(); });
   $("btnMpReadyToggle").addEventListener("click",()=>{
     Snd.click&&Snd.click();
     mpToggleReady();
@@ -15518,7 +15647,11 @@ function boot(){
       Snd.on=save.sound!==false;
       layout();
       applyLang(save.lang || "en");
-      if(!save.tutSeen){
+      let viaInvite=false;
+      try{ viaInvite=mpTakeRoomFromUrl(); }catch(e){ console.warn("Room link error:",e); }
+      if(viaInvite){
+        // opened from a room invite (QR / shared link): straight into multiplayer
+      } else if(!save.tutSeen){
         firstRunStart();
       } else {
         toMenu();
@@ -15530,7 +15663,7 @@ function boot(){
   // varovalka: če se nalaganje ne konča v 8 s, vseeno zaženi
   setTimeout(()=>{ if(!booted){ booted=true; toLoad=0;
     loadTrack(0); drawBG();
-    loadSave().then(()=>{ Snd.on=save.sound!==false; layout(); applyLang(save.lang || "en"); if(!save.tutSeen){ firstRunStart(); } else { toMenu(); } requestAnimationFrame(loop); });
+    loadSave().then(()=>{ Snd.on=save.sound!==false; layout(); applyLang(save.lang || "en"); let viaInvite=false; try{ viaInvite=mpTakeRoomFromUrl(); }catch(e){} if(!viaInvite){ if(!save.tutSeen){ firstRunStart(); } else { toMenu(); } } requestAnimationFrame(loop); });
   } },8000);
   TRACKS.forEach(t=>{
     prepTrack(t);
