@@ -9,6 +9,7 @@ New-Item -ItemType Directory -Path $stage | Out-Null
 try {
     Copy-Item -Path "index.html" -Destination $stage
     Copy-Item -Path "paho-mqtt.js" -Destination $stage
+    Copy-Item -Path "qrcode.js" -Destination $stage
     Copy-Item -Path "favicon.svg" -Destination $stage
     Copy-Item -Path "favicon-32x32.png" -Destination $stage
     Copy-Item -Path "favicon.ico" -Destination $stage

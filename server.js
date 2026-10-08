@@ -4,7 +4,7 @@ const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
 
-const START_PORT = 3000;
+const START_PORT = Number(process.env.PORT) || 3000;
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
