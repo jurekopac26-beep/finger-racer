@@ -2893,8 +2893,8 @@ const PIT_RATE=9;              // počasnejše krčenje v boksih (px/s)
 const DRAFT_RANGE=380;         // px po progi za vodilnim avtom
 const DRAFT_BURST_T=2.5;       // s polne moči
 const DRAFT_BURST_RATE=0.12;   // delež popravila / s (tik za avtom, polna hitrost vodilnega)
-const DRAFT_FADE_T=4;          // s upada po burstu
-const DRAFT_FLOOR=0.25;        // preostala moč po upadu (umazan zrak)
+const DRAFT_FADE_T=3;          // s upada po burstu
+const DRAFT_FLOOR=0.12;        // preostala moč po upadu (umazan zrak)
 const DRAFT_RECHARGE_T=1.5;    // s izven zavetrja za ponovno polnjenje
 const SLING_BONUS=0.06;        // takojšnje popravilo ob prehitevanju iz zavetrja
 const AI_DRAFT_SPD=1.04;       // AI v zavetrju je malo hitrejši
@@ -4121,7 +4121,7 @@ const I18N = {
     myCareerBtn: "📊 My Career",
     achTab: "🏅 Achievements",
     lbHint: "Best World Cup results (points + difficulty bonus)",
-    lbSingleHint: "Top 50 global records (fastest times worldwide)",
+    lbSingleHint: "Top 100 global records (fastest times worldwide)",
     shareResult: "Share Result 📤",
 
     // settings
@@ -4310,7 +4310,7 @@ const I18N = {
     myCareerBtn: "📊 Moja kariera",
     achTab: "🏅 Dosežki",
     lbHint: "Najboljši rezultati World Cupa (točke + bonus za težavnost)",
-    lbSingleHint: "Top 50 globalnih rekordov (najhitrejši časi na svetu)",
+    lbSingleHint: "Top 100 globalnih rekordov (najhitrejši časi na svetu)",
     shareResult: "Deli rezultat 📤",
 
     // settings
@@ -4927,6 +4927,7 @@ function applyLang(l){
     setTx("lblSettingLang", isEn ? "🌐 Language" : "🌐 Jezik");
     setTx("lblSettingPlayerName", isEn ? "Player name" : "Ime igralca");
     setTx("hintSettingPlayerName", isEn ? "Shown in multiplayer and on leaderboards (max 12 characters)." : "Ime, ki se prikazuje v multiplayerju in na lestvicah (do 12 znakov).");
+    if($("btnSaveSettingName")) $("btnSaveSettingName").querySelector("span").textContent = isEn ? "Save" : "Shrani";
   }
   const pLook = $("settings")?.querySelector('[data-page="look"]');
   if(pLook){
@@ -9723,7 +9724,7 @@ async function submitGlobalRecord(trackId, timeSeconds) {
     const flag = save.countryFlag || (save.lang === "en" ? "🇬🇧" : "🇸🇮");
 
     // Deterministic doc ID per user + time (e.g. p_abc_20458): saves previous records on the leaderboard
-    // (up to top 50) and avoids duplicate rows if the same time is synced again.
+    // (up to top 100) and avoids duplicate rows if the same time is synced again.
     const recordDocId = save.uid + '_' + Math.round(roundTime * 1000);
     const docRef = db.collection("tracks").doc(String(trackId)).collection("records").doc(recordDocId);
     const rec = {
@@ -10074,7 +10075,7 @@ async function loadGlobalTrackLeaderboard(trackNum) {
   }
 
   try {
-    const snap = await db.collection("tracks").doc(String(trackNum)).collection("records").orderBy("time", "asc").limit(50).get();
+    const snap = await db.collection("tracks").doc(String(trackNum)).collection("records").orderBy("time", "asc").limit(100).get();
 
     if (currentLbTab !== "single" || currentLbTrack !== trackNum) return; // Prevent race conditions
 
@@ -14192,17 +14193,28 @@ function openShareSheet(ctx){
   modal.style.display = "flex";
 }
 
-function shareNative(ctx){
+async function shareNative(ctx){
   if(!ctx || !ctx.url) return;
   const isEn = (save.lang === "en");
-  try{
-    if(navigator.share){
-      navigator.share({ title: "Finger Racer", text: ctx.text, url: ctx.url }).catch(() => {});
-    } else if(navigator.clipboard){
-      navigator.clipboard.writeText(ctx.text + "\n" + ctx.url);
-      showBanner(isEn ? "Invite copied! 📋" : "Vabilo kopirano v odložišče! 📋", 1800, true);
+  if(navigator.share){
+    try{
+      await navigator.share({ title: "Finger Racer", text: ctx.text, url: ctx.url });
+      return;
+    }catch(e){
+      // If user aborted/dismissed native share, don't force popup; otherwise fall back
+      if(e && (e.name === "AbortError" || e.name === "NotAllowedError")) return;
+      openShareSheet(ctx);
+      return;
     }
-  }catch(e){}
+  }
+  if(navigator.clipboard){
+    try{
+      await navigator.clipboard.writeText(ctx.text + "\n" + ctx.url);
+      showBanner(isEn ? "Invite copied! 📋" : "Vabilo kopirano v odložišče! 📋", 1800, true);
+    }catch(e){ openShareSheet(ctx); }
+  } else {
+    openShareSheet(ctx);
+  }
 }
 
 function shareCopyLink(ctx){
@@ -14214,7 +14226,7 @@ function shareCopyLink(ctx){
   }catch(e){ showBanner(isEn ? "Copy failed" : "Kopiranje ni uspelo", 1800, true); }
 }
 
-// Phone share menu if there is one, otherwise the QR + link sheet
+// Phone share menu if available, otherwise the QR + link sheet
 function shareInvite(ctx){
   if(navigator.share) shareNative(ctx);
   else openShareSheet(ctx);
@@ -15811,7 +15823,7 @@ function showWCStand(final, gains, dnf, qfail){
       if (!aDone && bDone) return 1;
       return (b.pts || 0) - (a.pts || 0);
     });
-    save.leaderboard=save.leaderboard.slice(0,50);
+    save.leaderboard=save.leaderboard.slice(0,100);
     save.totalWcPts=(save.totalWcPts||0)+wc.pts[5];   // za odklepanje skinov
     persist();
   }
