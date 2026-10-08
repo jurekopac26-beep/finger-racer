@@ -50,6 +50,16 @@ service cloud.firestore {
       }
     }
 
+    // Cloud save of a signed-in (Google / email) account: saves/{authUid}, only that account can read/write
+    match /saves/{authUid} {
+      allow read: if request.auth != null && request.auth.uid == authUid;
+      allow create, update: if request.auth != null && request.auth.uid == authUid
+        && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
+        && request.resource.data.data is string && request.resource.data.data.size() <= 900000
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
     // Private buddy-invite key per racer (only the owner can read or change it)
     match /invites/{racerId} {
       allow read: if ownsRacer(racerId);
