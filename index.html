@@ -268,6 +268,20 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .rrow .dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #000}
 .rrow.me{background:rgba(255,255,255,.09);color:var(--me-col,var(--green));border-left:3px solid var(--me-col,var(--green))}
 .rrow .t{margin-left:auto;font-variant-numeric:tabular-nums;color:#b8c49f;font-weight:600;font-size:12px}
+/* ---------- Top Header Bar & Back Button for Settings and Menus ---------- */
+.screenTopBar{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;max-width:100%;box-sizing:border-box;margin:0 0 10px;min-height:38px;position:relative}
+.screenTopBar h1,.screenTopBar h2{flex:1;min-width:0;font-size:clamp(18px,5.8vw,26px)!important;line-height:1.1;margin:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topBackBtn{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:rgba(244,239,227,.12);border:1px solid rgba(244,239,227,.28);border-radius:9px;color:var(--paper);font-family:inherit;font-size:13px;font-weight:800;padding:6px 11px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,background .12s,border-color .12s;box-shadow:0 2px 6px rgba(0,0,0,.35);flex:none;line-height:1;text-decoration:none;user-select:none}
+.topBackBtn .tbbIco{font-size:15px;font-weight:900;line-height:1;display:inline-block;transform:translateY(-1px)}
+.topBackBtn .tbbTxt{letter-spacing:.02em}
+.topBackBtn:hover{background:rgba(244,239,227,.22);border-color:rgba(244,239,227,.45)}
+.topBackBtn:active{transform:scale(.94);background:rgba(244,239,227,.3)}
+.screenTopBarSpacer{width:56px;flex:none;visibility:hidden;pointer-events:none}
+@media(max-width:380px){
+  .topBackBtn{padding:5px 8px;font-size:12px;gap:4px}
+  .screenTopBarSpacer{width:42px}
+  .screenTopBar h1,.screenTopBar h2{font-size:clamp(16px,5.2vw,22px)!important}
+}
 /* ---------- Leaderboard ---------- */
 .lbPanel{display:flex;flex-direction:column;height:calc(100dvh - 40px);max-height:760px;margin:0 auto}
 .lbHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
@@ -1621,7 +1635,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="training" class="screen">
     <div class="panel">
-      <h2>🎓 Trening</h2>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnTrainBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h2 style="margin:0">🎓 Trening</h2>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="sub">Nauči se dirkati v treh korakih</div>
       <div id="trainSteps" style="display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
       <button class="ghostBtn" id="btnTrainBack">← Back</button>
@@ -1629,7 +1647,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   </div>
   <div id="trainInfo" class="screen">
     <div class="panel">
-      <h2 id="tiTitle">Korak 1</h2>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnTrainInfoBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h2 id="tiTitle" style="margin:0">Korak 1</h2>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div id="tiBody" style="text-align:left;font-size:14px;line-height:1.55;margin:10px 0"></div>
       <button class="bigBtn" id="btnTrainGo">Start Race 🏁</button>
       <button class="ghostBtn" id="btnTrainInfoBack">← Back</button>
@@ -1637,7 +1659,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   </div>
   <div id="wcName" class="screen">
     <div class="panel">
-      <h1 class="disp" style="font-size:32px"><span>World Cup</span></h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnWCNameBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" style="font-size:30px;margin:0"><span>World Cup</span></h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="checker"></div>
       <div class="sub" style="margin-bottom:14px">Vpiši svoje ime za prvenstvo</div>
       <input id="wcNameInput" maxlength="16" placeholder="Tvoje ime" autocomplete="off" />
@@ -1648,7 +1674,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="wcPreview" class="screen">
     <div class="panel wide">
-      <h1 class="disp" id="wcPreviewTitle" style="font-size:28px">3 <span>Tracks</span></h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnWCPrevBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" id="wcPreviewTitle" style="font-size:28px;margin:0">3 <span>Tracks</span></h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="checker"></div>
       <div class="hint" id="wcPreviewHint" style="margin:-2px 0 8px">The championship takes place in this track order.</div>
       <div id="wcCards"></div>
@@ -1660,7 +1690,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <div id="mpHome" class="screen">
     <div class="panel wide mpPanel">
       <div class="mpHeader">
-        <h1 class="disp" style="font-size:24px;margin:0">MULTIPLAYER <span>LOBBY</span></h1>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="topBackBtn" id="btnMpBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+          <h1 class="disp" style="font-size:24px;margin:0">MULTIPLAYER <span>LOBBY</span></h1>
+        </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="mpStatusIndicator" id="mpHubStatus"><span class="mpDot" id="mpDot"></span> <span id="mpHubTxt">Connecting to lobby…</span></div>
           <button class="mpGearBtn" id="btnMpSettings" title="Settings" aria-label="Settings">⚙️</button>
@@ -1823,9 +1856,12 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <div id="mpLobby" class="screen">
     <div class="panel wide mpPanel">
       <div class="mpHeader mpRoomHead">
-        <div class="mpRoomTitleWrap">
-          <h2 id="mpRoomHeading" class="disp" style="font-size:22px;margin:0">ROOM <span>#1</span></h2>
-          <div id="mpRoomSub" style="font-size:11.5px;opacity:.75">Track 1 · 3 laps</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="topBackBtn" id="btnMpLeaveTop" aria-label="Leave room"><span class="tbbIco">←</span><span class="tbbTxt">Zapusti</span></button>
+          <div class="mpRoomTitleWrap">
+            <h2 id="mpRoomHeading" class="disp" style="font-size:22px;margin:0">ROOM <span>#1</span></h2>
+            <div id="mpRoomSub" style="font-size:11.5px;opacity:.75">Track 1 · 3 laps</div>
+          </div>
         </div>
         <div class="mpCodeBoxNew" id="mpCodeBoxNew" style="display:none">
           <span class="mpCodeLbl">CODE</span>
@@ -1880,7 +1916,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   </div>
   <div id="singlePick" class="screen">
     <div class="panel wide">
-      <h1 class="disp" id="singlePickTitle" style="font-size:26px">Choose <span>Track</span></h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnSingleBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" id="singlePickTitle" style="font-size:26px">Choose <span>Track</span></h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div id="singleModeToggle" style="display:flex;gap:8px;justify-content:center;margin:8px 0 6px;flex-wrap:wrap">
         <div class="setOpt sel" id="optModeRace">🏁 Race</div>
         <div class="setOpt" id="optModeOther">⚡ Other Modes ▾</div>
@@ -1933,7 +1973,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="ttOpp" class="screen">
     <div class="panel">
-      <h1 class="disp" style="font-size:24px"><span>Time Trial</span> ⏱️</h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnTTOppBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" style="font-size:24px;margin:0"><span>Time Trial</span> ⏱️</h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="checker"></div>
       <div class="hint" id="ttOppHint" style="margin:-2px 0 10px">Who will you race against for 10 laps? Ghost of your best time is always present.</div>
       <div id="ttOppBtns" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -1941,9 +1985,21 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     </div>
   </div>
 
-  <div id="achScreen" class="screen"><div class="panel"><div id="achBody"></div><button class="ghostBtn" id="btnAchBack">← Back</button></div></div>
+  <div id="achScreen" class="screen"><div class="panel">
+    <div class="screenTopBar">
+      <button class="topBackBtn" id="btnAchBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+      <h2 style="margin:0">🏅 Dosežki</h2>
+      <div class="screenTopBarSpacer"></div>
+    </div>
+    <div id="achBody"></div><button class="ghostBtn" id="btnAchBack">← Back</button>
+  </div></div>
   <div id="clevels" class="screen"><div class="panel">
-    <h2 id="clevelsTitleH">🏁 Career</h2><div class="sub" id="clevelsSub">50 levels · each harder · level 50 is nearly unbeatable</div>
+    <div class="screenTopBar">
+      <button class="topBackBtn" id="btnCareerBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+      <h2 id="clevelsTitleH" style="margin:0">🏁 Career</h2>
+      <div class="screenTopBarSpacer"></div>
+    </div>
+    <div class="sub" id="clevelsSub">50 levels · each harder · level 50 is nearly unbeatable</div>
     <div style="display:flex;justify-content:center;gap:10px;align-items:center;margin:8px 0"><span id="cTokens" style="font-weight:900;color:#ffd21f;font-size:16px">🪙 0</span><button class="ghostBtn" id="btnGarage" style="padding:6px 12px">🛠️ Garage</button></div>
     <div id="cGrid"></div>
     <button class="ghostBtn" id="btnCareerBack">← Back</button>
@@ -1956,12 +2012,22 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     <button class="bigBtn" id="btnCiGo">🏁 START RACE</button>
   </div></div>
   <div id="repairQ" class="screen"><div class="panel"><h2 id="repairQTitleH">🔧 Post-Race</h2><div id="rqText" style="font-size:15px;line-height:1.5;margin:10px 0"></div><div id="rqTokens" style="color:#ffd21f;font-weight:800;margin-bottom:10px"></div><button class="bigBtn" id="btnRqFix">🔧 Repair</button><button class="bigBtn" id="btnRqCash" style="margin-top:8px;background:linear-gradient(135deg,#c9971f,#8a6414)">🪙 Collect Tokens</button></div></div>
-  <div id="garage" class="screen"><div class="panel"><h2 id="garageTitleH">🛠️ Garage</h2><div style="display:flex;justify-content:center;align-items:center;gap:10px"><span id="gTokens" style="font-weight:900;color:#ffd21f;font-size:16px">🪙 0</span><span id="gMsg" style="font-size:12px;color:#ff8a80;min-height:14px"></span></div><canvas id="gPrev" width="300" height="170" class="tIll" style="display:block;margin:6px auto;border-radius:12px;width:100%;max-width:300px;box-shadow:0 6px 18px rgba(0,0,0,.45)"></canvas>
+  <div id="garage" class="screen"><div class="panel">
+    <div class="screenTopBar">
+      <button class="topBackBtn" id="btnGarageBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+      <h2 id="garageTitleH" style="margin:0">🛠️ Garage</h2>
+      <div class="screenTopBarSpacer"></div>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:10px"><span id="gTokens" style="font-weight:900;color:#ffd21f;font-size:16px">🪙 0</span><span id="gMsg" style="font-size:12px;color:#ff8a80;min-height:14px"></span></div><canvas id="gPrev" width="300" height="170" class="tIll" style="display:block;margin:6px auto;border-radius:12px;width:100%;max-width:300px;box-shadow:0 6px 18px rgba(0,0,0,.45)"></canvas>
     <div id="gStats" style="font-size:11px;opacity:.85;text-align:center;margin:2px 0"></div>
     <button class="ghostBtn" id="btnGarageTest" style="padding:6px 14px;margin:2px auto 6px">▶️ Test on Track</button><div id="gTabs" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:6px 0"></div><div id="gItems"></div><button class="ghostBtn" id="btnGarageBack">← Back</button></div></div>
   <div id="career" class="screen">
     <div class="panel">
-      <h1 class="disp" id="careerTitleH" style="font-size:26px"><span>Career</span> 📊</h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnCareerStatsBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" id="careerTitleH" style="font-size:26px;margin:0"><span>Career</span> 📊</h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="checker"></div>
       <div id="careerFull" style="text-align:left;font-size:14px;line-height:1.9;font-weight:700;margin:6px 2px 12px"></div>
       <button class="btn ghost small disp" id="btnCareerStatsBack"><span>Back</span></button>
@@ -1971,6 +2037,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <div id="leaderboard" class="screen">
     <div class="panel wide lbPanel">
       <div class="lbHead">
+        <button class="topBackBtn" id="btnLbBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
         <h1 class="disp" id="leaderboardTitleH" style="font-size:26px"><span>Lestvica</span> 🏆</h1>
         <div class="lbSide">
           <button class="lbIco" id="btnCareerLb" title="Moja kariera" aria-label="Moja kariera">📊</button>
@@ -2109,7 +2176,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="settings" class="screen">
     <div class="panel">
-      <h1 class="disp" id="settingsTitleH" style="font-size:26px"><span>Settings</span></h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnSetBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" id="settingsTitleH" style="font-size:26px"><span>Settings</span></h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
 
       <!-- Country & Language Picker Trigger (First Setting at the Top) -->
       <div id="setLangCard" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.18);border-radius:14px;padding:10px 14px;margin:8px 0 12px;cursor:pointer;pointer-events:auto;transition:all .18s;box-shadow:0 3px 12px rgba(0,0,0,0.3)">
@@ -2245,7 +2316,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="levels" class="screen">
     <div class="panel">
-      <h1 class="disp" id="levelsTitleH" style="font-size:34px">Select <span>level</span></h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnBack1Top" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" id="levelsTitleH" style="font-size:30px;margin:0">Select <span>level</span></h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="checker"></div>
       <div id="lvlGrid"></div>
       <button class="btn ghost small disp" id="btnBack1"><span>Back</span></button>
@@ -2290,7 +2365,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="help" class="screen">
     <div class="panel">
-      <h1 class="disp" id="helpTitleH" style="font-size:34px">Instructions</h1>
+      <div class="screenTopBar">
+        <button class="topBackBtn" id="btnBack2Top" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
+        <h1 class="disp" id="helpTitleH" style="font-size:30px;margin:0">Instructions</h1>
+        <div class="screenTopBarSpacer"></div>
+      </div>
       <div class="checker"></div>
       <div class="helpTxt" id="helpBody">
         <b>1.</b> Postavi prst na označeni krog <span class="k">za ciljno črto</span>. Sledi odštevanje <b>3&nbsp;&middot;&nbsp;2&nbsp;&middot;&nbsp;1</b> — ob <span class="k">START</span> začni voziti.<br>
@@ -3293,7 +3372,14 @@ async function ensurePlayerClaim(user) {
     const ref = db.collection("players").doc(save.uid);
     const snap = await ref.get();
     if (snap.exists) {
-      if ((snap.data() || {}).owner !== user.uid) { console.warn("Racer id is owned by another sign-in"); return false; }
+      if ((snap.data() || {}).owner !== user.uid) {
+        console.warn("Racer id is owned by another sign-in; generating fresh racer id");
+        save.uid = 'p_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        save.claimedBy = null;
+        save.buddyKey = null;
+        persist();
+        return ensurePlayerClaim(user);
+      }
     } else {
       await ref.set({ owner: user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
@@ -3344,17 +3430,26 @@ async function buddySyncProfile(){
 // Private key that makes my buddy link work (created once, kept in invites/{save.uid})
 async function buddyInviteKey(){
   if(save.buddyKey) return save.buddyKey;
-  if(!await buddyAuthReady()) return null;
   const A = "abcdefghijkmnpqrstuvwxyz23456789";
   let key = "";
   const rnd = new Uint32Array(18);
   (window.crypto || {}).getRandomValues ? crypto.getRandomValues(rnd) : rnd.forEach((_, i) => rnd[i] = Math.random() * 1e9);
   rnd.forEach(n => key += A[n % A.length]);
-  try{
-    await db.collection("invites").doc(save.uid).set({ key });
-    save.buddyKey = key; persist();
-    return key;
-  }catch(e){ console.warn("Invite key error:", e && e.code); return null; }
+
+  if(await buddyAuthReady()){
+    try{
+      await db.collection("invites").doc(save.uid).set({ key });
+      save.buddyKey = key; persist();
+      return key;
+    }catch(e){ console.warn("Invite key write error:", e && e.code); }
+  }
+  // Fallback: save locally so the player can still share link / QR code immediately
+  save.buddyKey = key; persist();
+  // Background attempt to write once auth is ready
+  buddyAuthReady().then(u => {
+    if(u && db) db.collection("invites").doc(save.uid).set({ key }).catch(() => {});
+  }).catch(() => {});
+  return key;
 }
 
 async function buddyShareCtx(){
@@ -5003,6 +5098,15 @@ function applyLang(l){
   if($("btnWCRaceGo")) $("btnWCRaceGo").querySelector("span").textContent = tr.continueBtn;
   if($("wcStandTitle")) $("wcStandTitle").innerHTML = "<span>" + tr.wcStandings + "</span>";
   if($("btnWCNext")) $("btnWCNext").querySelector("span").textContent = tr.wcNextRace;
+  // Top Back Buttons text update
+  document.querySelectorAll(".topBackBtn .tbbTxt").forEach(el=>{
+    const btn = el.closest(".topBackBtn");
+    if(btn && btn.id === "btnMpLeaveTop"){
+      el.textContent = tr.mpLeaveRoom || (isEn ? "Leave" : "Zapusti");
+    } else {
+      el.textContent = tr.back || (isEn ? "Back" : "Nazaj");
+    }
+  });
 
   // If active screen needs re-rendering
   if($("singlePick") && $("singlePick").classList.contains("on")) openSingle();
@@ -16416,6 +16520,36 @@ function bindUI(){
     else startLevel(Math.min(MAXLVL,level+1));
   });
   $("btnWCRaceGo").addEventListener("click",startRace);
+  // Wire all top header Back buttons to trigger the same actions as their corresponding bottom Back buttons
+  const topBackMap = [
+    ["btnTrainBackTop", "btnTrainBack"],
+    ["btnTrainInfoBackTop", "btnTrainInfoBack"],
+    ["btnWCNameBackTop", "btnWCNameBack"],
+    ["btnWCPrevBackTop", "btnWCPrevBack"],
+    ["btnMpBackTop", "btnMpBack"],
+    ["btnMpLeaveTop", "btnMpLeave"],
+    ["btnSingleBackTop", "btnSingleBack"],
+    ["btnTTOppBackTop", "btnTTOppBack"],
+    ["btnAchBackTop", "btnAchBack"],
+    ["btnCareerBackTop", "btnCareerBack"],
+    ["btnGarageBackTop", "btnGarageBack"],
+    ["btnCareerStatsBackTop", "btnCareerStatsBack"],
+    ["btnLbBackTop", "btnLbBack"],
+    ["btnSetBackTop", "btnSetBack"],
+    ["btnBack1Top", "btnBack1"],
+    ["btnBack2Top", "btnBack2"]
+  ];
+  topBackMap.forEach(([topId, botId]) => {
+    const topEl = $(topId);
+    const botEl = $(botId);
+    if(topEl && botEl){
+      topEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        botEl.click();
+      });
+    }
+  });
   window.addEventListener("resize",layout);
   window.addEventListener("orientationchange",()=>setTimeout(layout,300));
   document.addEventListener("visibilitychange",()=>{
