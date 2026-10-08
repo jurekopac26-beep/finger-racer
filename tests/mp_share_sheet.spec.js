@@ -25,7 +25,7 @@ async function openPrivateRoom(page) {
 
 test.describe('Multiplayer invite sheet', () => {
 
-  test('Invite button opens sheet with room code, QR and native share link', async ({ page }) => {
+  test('Big Invite button opens the native share menu with the join link', async ({ page }) => {
     await page.addInitScript(() => {
       navigator.share = (data) => { window.__shared = data; return Promise.resolve(); };
     });
@@ -33,15 +33,33 @@ test.describe('Multiplayer invite sheet', () => {
     await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
     const code = await openPrivateRoom(page);
 
+    await expect(page.locator('#btnMpShare')).toBeVisible();
     await page.click('#btnMpShare');
-    await expect(page.locator('#mpShareModal')).toBeVisible();
-    await expect(page.locator('#mpShareCode')).toHaveText(code);
-    await expect(page.locator('#btnMpShareNative')).toBeVisible();
+    await expect(page.locator('#mpShareModal')).toBeHidden();   // straight to the phone's share menu
+    const shared = await page.evaluate(() => window.__shared);
+    expect(shared.url).toContain('?room=' + code);
+    expect(shared.text).toContain(code);
 
-    // QR is collapsed when native share exists; toggling shows a drawn code
-    await expect(page.locator('#mpShareQr')).toBeHidden();
-    await page.click('#btnMpShareQr');
+    // An empty racer slot invites too
+    await page.evaluate(() => { window.__shared = null; });
+    await page.locator('.mpRacerCard.open').first().click();
+    expect((await page.evaluate(() => window.__shared)).url).toContain('?room=' + code);
+  });
+
+  test('QR button opens the scan sheet with a drawn QR, code and link actions', async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (data) => { window.__shared = data; return Promise.resolve(); };
+    });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
+    const code = await openPrivateRoom(page);
+
+    await page.click('#btnMpQr');
+    await expect(page.locator('#mpShareModal')).toBeVisible();
     await expect(page.locator('#mpShareQr')).toBeVisible();
+    await expect(page.locator('#mpShareCode')).toHaveText(code);
+    await expect(page.locator('#btnMpShareCopy')).toBeVisible();
+    await expect(page.locator('#btnMpShareNative')).toBeVisible();
     const qr = await page.evaluate(() => {
       const cv = document.getElementById('mpShareQrCanvas');
       const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
@@ -52,12 +70,6 @@ test.describe('Multiplayer invite sheet', () => {
     expect(qr.w).toBeGreaterThan(0);
     expect(qr.dark).toBeGreaterThan(100);
 
-    await page.click('#btnMpShareNative');
-    const shared = await page.evaluate(() => window.__shared);
-    expect(shared.url).toContain('?room=' + code);
-    expect(shared.text).toContain(code);
-
-    // No horizontal overflow at phone width while the sheet is open
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2);
     expect(overflow).toBe(false);
 
@@ -65,13 +77,43 @@ test.describe('Multiplayer invite sheet', () => {
     await expect(page.locator('#mpShareModal')).toBeHidden();
   });
 
-  test('Without native share the QR is shown right away', async ({ page }) => {
+  test('Without native share, Invite opens the QR sheet instead', async ({ page }) => {
     await page.addInitScript(() => { try { delete Navigator.prototype.share; } catch (e) {} navigator.share = undefined; });
     await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
     await openPrivateRoom(page);
     await page.click('#btnMpShare');
+    await expect(page.locator('#mpShareModal')).toBeVisible();
     await expect(page.locator('#btnMpShareNative')).toBeHidden();
     await expect(page.locator('#mpShareQr')).toBeVisible();
+  });
+
+  for (const vp of [{ w: 360, h: 740 }, { w: 390, h: 844 }]) {
+    test(`Host room fits on one screen without scrolling at ${vp.w}x${vp.h}`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.w, height: vp.h });
+      await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
+      await openPrivateRoom(page);
+      await expect(page.locator('#mpTrackPick')).toBeVisible();
+      const m = await page.evaluate(() => {
+        const s = document.getElementById('mpLobby');
+        const row = ['mpTracks', 'mpLapsSel', 'mpAISel'].map(id => document.getElementById(id).getBoundingClientRect().top);
+        return { scrollH: s.scrollHeight, clientH: s.clientHeight, rowSpread: Math.max(...row) - Math.min(...row),
+                 hOverflow: document.documentElement.scrollWidth > window.innerWidth + 2 };
+      });
+      expect(m.scrollH, 'room screen needs vertical scrolling').toBeLessThanOrEqual(m.clientH + 2);
+      expect(m.rowSpread, 'track / laps / AI are not on one row').toBeLessThan(20);
+      expect(m.hOverflow).toBe(false);
+    });
+  }
+
+  test('Laps and AI dropdowns update the room settings', async ({ page }) => {
+    await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
+    await openPrivateRoom(page);
+    await page.selectOption('#mpLapsSel', '5');
+    await page.selectOption('#mpAISel', '2');
+    const st = await page.evaluate(() => ({ laps: mp.laps, nai: mp.nai, sub: document.getElementById('mpRoomSub').textContent }));
+    expect(st.laps).toBe(5);
+    expect(st.nai).toBe(2);
+    expect(st.sub).toContain('5 laps');
   });
 
   test('Opening ?room=CODE without a name asks for one, then joins that room', async ({ page }) => {
@@ -95,5 +137,38 @@ test.describe('Multiplayer invite sheet', () => {
     await expect(page.locator('#mpLobby')).toHaveClass(/on/, { timeout: 10000 });
     await expect(page.locator('#nameOnboardModal')).toBeHidden();
     expect(await page.evaluate(() => mp.roomId)).toBe('PRIV-XYZ12');
+  });
+});
+
+test.describe('Multiplayer invite sheet — public rooms', () => {
+
+  test('Public room shows the Invite button and its link carries pub=1', async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = (data) => { window.__shared = data; return Promise.resolve(); };
+    });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await bootWithSave(page, { tutSeen: true, introSeen: true, playerName: 'Ana', lang: 'en' });
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    await page.evaluate(() => { openMP(); mpCreateRoom({ isPublic: true }, 'Public Test'); });
+    await expect(page.locator('#mpLobby')).toHaveClass(/on/);
+    await expect(page.locator('#mpPublicTag')).toBeVisible();
+    await expect(page.locator('#btnMpShare')).toBeVisible();
+
+    const code = await page.evaluate(() => mp.code);
+    await page.click('#btnMpShare');
+    const shared = await page.evaluate(() => window.__shared);
+    expect(shared.url).toContain('?room=' + code + '&pub=1');
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2);
+    expect(overflow).toBe(false);
+  });
+
+  test('Opening ?room=CODE&pub=1 joins the PUBLIC room', async ({ page }) => {
+    await bootWithSave(page, { playerName: 'Bojan', lang: 'en' }, FILE_URL + '?room=PUB77&pub=1');
+    await expect(page.locator('#mpLobby')).toHaveClass(/on/, { timeout: 10000 });
+    const st = await page.evaluate(() => ({ roomId: mp.roomId, isPublic: mp.isPublic, search: location.search }));
+    expect(st.roomId).toBe('PUB-PUB77');
+    expect(st.isPublic).toBe(true);
+    expect(st.search).not.toContain('pub=');
   });
 });

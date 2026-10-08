@@ -1149,6 +1149,67 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   margin: 6px 0 !important;
 }
 
+/* ---------- Room screen: one phone screen, no scrolling ---------- */
+#mpLobby .mpRoomHead { flex-wrap:nowrap; align-items:flex-start; margin-bottom:6px; }
+#mpLobby .mpRoomTitleWrap { flex:1; min-width:0; }
+#mpLobby #mpRoomHeading { font-size:clamp(17px,5.4vw,22px)!important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#mpLobby #mpRoomSub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#mpLobby .mpRoomHead .mpCodeBoxNew { flex:none; padding:3px 4px 3px 8px; gap:5px; }
+#mpLobby .mpCodeLbl { font-size:9px; opacity:.6; font-weight:800; letter-spacing:.5px; }
+#mpLobby .mpRoomHead .mpPillStatus { flex:none; align-self:center; }
+#mpLobby .mpStatusBar { text-align:center; }
+
+.mpInviteRow { display:flex; gap:8px; margin:6px 0 8px; }
+.mpInviteBtn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; min-height:52px; padding:10px 14px; border:none; border-radius:14px; cursor:pointer;
+  background:linear-gradient(180deg,#ffd84d,#ffb81f); color:#1a1300; font:inherit; font-size:clamp(16px,4.6vw,19px); font-weight:900; font-style:italic; letter-spacing:.5px;
+  box-shadow:0 4px 0 #b9800a, 0 8px 20px rgba(255,190,30,.35); -webkit-tap-highlight-color:transparent; }
+.mpInviteBtn:active { transform:translateY(3px); box-shadow:0 1px 0 #b9800a, 0 4px 10px rgba(255,190,30,.3); }
+.mpQrBtn { flex:none; width:58px; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; border-radius:14px; cursor:pointer;
+  background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.25); color:#fff; font:inherit; font-size:10px; font-weight:900; letter-spacing:.5px; }
+.mpQrBtn .ico { font-size:20px; line-height:1; }
+.mpQrBtn:active { transform:scale(.95); }
+
+/* racer chips: 2 per row, one line each */
+#mpLobby .mpRacerGrid { grid-template-columns:1fr 1fr; gap:6px; margin:0 0 8px; }
+#mpLobby .mpRacerCard { flex-direction:row; align-items:center; gap:8px; padding:6px 8px; border-radius:12px; border-width:1.5px; text-align:left; min-width:0; min-height:44px; box-sizing:border-box; }
+#mpLobby .mpRacerAvatar { width:28px; height:28px; flex:none; border-width:2px; }
+#mpLobby .mpRacerInfo { min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
+#mpLobby .mpRacerName { font-size:12.5px; max-width:none; }
+#mpLobby .mpRacerMeta { display:flex; align-items:center; gap:4px; min-width:0; white-space:nowrap; overflow:hidden; }
+#mpLobby .mpRacerRole { font-size:8.5px; }
+#mpLobby .mpReadyBadge { font-size:9.5px; padding:0 5px; border-radius:7px; overflow:hidden; text-overflow:ellipsis; }
+#mpLobby .mpRacerCard.open { opacity:.75; border-style:dashed; border-color:rgba(255,216,77,.45); background:rgba(255,216,77,.05); cursor:pointer; color:#ffd84d; font-weight:900; font-size:12.5px; justify-content:center; }
+#mpLobby .mpRacerCard.open:active { transform:scale(.97); }
+
+/* host settings: track · laps · AI on one line */
+#mpLobby .mpCfgRow { gap:6px; margin:0 0 8px !important; align-items:stretch; }
+#mpLobby .mpCfgTrack { flex:1; min-width:0; }
+#mpLobby .mpCfgTrack .mpTrackBtn { height:100%; padding:4px 6px; gap:6px; border-radius:10px; box-sizing:border-box; }
+#mpLobby .mpCfgTrack .mpTrackBtn img { width:34px; height:24px; border-radius:5px; }
+#mpLobby .mpCfgTrack .tbName { font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#mpLobby .mpCfgTrack .tbSub { display:none; }
+#mpLobby .mpCfgTrack .tbArrow { font-size:10px; padding-right:0; }
+#mpLobby .mpCfgTrack > div:first-child { min-width:0; }
+.mpCfgCell { flex:none; display:flex; flex-direction:column; justify-content:center; gap:1px; padding:3px 6px; border-radius:10px; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.2); cursor:pointer; }
+.mpCfgCell > span { font-size:8.5px; font-weight:800; opacity:.65; text-transform:uppercase; letter-spacing:.5px; }
+.mpCfgCell select { appearance:none; -webkit-appearance:none; background:transparent; border:none; color:#fff; font:inherit; font-size:13px; font-weight:900; padding:0 14px 0 0; cursor:pointer; outline:none;
+  background-image:linear-gradient(45deg,transparent 50%,#fff 50%),linear-gradient(135deg,#fff 50%,transparent 50%); background-position:right 5px center,right 1px center; background-size:4px 4px; background-repeat:no-repeat; }
+.mpCfgCell select option { background:#141920; color:#fff; }
+
+/* chat: compact */
+#mpLobby #mpRoomChatBox { margin:0 0 6px; padding:6px; gap:5px; }
+#mpLobby #mpRoomChatMessages { max-height:44px; min-height:22px; }
+#mpLobby #mpRoomChatBox .mpChatEmpty { padding:3px 6px; }
+
+/* actions + footer row */
+#mpLobby .mpRoomActions { margin-top:2px; }
+#mpLobby #btnMpStart, #mpLobby #btnMpReadyToggle { margin:4px auto 2px; }
+#mpLobby #mpWait { padding:3px; }
+.mpRoomFoot { display:flex; gap:6px; margin-top:6px; }
+.mpRoomFoot button { flex:1; width:auto !important; min-width:0; margin:0 !important; padding:9px 4px !important; font-size:12px !important; font-weight:800; border-radius:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:none !important; text-transform:none !important; letter-spacing:0 !important; }
+#mpLobby #btnMpStart { font-size:clamp(14px,4vw,18px); padding:12px 10px; }
+.mpRoomFoot #btnMpCustomize { border:1.5px solid rgba(160,120,255,.5); background:rgba(109,60,184,.35); }
+
 #btnMpStart { 
   display: block; width: 100%; margin: 8px auto 4px; padding: clamp(12px, 2.6vh, 16px) 18px; font-size: clamp(17px, 4.4vw, 21px); font-weight: 900;
   border-radius: 12px; border: none; background: linear-gradient(180deg, #5dffa0, #2fdd7a);
@@ -1712,42 +1773,40 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="mpLobby" class="screen">
     <div class="panel wide mpPanel">
-      <div class="mpHeader">
-        <div>
+      <div class="mpHeader mpRoomHead">
+        <div class="mpRoomTitleWrap">
           <h2 id="mpRoomHeading" class="disp" style="font-size:22px;margin:0">ROOM <span>#1</span></h2>
           <div id="mpRoomSub" style="font-size:11.5px;opacity:.75">Track 1 · 3 laps</div>
         </div>
         <div class="mpCodeBoxNew" id="mpCodeBoxNew" style="display:none">
-          <span style="font-size:10px;opacity:.7">CODE:</span>
+          <span class="mpCodeLbl">CODE</span>
           <span id="mpCode" class="mpCodeTag">-----</span>
           <button class="mpBtnMini" id="btnMpCopy" title="Copy code">📋</button>
-          <button class="mpBtnMini" id="btnMpShare" title="Invite friends">📨</button>
         </div>
         <div class="mpPillStatus" id="mpPublicTag" style="display:none;font-size:11px">🌐 PUBLIC ROOM</div>
       </div>
 
       <div id="mpStatus" class="mpStatusBar">Connecting…</div>
 
-      <!-- Racers Grid -->
-      <div class="mpRacerGrid">
-        <div class="mpRacerCard me" id="mpCardMe">
-          <div class="mpRacerAvatar" id="mpRacerAvatarMe"></div>
-          <div class="mpRacerName" id="mpRacerNameMe">YOU</div>
-          <div class="mpRacerRole" id="mpRacerRoleMe">Host</div>
-          <div class="mpReadyBadge" id="mpRacerReadyMe">✓ Ready</div>
-        </div>
+      <!-- Invite: the main way to fill the room -->
+      <div class="mpInviteRow">
+        <button class="mpInviteBtn" id="btnMpShare">📨 <span id="mpInviteTxt">INVITE FRIENDS</span></button>
+        <button class="mpQrBtn" id="btnMpQr" title="Show QR code"><span class="ico">🔳</span><span>QR</span></button>
+      </div>
 
-        <div class="mpRacerCard" id="mpCardOpp">
-          <div class="mpRacerAvatar" id="mpRacerAvatarOpp"></div>
-          <div class="mpRacerName" id="mpRacerNameOpp">Waiting for player…</div>
-          <div class="mpRacerRole" id="mpRacerRoleOpp">Guest</div>
-          <div class="mpReadyBadge waiting" id="mpRacerReadyOpp">⏳ Waiting</div>
-        </div>
+      <!-- Racers (compact chips, rendered by mpUpdateRoomView) -->
+      <div class="mpRacerGrid"></div>
+
+      <!-- Host Settings (if host): track · laps · AI in one row -->
+      <div id="mpTrackPick" class="mpCfgRow" style="display:none">
+        <div id="mpTracks" class="mpCfgTrack"></div>
+        <label class="mpCfgCell"><span id="lblMpHLaps">Laps</span><select id="mpLapsSel"></select></label>
+        <label class="mpCfgCell"><span id="lblMpHAI">AI</span><select id="mpAISel"></select></label>
       </div>
 
       <!-- Room Chat Box -->
-      <div id="mpRoomChatBox" class="mpChatBox" style="margin:8px 0">
-        <div class="mpChatMessages" id="mpRoomChatMessages" style="max-height:85px;min-height:48px">
+      <div id="mpRoomChatBox" class="mpChatBox">
+        <div class="mpChatMessages" id="mpRoomChatMessages">
           <div class="mpChatEmpty" id="mpRoomChatEmpty">💬 Room chat is open. Talk with racers!</div>
         </div>
         <div class="mpChatInputRow">
@@ -1756,26 +1815,18 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         </div>
       </div>
 
-      <!-- Host Settings (if host) -->
-      <div id="mpTrackPick" style="display:none;margin:8px 0">
-        <div id="lblMpHTrack" style="font-size:11px;opacity:.75;margin-bottom:3px">Track:</div>
-        <div id="mpTracks" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
-        <div id="lblMpHLaps" style="font-size:11px;opacity:.75;margin:6px 0 3px">Laps:</div>
-        <div id="mpLaps" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
-        <div id="lblMpHAI" style="font-size:11px;opacity:.75;margin:6px 0 3px">AI Bots:</div>
-        <div id="mpAI" style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap"></div>
-      </div>
-
       <!-- Actions -->
       <div class="mpRoomActions">
-        <button class="bigBtn" id="btnMpCustomize" style="background:linear-gradient(135deg,#6d3cb8,#4b2a8a);margin-bottom:8px">⚙️ Settings</button>
         <button class="bigBtn" id="btnMpReadyToggle" style="display:none">✓ Ready Up</button>
         <div id="mpAutoStartTimer" style="display:none; text-align:center; font-weight:bold; font-size:16px; margin:8px 0; color:#ffdd57;"></div><button class="bigBtn" id="btnMpStart" style="display:none">🏁 Start Race</button>
         <div id="mpWait" style="display:none;opacity:.7;font-size:12.5px;padding:6px">Waiting for host to start…</div>
       </div>
 
-      <button class="ghostBtn" id="btnMpBrowseLobby" style="margin-top:6px;border-color:rgba(61,255,142,.45);color:var(--green,#3dff8e)">👁️ Browse Lobby</button>
-      <button class="ghostBtn" id="btnMpLeave" style="margin-top:6px">← Leave Room</button>
+      <div class="mpRoomFoot">
+        <button class="bigBtn" id="btnMpCustomize">⚙️ Settings</button>
+        <button class="ghostBtn" id="btnMpBrowseLobby">👁️ Lobby</button>
+        <button class="ghostBtn" id="btnMpLeave">← Leave</button>
+      </div>
     </div>
   </div>
   <div id="singlePick" class="screen">
@@ -1933,15 +1984,14 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   <div id="mpShareModal" class="mpModal" style="display:none">
     <div class="mpModalContent">
       <button class="mpShareClose" id="btnMpShareClose" aria-label="Close">✕</button>
-      <div class="mpModalTitle" id="mpShareTitle">Invite friends</div>
+      <div class="mpModalTitle" id="mpShareTitle">Scan to join</div>
+      <div class="mpShareQr on" id="mpShareQr"><canvas id="mpShareQrCanvas" width="200" height="200"></canvas></div>
+      <div class="mpShareHint" id="mpShareHint">Your friend points their phone camera here and lands in this room.</div>
       <div class="mpShareCode" id="mpShareCode">-----</div>
-      <div class="mpShareHint" id="mpShareHint">Friends open the link or scan the QR and join this room.</div>
       <div class="mpShareOpts">
-        <button class="mpShareOpt primary" id="btnMpShareNative"><span class="ico">📲</span><span id="mpShareNativeTxt">Share via… (WhatsApp, Messenger…)</span></button>
-        <button class="mpShareOpt" id="btnMpShareQr"><span class="ico">🔳</span><span id="mpShareQrTxt">Show QR code</span></button>
         <button class="mpShareOpt" id="btnMpShareCopy"><span class="ico">🔗</span><span id="mpShareCopyTxt">Copy link</span></button>
+        <button class="mpShareOpt primary" id="btnMpShareNative"><span class="ico">📲</span><span id="mpShareNativeTxt">Send link…</span></button>
       </div>
-      <div class="mpShareQr" id="mpShareQr"><canvas id="mpShareQrCanvas" width="200" height="200"></canvas></div>
     </div>
   </div>
 
@@ -3391,7 +3441,7 @@ const I18N = {
     mpSecRacers: "👥 Racers",
     mpChatDockTitle: "Lobby chat",
     mpSettingsBtn: "Multiplayer settings",
-    mpBrowseLobby: "👁️ Browse Lobby",
+    mpBrowseLobby: "👁️ Lobby",
     mpReturnToRoom: "Return 🏎️",
     mpChatPlaceholder: "Type a message…",
     mpChatEmpty: "💬 Lobby chat is open. Say hi or challenge someone!",
@@ -3418,11 +3468,12 @@ const I18N = {
     mpPublicTag: "🌐 PUBLIC ROOM",
     mpCodeLbl: "CODE:",
     mpCopyCode: "Copy code",
-    mpShareRoom: "Share room",
+    mpShareRoom: "Invite friends",
+    mpInviteBtn: "INVITE FRIENDS",
     mpTrackLbl: "Track:",
-    mpLapsLbl: "Laps:",
-    mpAIBotsLbl: "AI Bots:",
-    mpLeaveRoom: "← Leave Room",
+    mpLapsLbl: "Laps",
+    mpAIBotsLbl: "AI bots",
+    mpLeaveRoom: "← Leave",
     mpReadyUp: "✓ Ready Up",
     mpStartRace: "🏁 Start Race",
     mpWaitHost: "Waiting for host to start…",
@@ -3579,7 +3630,7 @@ const I18N = {
     mpSecRacers: "👥 Dirkači",
     mpChatDockTitle: "Klepet lobija",
     mpSettingsBtn: "Nastavitve multiplayerja",
-    mpBrowseLobby: "👁️ Razišči lobi",
+    mpBrowseLobby: "👁️ Lobi",
     mpReturnToRoom: "V sobo 🏎️",
     mpChatPlaceholder: "Vpiši sporočilo…",
     mpChatEmpty: "💬 Klepet lobija je odprt. Pozdravi ali izzovi koga!",
@@ -3606,11 +3657,12 @@ const I18N = {
     mpPublicTag: "🌐 JAVNA SOBA",
     mpCodeLbl: "KODA:",
     mpCopyCode: "Kopiraj kodo",
-    mpShareRoom: "Deli sobo",
+    mpShareRoom: "Povabi prijatelje",
+    mpInviteBtn: "POVABI PRIJATELJE",
     mpTrackLbl: "Proga:",
-    mpLapsLbl: "Krogi:",
-    mpAIBotsLbl: "AI boti:",
-    mpLeaveRoom: "← Zapusti sobo",
+    mpLapsLbl: "Krogi",
+    mpAIBotsLbl: "AI",
+    mpLeaveRoom: "← Zapusti",
     mpReadyUp: "✓ Pripravi se",
     mpStartRace: "🏁 Začni dirko",
     mpWaitHost: "Čakam, da gostitelj začne…",
@@ -4181,7 +4233,7 @@ function applyLang(l){
 
   // Multiplayer Lobby Room (#mpLobby)
   if($("mpPublicTag")) $("mpPublicTag").textContent = tr.mpPublicTag;
-  if($("lblMpHTrack")) $("lblMpHTrack").textContent = tr.mpTrackLbl;
+  if($("mpInviteTxt")) $("mpInviteTxt").textContent = tr.mpInviteBtn;
   if($("lblMpHLaps")) $("lblMpHLaps").textContent = tr.mpLapsLbl;
   if($("lblMpHAI")) $("lblMpHAI").textContent = tr.mpAIBotsLbl;
   if($("btnMpLeave")) $("btnMpLeave").textContent = tr.mpLeaveRoom;
@@ -13388,7 +13440,7 @@ function mpJoinCode(customCode){
     showBanner(isEn ? "Enter a valid room code." : "Vpiši veljavno kodo sobe.", 2200, true);
     return;
   }
-  mpJoinRoom("PRIV-" + code, code, (isEn ? "Room #" : "Soba #") + code, false);
+  mpJoinRoom("PRIV-" + code, code, isEn ? "Private room" : "Zasebna soba", false);
 }
 
 // Join either public or private room by typed code from lobby input
@@ -13410,7 +13462,7 @@ function mpJoinByCode(customCode){
 /* ---------- ROOM INVITE: share sheet (native share / QR / copy link) + ?room= deep link ---------- */
 function mpRoomInviteUrl(){
   if(!mp || !mp.code) return "";
-  return location.href.split(/[?#]/)[0] + "?room=" + encodeURIComponent(mp.code);
+  return location.href.split(/[?#]/)[0] + "?room=" + encodeURIComponent(mp.code) + (mp.isPublic ? "&pub=1" : "");
 }
 
 function mpDrawInviteQr(url){
@@ -13434,24 +13486,23 @@ function openMpShareSheet(){
   const modal = $("mpShareModal"), url = mpRoomInviteUrl();
   if(!modal || !url) return;
   const isEn = (save.lang === "en");
-  const canShare = !!navigator.share;
   const qrOk = mpDrawInviteQr(url);
-  $("mpShareTitle").textContent = isEn ? "Invite friends" : "Povabi prijatelje";
+  $("mpShareTitle").textContent = qrOk ? (isEn ? "Scan to join" : "Skeniraj in pridruži se") : (isEn ? "Invite friends" : "Povabi prijatelje");
   $("mpShareCode").textContent = mp.code;
-  $("mpShareHint").textContent = isEn ? "Friends open the link or scan the QR and land straight in this room." : "Prijatelji odprejo povezavo ali skenirajo QR in pristanejo naravnost v tej sobi.";
-  $("mpShareNativeTxt").textContent = isEn ? "Share via… (WhatsApp, Messenger…)" : "Deli prek… (WhatsApp, Messenger…)";
+  $("mpShareHint").textContent = isEn ? "Your friend points their phone camera here and lands straight in this room."
+                                      : "Prijatelj usmeri kamero telefona sem in pristane naravnost v tej sobi.";
+  $("mpShareNativeTxt").textContent = isEn ? "Send link…" : "Pošlji povezavo…";
   $("mpShareCopyTxt").textContent = isEn ? "Copy link" : "Kopiraj povezavo";
-  $("btnMpShareNative").style.display = canShare ? "" : "none";
-  $("btnMpShareQr").style.display = qrOk ? "" : "none";
-  // No native share sheet (desktop): show the QR right away so a phone can scan it
-  mpSetShareQr(qrOk && !canShare);
+  $("btnMpShareNative").style.display = navigator.share ? "" : "none";
+  $("mpShareQr").classList.toggle("on", qrOk);
+  $("mpShareHint").style.display = qrOk ? "" : "none";
   modal.style.display = "flex";
 }
 
-function mpSetShareQr(on){
-  const isEn = (save.lang === "en");
-  $("mpShareQr").classList.toggle("on", !!on);
-  $("mpShareQrTxt").textContent = on ? (isEn ? "Hide QR code" : "Skrij QR kodo") : (isEn ? "Show QR code" : "Pokaži QR kodo");
+// Big 📨 INVITE button / empty slots: the phone's own share menu if it has one, otherwise the QR + link sheet
+function mpInviteFriends(){
+  if(navigator.share) mpShareInviteNative();
+  else openMpShareSheet();
 }
 
 function closeMpShareSheet(){
@@ -13485,15 +13536,16 @@ function mpCopyInviteLink(){
   }catch(e){ showBanner(isEn ? "Copy failed" : "Kopiranje ni uspelo", 1800, true); }
 }
 
-// Opened via a private-room invite link (?room=CODE): skip intro/tutorial, ask for a name if needed, join the room.
-// Returns true when it took over the landing screen.
+// Opened via an invite link (?room=CODE, plus &pub=1 for a public room): skip intro/tutorial,
+// ask for a name if needed, join the room. Returns true when it took over the landing screen.
 function mpTakeRoomFromUrl(){
-  let code = "";
+  let code = "", pub = false;
   try{
     const q = new URLSearchParams(location.search);
     if(!q.has("room")) return false;
     code = (q.get("room") || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
-    q.delete("room");
+    pub = q.get("pub") === "1";
+    q.delete("room"); q.delete("pub");
     const rest = q.toString();
     try{ history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); }catch(e){}   // a reload must not rejoin
   }catch(e){ return false; }
@@ -13501,7 +13553,11 @@ function mpTakeRoomFromUrl(){
 
   const isEn = (save.lang === "en");
   toMenu();
-  const go = () => { openMP(); mpJoinCode(code); };
+  const go = () => {
+    openMP();
+    if(pub) mpJoinPublicSlot("PUB-" + code, isEn ? "Public room" : "Javna soba", false);
+    else mpJoinCode(code);
+  };
   if(hasCustomPlayerName()) go();
   else showNameOnboarding({
     icon: "🏁📲",
@@ -13965,9 +14021,10 @@ function mpUpdateRoomView(){
       pubTag.style.display = "inline-block";
       pubTag.textContent = isEn ? "🌐 PUBLIC ROOM" : "🌐 JAVNA SOBA";
     }
-    if(codeBox) codeBox.style.display = "none";
+    if(codeBox) codeBox.style.display = "flex";   // public rooms can be shared too (📨 invite)
+    if(cd) cd.textContent = mp.code;
   } else {
-    if(rh) rh.innerHTML = `${esc(mp.title || (isEn ? 'PRIVATE ROOM' : 'ZASEBNA SOBA'))} <span>#${esc(mp.code)}</span>`;
+    if(rh) rh.innerHTML = esc(mp.title || (isEn ? 'PRIVATE ROOM' : 'ZASEBNA SOBA'));
     if(pubTag) pubTag.style.display = "none";
     if(codeBox) codeBox.style.display = "flex";
     if(cd) cd.textContent = mp.code;
@@ -14010,9 +14067,10 @@ function mpUpdateRoomView(){
     const myVoiceIcon = mp.voiceEnabled ? (mpVoice.isMuted ? " 🔇" : " 🎙️") : "";
     myCard.innerHTML = `
       <div class="mpRacerAvatar" style="background:${mpSafeColor(mp.myColor, '#3dff8e')}" id="mpAvatar_${MP_CLIENT_ID}"></div>
-      <div class="mpRacerName">${esc(mp.name || (isEn ? "YOU" : "TI"))}${myVoiceIcon}</div>
-      <div class="mpRacerRole">${myRole}</div>
-      <div class="mpReadyBadge${myReadyClass}">${myReadyText}</div>
+      <div class="mpRacerInfo">
+        <div class="mpRacerName">${esc(mp.name || (isEn ? "YOU" : "TI"))}${myVoiceIcon}</div>
+        <div class="mpRacerMeta">${mp.isHost ? `<span class="mpRacerRole">${myRole}</span>` : ""}<span class="mpReadyBadge${myReadyClass}">${myReadyText}</span></div>
+      </div>
     `;
     grid.appendChild(myCard);
 
@@ -14027,9 +14085,10 @@ function mpUpdateRoomView(){
       const pVoiceIcon = mp.voiceEnabled ? (peer.voiceMuted ? " 🔇" : " 🎙️") : "";
       card.innerHTML = `
         <div class="mpRacerAvatar" style="background:${mpSafeColor(peer.baseColor || peer.color, '#ff6b6b')}" id="mpAvatar_${esc(peer.id)}"></div>
-        <div class="mpRacerName">${esc(peer.name || "Dirkač")}${pVoiceIcon}</div>
-        <div class="mpRacerRole">${pRole}</div>
-        <div class="mpReadyBadge${pReadyClass}">${pReadyText}</div>
+        <div class="mpRacerInfo">
+          <div class="mpRacerName">${esc(peer.name || "Dirkač")}${pVoiceIcon}</div>
+          <div class="mpRacerMeta">${peer.isHost ? `<span class="mpRacerRole">${pRole}</span>` : ""}<span class="mpReadyBadge${pReadyClass}">${pReadyText}</span></div>
+        </div>
       `;
       grid.appendChild(card);
     });
@@ -14039,16 +14098,12 @@ function mpUpdateRoomView(){
     const nonSpecCount = peers.filter(p => !p.isSpectator).length;
     const openSlots = Math.max(0, maxPlayers - 1 - nonSpecCount);
     for(let i = 0; i < openSlots; i++){
-      const slotCard = document.createElement("div");
-      slotCard.className = "mpRacerCard";
-      slotCard.style.opacity = "0.55";
-      slotCard.style.borderStyle = "dashed";
-      slotCard.innerHTML = `
-        <div class="mpRacerAvatar" style="background:rgba(255,255,255,.05)"></div>
-        <div class="mpRacerName" style="opacity:0.5;font-style:italic">${isEn ? "Open Slot" : "Prosto mesto"}</div>
-        <div class="mpRacerRole">—</div>
-        <div class="mpReadyBadge waiting">${isEn ? "Waiting..." : "Čakam..."}</div>
-      `;
+      // Empty slot doubles as an invite button
+      const slotCard = document.createElement("button");
+      slotCard.type = "button";
+      slotCard.className = "mpRacerCard open";
+      slotCard.textContent = isEn ? "+ Invite" : "+ Povabi";
+      slotCard.addEventListener("click", () => { Snd.click && Snd.click(); mpInviteFriends(); });
       grid.appendChild(slotCard);
     }
   }
@@ -14103,12 +14158,11 @@ function mpRenderHostSettings(){
     return;
   }
   const isEn = (save.lang === "en");
-  if($("mpTrackPick")) $("mpTrackPick").style.display = "block";
+  if($("mpTrackPick")) $("mpTrackPick").style.display = "flex";   // track · laps · AI in one row
   const tb = $("mpTracks");
   if(tb){
     const isWC = mp.mode === "wc";
     tb.style.display = isWC ? "none" : "block";
-    if($("lblMpHTrack")) $("lblMpHTrack").style.display = isWC ? "none" : "block";
     if(!isWC) mpRenderTrackButton(tb, mp.track, (tr) => {
       if(!mp || !mp.isHost) return;
       mp.track = tr;
@@ -14117,40 +14171,21 @@ function mpRenderHostSettings(){
       mpUpdateRoomView();
     });
   }
-  const lb = $("mpLaps");
-  if(lb){
-    lb.innerHTML = "";
-    MP_LAPS.forEach(n => {
-      const d = document.createElement("div");
-      d.className = "setOpt" + ((mp.laps || 3) === n ? " sel" : "");
-      d.style.cssText = "padding:6px 9px;font-size:12px";
-      d.textContent = n + (isEn ? (n === 1 ? " lap" : " laps") : (n === 1 ? " krog" : " krogi"));
-      d.addEventListener("click", () => {
-        mp.laps = n;
-        mpBroadcastCfg();
-        mpRenderHostSettings();
-        mpUpdateRoomView();
-      });
-      lb.appendChild(d);
-    });
-  }
-  const ab = $("mpAI");
-  if(ab){
-    ab.innerHTML = "";
-    MP_AI.forEach(n => {
-      const d = document.createElement("div");
-      d.className = "setOpt" + ((mp.nai || 0) === n ? " sel" : "");
-      d.style.cssText = "padding:6px 9px;font-size:12px";
-      d.textContent = n === 0 ? (isEn ? "No AI" : "Brez AI") : (n + " AI");
-      d.addEventListener("click", () => {
-        mp.nai = n;
-        mpBroadcastCfg();
-        mpRenderHostSettings();
-        mpUpdateRoomView();
-      });
-      ab.appendChild(d);
-    });
-  }
+  // Laps / AI: native dropdowns (phones open their own picker)
+  const fillSel = (sel, values, cur, label, apply) => {
+    if(!sel) return;
+    sel.innerHTML = values.map(n => `<option value="${n}"${n === cur ? " selected" : ""}>${label(n)}</option>`).join("");
+    sel.onchange = () => {
+      apply(Number(sel.value));
+      mpBroadcastCfg();
+      mpRenderHostSettings();
+      mpUpdateRoomView();
+    };
+  };
+  if($("lblMpHLaps")) $("lblMpHLaps").textContent = isEn ? "Laps" : "Krogi";
+  if($("lblMpHAI")) $("lblMpHAI").textContent = isEn ? "AI bots" : "AI";
+  fillSel($("mpLapsSel"), MP_LAPS, mp.laps || 3, n => String(n), n => { mp.laps = n; });
+  fillSel($("mpAISel"), MP_AI, mp.nai || 0, n => n === 0 ? (isEn ? "None" : "Brez") : String(n), n => { mp.nai = n; });
 }
 
 function mpBroadcastCfg(){
@@ -15520,9 +15555,9 @@ function bindUI(){
       showBanner("Koda sobe "+code+" kopirana! 📋",1600,true);
     }catch(e){}
   });
-  $("btnMpShare").addEventListener("click",()=>{ Snd.click&&Snd.click(); openMpShareSheet(); });
+  $("btnMpShare").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpInviteFriends(); });
+  $("btnMpQr").addEventListener("click",()=>{ Snd.click&&Snd.click(); openMpShareSheet(); });
   $("btnMpShareNative").addEventListener("click",()=>mpShareInviteNative());
-  $("btnMpShareQr").addEventListener("click",()=>mpSetShareQr(!$("mpShareQr").classList.contains("on")));
   $("btnMpShareCopy").addEventListener("click",()=>mpCopyInviteLink());
   $("btnMpShareClose").addEventListener("click",()=>closeMpShareSheet());
   $("mpShareModal").addEventListener("click",(e)=>{ if(e.target===$("mpShareModal")) closeMpShareSheet(); });
