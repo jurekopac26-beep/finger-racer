@@ -96,12 +96,19 @@ test.describe('Multiplayer invite sheet', () => {
       const m = await page.evaluate(() => {
         const s = document.getElementById('mpLobby');
         const row = ['mpTracks', 'mpLapsSel', 'mpAISel'].map(id => document.getElementById(id).getBoundingClientRect().top);
+        const code = document.getElementById('mpCodeBoxNew').getBoundingClientRect();
+        const leave = document.getElementById('btnMpLeaveTop');
         return { scrollH: s.scrollHeight, clientH: s.clientHeight, rowSpread: Math.max(...row) - Math.min(...row),
-                 hOverflow: document.documentElement.scrollWidth > window.innerWidth + 2 };
+                 hOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
+                 codeRight: code.right, codeLeft: code.left, vw: window.innerWidth,
+                 leaveText: leave ? leave.innerText : '' };
       });
       expect(m.scrollH, 'room screen needs vertical scrolling').toBeLessThanOrEqual(m.clientH + 2);
       expect(m.rowSpread, 'track / laps / AI are not on one row').toBeLessThan(20);
       expect(m.hOverflow).toBe(false);
+      expect(m.codeRight, 'room code box is cut off on the right').toBeLessThanOrEqual(m.vw);
+      expect(m.codeLeft).toBeGreaterThanOrEqual(0);
+      expect(m.leaveText, 'double arrow on the top Leave button').not.toContain('←←');
     });
   }
 

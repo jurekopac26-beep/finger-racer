@@ -1214,6 +1214,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
 /* ---------- Room screen: one phone screen, no scrolling ---------- */
 #mpLobby .mpRoomHead { flex-wrap:nowrap; align-items:flex-start; margin-bottom:6px; }
+/* top Leave button: icon only here (the footer has the full "← Leave"), so title + code still fit on a phone */
+#mpLobby .mpRoomHead > div:first-child { flex:1; min-width:0; }
+#mpLobby .mpRoomHead .topBackBtn { padding:6px 9px; align-self:center; }
+#mpLobby .mpRoomHead .topBackBtn .tbbTxt { display:none; }
 #mpLobby .mpRoomTitleWrap { flex:1; min-width:0; }
 #mpLobby #mpRoomHeading { font-size:clamp(17px,5.4vw,22px)!important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #mpLobby #mpRoomSub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -5102,7 +5106,7 @@ function applyLang(l){
   document.querySelectorAll(".topBackBtn .tbbTxt").forEach(el=>{
     const btn = el.closest(".topBackBtn");
     if(btn && btn.id === "btnMpLeaveTop"){
-      el.textContent = tr.mpLeaveRoom || (isEn ? "Leave" : "Zapusti");
+      el.textContent = (tr.mpLeaveRoom || (isEn ? "Leave" : "Zapusti")).replace(/^←\s*/, "");   // the button has its own ← icon
     } else {
       el.textContent = tr.back || (isEn ? "Back" : "Nazaj");
     }
