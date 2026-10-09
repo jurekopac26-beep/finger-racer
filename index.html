@@ -1024,28 +1024,14 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpQJSub { font-size:11px; opacity:.85; color:#dfe6cf; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* Sections */
-.mpSection { margin-bottom:12px; display:flex; flex-direction:column; gap:6px; width:100%; box-sizing:border-box; min-width:0; }
+.mpSection { margin-bottom:12px; display:flex; flex-direction:column; gap:6px; }
 .mpSectionHead { display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; padding:0 2px; }
 .mpSecTitle { font-size:12px; font-weight:900; color:#b9c2cf; text-transform:uppercase; letter-spacing:.5px; display:flex; align-items:center; gap:6px; }
-
-/* Navigation Tabs */
-.mpTabs { display:flex; gap:6px; border-bottom:1.5px solid rgba(255,255,255,.1); padding-bottom:8px; margin-bottom:10px; width:100%; box-sizing:border-box; flex:none; }
-.mpTab { flex:1; min-width:0; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:7px 4px; font-size:11.5px; font-weight:800; color:#dfe6cf; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; -webkit-tap-highlight-color:transparent; box-sizing:border-box; white-space:nowrap; }
-.mpTab.sel { background:rgba(61,255,142,.18); border-color:var(--green); color:var(--green); }
-
-/* Room Code Inline */
-.mpBtnCodeToggle { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); border-radius:8px; color:#ffd21f; font-size:11px; font-weight:800; padding:4px 9px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.mpBtnCodeToggle:active { transform:scale(.95); }
-.mpCodeInlineBox { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:8px 10px; margin-bottom:6px; text-align:center; box-sizing:border-box; }
-.mpCodeInlineBox #mpCodeIn { width:110px; height:36px; padding:0 6px; border-radius:8px; border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.1); color:#ffd21f; font-size:16px; font-weight:900; letter-spacing:2px; text-align:center; text-transform:uppercase; outline:none; }
-.mpCodeInlineBox #mpCodeIn:focus { border-color:var(--green); }
-
-/* Quick Chat Pills */
-.mpQuickChatPills { display:flex; gap:6px; overflow-x:auto; padding-bottom:3px; -webkit-overflow-scrolling:touch; scrollbar-width:none; width:100%; box-sizing:border-box; }
-.mpQuickChatPills::-webkit-scrollbar { display:none; }
-.mpQuickPill { flex:none; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-radius:14px; padding:5px 10px; font-size:11px; font-weight:800; color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent; white-space:nowrap; transition:background .1s, transform .1s; }
-.mpQuickPill:active { transform:scale(.94); background:rgba(61,255,142,.22); border-color:var(--green,#3dff8e); }
-
+/* Browse: rooms | racers of the selected room (one column + inline details on phones) */
+#mpHome .mpPanel { width:min(780px,96vw)!important; max-width:min(780px,96vw)!important; }
+.mpBrowse { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:12px; align-items:start; margin-bottom:10px; }
+.mpBrowseCol { display:flex; flex-direction:column; gap:6px; min-width:0; }
+@media (max-width:699px){ .mpBrowse { grid-template-columns:1fr; } .mpDetailCol { display:none; } }
 .mpRoomItem { cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .mpRoomItem.sel { border-color:var(--green); background:rgba(61,255,142,.1); }
 .mpRoomDetail { background:rgba(10,12,16,.6); border:1.5px solid rgba(255,255,255,.12); border-radius:14px; padding:10px; min-height:140px; }
@@ -1762,53 +1748,32 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <button class="mpBtnAction quick" id="btnMpQJAction" style="font-size:11.5px;padding:6px 12px">⚡ Quick Join</button>
       </div>
 
-      <!-- Navigation Tabs / View Filters -->
-      <div class="mpTabs">
-        <button class="mpTab sel" id="mpTabAll">🌐 All</button>
-        <button class="mpTab" id="mpTabRooms">🏁 Rooms <span class="mpBadgeCount" id="mpRoomCount">0</span></button>
-        <button class="mpTab" id="mpTabPlayers">👥 Racers <span class="mpBadgeCount" id="mpPlayerCount">1</span></button>
-        <button class="mpTab" id="mpTabChat">💬 Chat</button>
-      </div>
-
-      <!-- Section 1: Open Rooms -->
-      <div id="mpSectionRooms" class="mpSection">
-        <div class="mpSectionHead">
-          <div class="mpSecTitle" id="lblMpSecRooms">🏁 Rooms</div>
-          <button class="mpBtnCodeToggle" id="btnMpToggleCode">🔑 Room Code ▾</button>
-        </div>
-        <div id="mpCodeInline" class="mpCodeInlineBox" style="display:none">
-          <div class="mpCodeLabel" style="font-size:11px;opacity:.8;margin-bottom:4px">Have a 5-digit room code?</div>
-          <div style="display:flex;gap:6px;justify-content:center;align-items:center">
-            <input id="mpCodeIn" placeholder="CODE" maxlength="6" />
-            <button class="mpBtnJoin" id="btnMpJoin" style="height:36px;padding:0 14px">Join 🔗</button>
+      <!-- Browse: rooms (left) + racers of the selected room (right); one column with inline details on phones -->
+      <div class="mpBrowse">
+        <div class="mpBrowseCol">
+          <div class="mpSecTitle" id="lblMpSecRooms">🏁 Rooms <span class="mpBadgeCount" id="mpRoomCount">0</span></div>
+          <div class="mpList" id="mpRoomList">
+            <div class="mpEmpty">🔎 Searching for open rooms on network…</div>
           </div>
         </div>
-        <div class="mpList" id="mpRoomList">
-          <div class="mpEmpty">🔎 Searching for open rooms on network…</div>
-        </div>
-        <div id="mpRoomDetail" class="mpRoomDetail" style="display:none"></div>
-      </div>
-
-      <!-- Section 2: Online Racers -->
-      <div id="mpSectionPlayers" class="mpSection">
-        <div class="mpSectionHead">
-          <div class="mpSecTitle" id="lblMpSecPlayers">👥 Racers in Lobby</div>
-        </div>
-        <div class="mpList" id="mpPlayerList">
-          <div class="mpEmpty">Loading players…</div>
+        <div class="mpBrowseCol mpDetailCol">
+          <div class="mpSecTitle" id="lblMpSecPlayers">👥 Racers <span class="mpBadgeCount" id="mpPlayerCount">1</span></div>
+          <div id="mpRoomDetail" class="mpRoomDetail"></div>
         </div>
       </div>
 
-      <!-- Section 3: Lobby Chat -->
-      <div id="mpSectionChat" class="mpSection">
-        <div class="mpSectionHead">
-          <div class="mpSecTitle" id="lblMpSecChat">💬 Lobby Chat</div>
-        </div>
+      <!-- Floating lobby chat dock (collapsed bar → expands upward) -->
+      <div id="mpChatDock" class="mpChatDock">
+        <button id="mpChatDockBar" class="mpChatDockBar" type="button">
+          <span class="mpChatDockIco">💬</span>
+          <span id="mpChatDockLast" class="mpChatDockLast">Lobby chat</span>
+          <span id="mpChatDockUnread" class="mpChatDockUnread" style="display:none">0</span>
+          <span class="mpChatDockArrow">▲</span>
+        </button>
         <div class="mpChatBox" id="mpLobbyChatBox">
           <div class="mpChatMessages" id="mpLobbyChatMessages">
             <div class="mpChatEmpty">💬 Welcome to multiplayer chat! Say hi to racers.</div>
           </div>
-          <div class="mpQuickChatPills" id="mpQuickChatPills"></div>
           <div class="mpChatInputRow">
             <input id="mpChatIn" placeholder="Type a message…" maxlength="50" autocomplete="off" />
             <button id="btnMpChatSend" class="mpBtnChatSend" title="Send">➤</button>
@@ -5093,24 +5058,15 @@ function applyLang(l){
   if($("btnMpCreateModalOpen")) $("btnMpCreateModalOpen").textContent = tr.mpNewRoomBtn;
   const rc = $("mpRoomCount") ? $("mpRoomCount").textContent : "0";
   const pc = $("mpPlayerCount") ? $("mpPlayerCount").textContent : "1";
-  if($("mpTabAll")) $("mpTabAll").textContent = tr.mpTabAll;
-  if($("mpTabRooms")) $("mpTabRooms").innerHTML = tr.mpTabRooms + ' <span class="mpBadgeCount" id="mpRoomCount">' + rc + '</span>';
-  if($("mpTabPlayers")) $("mpTabPlayers").innerHTML = tr.mpTabPlayers + ' <span class="mpBadgeCount" id="mpPlayerCount">' + pc + '</span>';
-  if($("mpTabChat")) $("mpTabChat").textContent = tr.mpTabChat;
-  if($("lblMpSecRooms")) $("lblMpSecRooms").textContent = tr.mpTabRooms;
-  if($("lblMpSecPlayers")) $("lblMpSecPlayers").textContent = tr.mpTabPlayers;
-  if($("lblMpSecChat")) $("lblMpSecChat").textContent = tr.mpTabChat;
-  if($("btnMpToggleCode")) $("btnMpToggleCode").textContent = tr.mpCodeToggle;
-  if($("mpCodeIn")) $("mpCodeIn").placeholder = tr.mpCodePlaceholder;
-  if($("btnMpJoin")) $("btnMpJoin").textContent = tr.mpJoinRoomBtn;
-  if($("mpCodeInline") && $("mpCodeInline").querySelector(".mpCodeLabel")) $("mpCodeInline").querySelector(".mpCodeLabel").textContent = tr.mpCodeLabel;
+  if($("lblMpSecRooms")) $("lblMpSecRooms").innerHTML = tr.mpSecRooms + ' <span class="mpBadgeCount" id="mpRoomCount">' + rc + '</span>';
+  if($("lblMpSecPlayers")) $("lblMpSecPlayers").innerHTML = tr.mpSecRacers + ' <span class="mpBadgeCount" id="mpPlayerCount">' + pc + '</span>';
+  if($("mpChatDockLast") && !$("mpChatDockLast").dataset.msg) $("mpChatDockLast").textContent = tr.mpChatDockTitle;
   if($("btnMpSettings")) { $("btnMpSettings").title = tr.mpSettingsBtn; $("btnMpSettings").setAttribute("aria-label", tr.mpSettingsBtn); }
   if($("btnMpBrowseLobby")) $("btnMpBrowseLobby").textContent = tr.mpBrowseLobby;
   if($("btnMpReturnRoom")) $("btnMpReturnRoom").textContent = tr.mpReturnToRoom;
   if($("mpChatIn")) $("mpChatIn").placeholder = tr.mpChatPlaceholder;
   if($("mpRoomChatIn")) $("mpRoomChatIn").placeholder = tr.mpRoomChatPlaceholder;
   if($("mpRoomChatEmpty")) $("mpRoomChatEmpty").textContent = tr.mpRoomChatEmpty;
-  if($("mpQuickChatPills")) mpInitQuickChatPills();
 
   // Create Modal in Multiplayer
   const mTitle = $("mpCreateModal")?.querySelector(".mpModalTitle");
@@ -13366,43 +13322,7 @@ function mpSendLobbyChat(rawText){
   mpAppendLobbyChatMessage(msg);
 }
 
-function mpInitQuickChatPills(){
-  const pillsBox = $("mpQuickChatPills");
-  if(!pillsBox) return;
-  const isEn = (save.lang === "en");
-  const pills = isEn
-    ? ["👋 Hi!", "🏎️ Anyone race?", "⚡ Join me!", "👍 Ready!", "🔥 Let's go!"]
-    : ["👋 Živjo!", "🏎️ Kdo za dirko?", "⚡ Pridruži se!", "👍 Pripravljen!", "🔥 Gremo!"];
-  pillsBox.innerHTML = "";
-  pills.forEach(p => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "mpQuickPill";
-    btn.textContent = p;
-    btn.addEventListener("click", () => {
-      Snd.click && Snd.click();
-      mpSendLobbyChat(p);
-    });
-    pillsBox.appendChild(btn);
-  });
-}
-
-function mpSwitchTab(tab){
-  mpLobby.activeTab = tab;
-  if($("mpTabAll")) $("mpTabAll").classList.toggle("sel", tab === "all");
-  if($("mpTabRooms")) $("mpTabRooms").classList.toggle("sel", tab === "rooms");
-  if($("mpTabPlayers")) $("mpTabPlayers").classList.toggle("sel", tab === "players");
-  if($("mpTabChat")) $("mpTabChat").classList.toggle("sel", tab === "chat");
-
-  if($("mpSectionRooms")) $("mpSectionRooms").style.display = (tab === "all" || tab === "rooms") ? "flex" : "none";
-  if($("mpSectionPlayers")) $("mpSectionPlayers").style.display = (tab === "all" || tab === "players") ? "flex" : "none";
-  if($("mpSectionChat")) $("mpSectionChat").style.display = (tab === "all" || tab === "chat") ? "flex" : "none";
-
-  mpRenderLobbyUI();
-}
-
 const mpLobby = {
-  activeTab: "all",
   selected: null,      // "lobby" | advertised room id; null = nothing open (phones)
   userPicked: false,   // false → keep auto-selecting the fullest joinable room
   rooms: [],
@@ -13486,65 +13406,35 @@ function mpRenderLobbyUI(){
   if(!narrow && !mpLobby.selected) mpLobby.selected = "lobby";
 
   const rList = $("mpRoomList");
-  // Don't rebuild rooms while the player is typing a private-room code (heartbeats re-render every 2.5s)
-  if(rList && (!document.activeElement || document.activeElement.id !== "mpPrivCodeIn")){
-    rList.innerHTML = "";
-    const lobbyCount = allPlayers.filter(p => p.isMe ? !mp : !p.inRoom).length;
-    rList.appendChild(mpRoomRow("lobby", "🌐", isEn ? "Lobby" : "Lobi",
-      isEn ? (lobbyCount === 1 ? "1 racer waiting" : lobbyCount + " racers waiting") : (lobbyCount + " čaka v lobiju"),
-      String(lobbyCount), false, "#3dff8e"));
-    roomsList.forEach(rm => {
-      const isFull = (rm.players | 0) >= (rm.max || 4);
-      const lapsText = rm.laps + (isEn ? (rm.laps === 1 ? ' lap' : ' laps') : ' kr.');
-      const meta = esc(mpTrackName(rm.track | 0)) + (rm.mode === "wc" ? " · 🏆" : "") + " · " + esc(lapsText) + " · " + (rm.ai ? rm.ai + " AI" : (isEn ? "no AI" : "brez AI"));
-      rList.appendChild(mpRoomRow(rm.id, rm.isPublic === false ? "🔒" : "🏁", esc(rm.title || "Room"), meta,
-        isFull ? (isEn ? "Full" : "Polno") : ((rm.players | 0) + "/" + (rm.max || 4)), isFull, rm.color));
-    });
-    if(!roomsList.length){
-      const e = document.createElement("div");
-      e.className = "mpEmpty";
-      e.textContent = isEn ? "No rooms yet — create one!" : "Še ni sob — ustvari svojo!";
-      rList.appendChild(e);
-    }
-  }
+  if(!rList) return;
+  // Don't rebuild while the player is typing a private-room code (heartbeats re-render every 2.5s)
+  if(document.activeElement && document.activeElement.id === "mpPrivCodeIn") return;
 
-  // Populate Racers in Lobby (#mpPlayerList)
-  const pList = $("mpPlayerList");
-  if(pList){
-    pList.innerHTML = "";
-    if(!allPlayers.length){
-      const e = document.createElement("div");
-      e.className = "mpEmpty";
-      e.textContent = isEn ? "No racers online" : "Ni dirkačev na spletu";
-      pList.appendChild(e);
-    } else {
-      allPlayers.forEach(p => {
-        const item = document.createElement("div");
-        item.className = "mpPlayerItem";
-        const extraBtn = p.isMe ? '' : '<button class="mpBtnAction mpChallengeBtn" data-name="' + esc(p.name) + '">' + (isEn ? '⚔️ Challenge' : '⚔️ Izzovi') + '</button>';
-        item.innerHTML = '<div class="mpPlayerLeft">'
-          + '<div class="mpPlayerAvatar" style="background:' + mpSafeColor(p.color, '#3dff8e') + '"></div><div>'
-          + '<div class="mpPlayerName">' + esc(p.name || "Racer") + (p.isMe ? ' <span style="opacity:.6">' + (isEn ? '(YOU)' : '(TI)') + '</span>' : '') + '</div>'
-          + '<div class="mpPlayerRank">🎖️ ' + esc(p.rank || "Racer") + (p.status ? ' · ' + esc(p.status) : '') + '</div></div></div>'
-          + extraBtn;
-        pList.appendChild(item);
-      });
-      pList.querySelectorAll(".mpChallengeBtn").forEach(b => b.addEventListener("click", (e) => {
-        e.stopPropagation(); Snd.click && Snd.click();
-        openCreateRoomModal((isEn ? "Challenge: " : "Izziv: ") + b.dataset.name);
-      }));
-    }
+  rList.innerHTML = "";
+  const lobbyCount = allPlayers.filter(p => p.isMe ? !mp : !p.inRoom).length;
+  rList.appendChild(mpRoomRow("lobby", "🌐", isEn ? "Lobby" : "Lobi",
+    isEn ? (lobbyCount === 1 ? "1 racer waiting" : lobbyCount + " racers waiting") : (lobbyCount + " čaka v lobiju"),
+    String(lobbyCount), false, "#3dff8e"));
+  roomsList.forEach(rm => {
+    const isFull = (rm.players | 0) >= (rm.max || 4);
+    const lapsText = rm.laps + (isEn ? (rm.laps === 1 ? ' lap' : ' laps') : ' kr.');
+    const meta = esc(mpTrackName(rm.track | 0)) + (rm.mode === "wc" ? " · 🏆" : "") + " · " + esc(lapsText) + " · " + (rm.ai ? rm.ai + " AI" : (isEn ? "no AI" : "brez AI"));
+    rList.appendChild(mpRoomRow(rm.id, rm.isPublic === false ? "🔒" : "🏁", esc(rm.title || "Room"), meta,
+      isFull ? (isEn ? "Full" : "Polno") : ((rm.players | 0) + "/" + (rm.max || 4)), isFull, rm.color));
+  });
+  if(!roomsList.length){
+    const e = document.createElement("div");
+    e.className = "mpEmpty";
+    e.textContent = isEn ? "No rooms yet — create one!" : "Še ni sob — ustvari svojo!";
+    rList.appendChild(e);
   }
 
   // Details: own column on wide screens, inline under the selected row on phones
   const detailCol = $("mpRoomDetail");
   const detail = mpLobby.selected ? mpRenderRoomDetail(mpLobby.selected) : null;
-  if(detailCol){
-    detailCol.innerHTML = "";
-    detailCol.style.display = (detail && !narrow) ? "block" : "none";
-  }
+  if(detailCol) detailCol.innerHTML = "";
   if(detail){
-    if(narrow && rList){
+    if(narrow){
       const row = rList.querySelector('.mpRoomItem[data-id="' + CSS.escape(mpLobby.selected) + '"]');
       if(row) row.after(detail);
     } else if(detailCol){
@@ -14059,8 +13949,6 @@ function openMP(preserveSession = false){
   if(rk) rk.textContent = "🎖️ " + playerTitle();
 
   setScreen("mpHome");
-  mpInitQuickChatPills();
-  mpSwitchTab("all");
   mpRenderLobbyChatFeed();
   mpToggleChatDock(false);
 
@@ -16481,48 +16369,6 @@ function bindUI(){
   $("btnMpConfirmCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpCreateRoom(); });
   $("btnMpCancelCreate").addEventListener("click",()=>{ Snd.click&&Snd.click(); closeCreateRoomModal(); });
   if($("mpChatDockBar")) $("mpChatDockBar").addEventListener("click",()=>{ Snd.click&&Snd.click(); mpToggleChatDock(); });
-
-  // Lobby navigation tabs
-  if($("mpTabAll")) $("mpTabAll").addEventListener("click", () => { Snd.click && Snd.click(); mpSwitchTab("all"); });
-  if($("mpTabRooms")) $("mpTabRooms").addEventListener("click", () => { Snd.click && Snd.click(); mpSwitchTab("rooms"); });
-  if($("mpTabPlayers")) $("mpTabPlayers").addEventListener("click", () => { Snd.click && Snd.click(); mpSwitchTab("players"); });
-  if($("mpTabChat")) $("mpTabChat").addEventListener("click", () => { Snd.click && Snd.click(); mpSwitchTab("chat"); });
-
-  // Direct room code input toggle & join
-  if($("btnMpToggleCode")){
-    $("btnMpToggleCode").addEventListener("click", () => {
-      Snd.click && Snd.click();
-      const box = $("mpCodeInline");
-      if(box){
-        const isHidden = (box.style.display === "none" || !box.style.display);
-        box.style.display = isHidden ? "block" : "none";
-        if(isHidden && $("mpCodeIn")){
-          $("mpCodeIn").focus();
-        }
-      }
-    });
-  }
-  const handleLobbyJoinCode = () => {
-    const inp = $("mpCodeIn");
-    if(!inp) return;
-    const code = (inp.value || "").trim().toUpperCase();
-    if(code.length < 4){
-      const isEn = (save.lang === "en");
-      showBanner(isEn ? "Enter a valid room code." : "Vpiši veljavno kodo sobe.", 2000, true);
-      inp.focus();
-      return;
-    }
-    Snd.click && Snd.click();
-    inp.blur();
-    mpJoinByCode(code);
-  };
-  if($("btnMpJoin")) $("btnMpJoin").addEventListener("click", handleLobbyJoinCode);
-  if($("mpCodeIn")) $("mpCodeIn").addEventListener("keydown", (e) => {
-    if(e.key === "Enter"){
-      e.preventDefault();
-      handleLobbyJoinCode();
-    }
-  });
   // Rooms/details switch between two columns and inline (phones) when the window is resized
   let _mpNarrow = mpLobbyNarrow();
   window.addEventListener("resize",()=>{
