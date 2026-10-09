@@ -101,4 +101,25 @@ test.describe('Buddies', () => {
     await page.waitForTimeout(300);
     await expect(page.locator('#buddyToast')).toBeHidden();
   });
+
+  test('Duplicate buddy entries with the same name are deduplicated on the Buddies leaderboard', async ({ page }) => {
+    await bootWithSave(page, Object.assign({}, ME, { trackBest: { 1: 40.0 } }));
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    // Simulate two buddy accounts with the exact same player name "PeRcPiskot", one with a time and one without
+    await page.evaluate(() => {
+      save.buddyCache = {
+        p_perc1: { name: 'PeRcPiskot', flag: '🇬🇧' },
+        p_perc2: { name: 'PeRcPiskot', flag: '🇸🇮' }
+      };
+      window.buddyLoadList = async () => ['p_perc1', 'p_perc2'];
+      window.buddyBestTimes = async (t, list) => ({ p_ana123: 40.0, p_perc2: 38.5 });
+    });
+    await page.evaluate(() => { currentLbTrack = 1; openLeaderboard('buddies'); });
+    // Expect 2 rows: 1 for user Ana and 1 for PeRcPiskot (the faster one), not 3 rows
+    await expect(page.locator('#lbList .lbRow')).toHaveCount(2);
+    const rows = await page.locator('#lbList .lbRow').allInnerTexts();
+    expect(rows[0]).toContain('PeRcPiskot');
+    expect(rows[0]).toContain('−1.50s');
+    expect(rows[1]).toContain('Ana');
+  });
 });
