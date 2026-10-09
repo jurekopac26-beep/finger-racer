@@ -111,3 +111,105 @@ test.describe('Account: save my progress', () => {
     expect(await page.evaluate(() => save.accPromptedBuddy)).toBe(true);
   });
 });
+
+// ---- When "Save my progress" is suggested (never on first launch) ----
+test.describe('Save-progress suggestions', () => {
+
+  // Results screen with Firestore + auth simulated (no network): an empty leaderboard, a not-signed-in player
+  async function setupResults(page, extraSave = {}) {
+    await bootWithSave(page, Object.assign({}, ME, extraSave));
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    await page.evaluate(() => {
+      const empty = { size: 0, docs: [], empty: true, forEach() {} };
+      const q = { where: () => q, orderBy: () => q, limit: () => q, get: async () => empty };
+      db = { collection: () => ({ doc: () => ({ collection: () => q }) }) };
+      fbAuth = { currentUser: { isAnonymous: true } };
+      setScreen('results');
+    });
+  }
+  // One finished race: t vs previous best (t < prev → personal best)
+  const race = (page, t, prev) => page.evaluate(async ({ t, prev }) => {
+    document.getElementById('resGlobal').innerHTML = '';
+    await showGlobalRankCard(1, t, prev);
+    return !!document.querySelector('#resGlobal .rgSave');
+  }, { t, prev });
+  const skipDay = (page) => page.evaluate(() => { save.accNudge.lastShown = 0; });
+
+  test('First personal best shows the save card; Save opens the sign-in modal', async ({ page }) => {
+    await setupResults(page);
+    expect(await race(page, 40, 41)).toBe(true);
+    await expect(page.locator('#resGlobal .rgSave')).toContainText('New record');
+    await page.click('#resGlobal .rsSave');
+    await expect(page.locator('#accModal')).toBeVisible();
+    await expect(page.locator('#accTitle')).toContainText('KEEP YOUR RECORDS');
+  });
+
+  test('After "Not now": shown again on the 3rd PB, and never more than 3 times', async ({ page }) => {
+    await setupResults(page);
+    expect(await race(page, 50, 51)).toBe(true);           // 1st PB → shown (1)
+    await page.click('#resGlobal .rsLater');
+    await expect(page.locator('#resGlobal .rgSave')).toHaveCount(0);
+    const seen = [];
+    let t = 49;
+    for (let i = 0; i < 9; i++) { await skipDay(page); seen.push(await race(page, t, t + 0.5)); t -= 1; }
+    // PB #2,#3 no · #4 yes (2) · #5,#6 no · #7 yes (3) · then never again
+    expect(seen).toEqual([false, false, true, false, false, true, false, false, false]);
+  });
+
+  test('Not shown for signed-in players, for a race that is not a PB, or twice within 24 h', async ({ page }) => {
+    await setupResults(page);
+    expect(await race(page, 42, 41)).toBe(false);          // slower than best → no PB
+    expect(await race(page, 40, 41)).toBe(true);           // PB → shown
+    for (let i = 0; i < 3; i++) expect(await race(page, 39 - i, 40 - i)).toBe(false);   // 3 more PBs, same day → none
+    await page.evaluate(() => { fbAuth = { currentUser: { isAnonymous: false, email: 'a@b.c', providerData: [] } }; save.accNudge = null; });
+    expect(await race(page, 30, 31)).toBe(false);          // signed in → never
+  });
+
+  test('Fresh first launch: no sign-in modal or save card anywhere', async ({ page }) => {
+    await page.goto(FILE_URL);
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(FILE_URL);
+    await page.waitForTimeout(6000);                         // boot, intro/tutorial, buddy checks…
+    await expect(page.locator('#accModal')).toBeHidden();
+    await expect(page.locator('.rgSave')).toHaveCount(0);
+  });
+
+  test('Buddies tab shows a passive save hint only while not signed in', async ({ page }) => {
+    await bootWithSave(page, ME);
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    await page.evaluate(() => { fbAuth = { currentUser: { isAnonymous: true } }; window.buddyLoadList = async () => []; openLeaderboard('buddies'); });
+    await expect(page.locator('.bdSaveHint')).toBeVisible();
+    await page.click('.bdSaveHint');
+    await expect(page.locator('#accModal')).toBeVisible();
+    await expect(page.locator('#accTitle')).toContainText("DON'T LOSE YOUR BUDDIES");
+    await page.click('#btnAccClose');
+    await page.evaluate(() => { fbAuth = { currentUser: { isAnonymous: false, email: 'a@b.c', providerData: [] } }; openLeaderboard('buddies'); });
+    await page.waitForTimeout(300);
+    await expect(page.locator('.bdSaveHint')).toHaveCount(0);
+  });
+
+  test('Finishing a World Cup shows the save card on the final standings, only once', async ({ page }) => {
+    await bootWithSave(page, ME);
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    // A finished cup, built like startWC() does
+    const finalCup = () => page.evaluate(() => {
+      fbAuth = { currentUser: { isAnonymous: true } };
+      const ents = [];
+      for (let k = 0; k < 5; k++) ents.push({ name: NAMES[k], color: COLORS[k], me: false });
+      ents.push({ name: 'Ana', color: '#3dff8e', me: true });
+      wc = { name: 'Ana', race: WC_TRACKS.length - 1, order: WC_TRACKS.slice(), pts: [10, 8, 6, 4, 2, 12], ents,
+        recs: WC_TRACKS.map(() => ({ time: 60 })), done: WC_TRACKS.length, finalShown: true,
+        stats: { pits: 0, dmg: 0, draftRep: 0, pitRep: 0, wins: 1, podiums: 2, crashes: 0, bestLap: null, bestLapName: null, bestTime: null, bestPos: 1 } };
+      showWCStand(true, null);
+      return !!document.querySelector('#wcRecords .rgSave');
+    });
+    expect(await finalCup()).toBe(true);
+    await expect(page.locator('#wcStand')).toHaveClass(/on/);
+    await expect(page.locator('#wcRecords .rgSave')).toContainText('Cup finished');
+    await page.click('#wcRecords .rsSave');
+    await expect(page.locator('#accTitle')).toContainText('KEEP YOUR CUP PROGRESS');
+    await page.click('#btnAccClose');
+    await page.evaluate(() => { save.accNudge.lastShown = 0; });   // even a day later…
+    expect(await finalCup()).toBe(false);                        // …the cup card never shows twice
+  });
+});
