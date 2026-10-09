@@ -284,11 +284,11 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 }
 /* ---------- Leaderboard ---------- */
 .lbPanel{display:flex;flex-direction:column;height:calc(100dvh - 40px);max-height:760px;margin:0 auto}
-.lbHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
-.lbHead h1{flex:1;min-width:0;font-size:clamp(18px,6vw,26px)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
-.lbSide{display:flex;gap:6px;flex:none}
-.lbIco{width:38px;height:38px;border-radius:50%;border:1px solid rgba(244,239,227,.3);background:rgba(244,239,227,.1);
-  font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.lbHead{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:44px}
+.lbHead h1{flex:1;min-width:0;font-size:clamp(15px,4.5vw,24px)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;letter-spacing:-.01em}
+.lbSide{display:flex;gap:5px;flex:none}
+.lbIco{width:36px;height:36px;border-radius:50%;border:1px solid rgba(244,239,227,.3);background:rgba(244,239,227,.1);
+  font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .lbIco:active{transform:translateY(2px)}
 .lbSeg{display:flex;padding:4px;gap:4px;border-radius:12px;background:rgba(10,12,9,.8);border:1px solid rgba(244,239,227,.16);margin-bottom:10px}
 .lbSegBtn{flex:1;border:none;border-radius:9px;padding:11px 6px;background:transparent;color:#cfd8bd;
@@ -2030,7 +2030,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
     <div class="panel wide lbPanel">
       <div class="lbHead">
         <button class="topBackBtn" id="btnLbBackTop" aria-label="Back"><span class="tbbIco">←</span><span class="tbbTxt">Back</span></button>
-        <h1 class="disp" id="leaderboardTitleH" style="font-size:26px"><span>Lestvica</span> 🏆</h1>
+        <h1 class="disp" id="leaderboardTitleH"><span>Lestvica</span> 🏆</h1>
         <div class="lbSide">
           <button class="lbIco" id="btnCareerLb" title="Moja kariera" aria-label="Moja kariera">📊</button>
           <button class="lbIco" id="btnLbAch" title="Dosežki" aria-label="Dosežki">🏅</button>
@@ -2370,7 +2370,8 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <b>4.</b> Pri <b>100&nbsp;%</b> motor <b>EKSPLODIRA</b> 💥 in dirke je zate konec (odstop). Če <b>dvigneš prst</b>, je nesreča — prst drži <b>1&nbsp;sekundo</b> na označenem mestu. Če zapelješ <b>predaleč s proge</b>, pa čakanja ni: prst samo postaviš na točko, <b>kjer si zapustil cesto</b>, in takoj nadaljuješ.<br>
         <b>5.</b> <b>Dotik tekmeca</b>: oba vibrirata in <b>oba rasteta</b>, dokler se ne razideta — prehitevaj previdno! Tudi tekmeci delajo napake, rastejo in hodijo v bokse.<br>
         <b>6.</b> <span class="k" style="color:#4da3ff">BOKSI 🔧</span> — moder pas ob <b>eni strani</b> ceste pred ciljem: dokler si na njem, se vozilo počasi <b>popravlja</b>. Za polno popravilo upočasni ali se ustavi — a pazi, tekmeci medtem vozijo!<br>
-        <b>7.</b> Prevozi <b>6 krogov</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Tekmeci so različno dobri — najboljši je hud oreh že na prvem levelu, zmaga pa je stvar prestiža. 🏆
+        <b>7.</b> <span class="k" style="color:#38bdf8">ZAVETRJE 💨</span> — vožnja <b>tik za tekmecem</b> prinaša hitro popravilo (zelena/modra avra in zračne črte). Če iz zavetrja tekmeca <b>prehitiš</b>, izvedeš <b>Slingshot</b> s takojšnjim dodatnim <b>+28 % popravilom</b> in pospeškom!<br>
+        <b>8.</b> Prevozi <b>vse kroge</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Tekmeci so različno dobri — najboljši je hud oreh že na prvem levelu, zmaga pa je stvar prestiža. 🏆
       </div>
       <div style="display:flex;gap:10px;margin-top:10px;width:100%;padding:0 4px;box-sizing:border-box;">
         <button class="btn primary small disp" id="btnHelpReplayIntro" style="flex:1"><span>🎬 Interactive Intro</span></button>
@@ -3177,7 +3178,22 @@ const Snd={
     this.beep(150+45*Math.min(2,sev),.07,"square",.13);
     this.beep(85,.10,"triangle",.10,.008); },
   pit(){ this.beep(1240,.05,"square",.08); this.beep(1560,.06,"square",.07,.05); },
-  draft(){ this.beep(880,.05,"triangle",.06); this.beep(1180,.05,"triangle",.05,.04); },
+  draft(isFull){
+    if(isFull){
+      this.beep(880,.04,"sine",.08);
+      this.noiseBand(.06,.04,1400,700);
+    } else {
+      this.beep(980,.06,"sine",.14);
+      this.beep(1320,.07,"triangle",.12,.03);
+      this.noiseBand(.08,.06,1200,600);
+    }
+  },
+  slingshot(){
+    this.noiseBand(.22,.20,2200,400);
+    this.beep(520,.10,"sawtooth",.15);
+    this.beep(880,.14,"square",.18,.04);
+    this.beep(1320,.18,"sine",.20,.10);
+  },
   screech(sev){ this.noiseBand(.12,.035+.05*Math.min(1,sev),1400+900*Math.min(1,sev),700); },
   skid(sev){ this.noiseBand(.12,.04+.06*Math.min(1,sev),1400,700); },  // cviljenje pnevmatik  // servis v zavetrju
   fixed(){ this.beep(880,.09,"square",.12); this.beep(1320,.11,"square",.12,.09); this.beep(1760,.16,"square",.11,.2); },  // 100% popravljen
@@ -3476,7 +3492,7 @@ async function buddyLoadList(force){
   if(!await buddyAuthReady()){ return _buddyIds || (save.buddyCache ? Object.keys(save.buddyCache) : []); }
   try{
     const snap = await db.collection("players").doc(save.uid).collection("buddies").get();
-    _buddyIds = snap.docs.map(d => d.id).filter(id => BUDDY_RE.test(id) && id !== save.uid);
+    _buddyIds = Array.from(new Set(snap.docs.map(d => d.id).filter(id => BUDDY_RE.test(id) && id !== save.uid)));
     await buddyLoadProfiles(_buddyIds);
     try{ buddyNetStart(); buddyNetSync(); buddyRenderOnline(); }catch(e){}   // who's online + challenges
     return _buddyIds;
@@ -4230,12 +4246,91 @@ let bgC,fgC,bg,fg;
 let W=0,H=0,dpr=1,scale=1,offX=0,offY=0,followCam=false,camScaleFixed=null,camZoomMul=1.85;
 let trackImg=null;
 
+let _currentScreenId = "menu";
+let _screenNavHistory = [];
+let _navFromPopstate = false;
+
+function handleAppBack(){
+  // 1. Close open modals / overlays if open
+  const pm = $("paywallModal");
+  if(pm && pm.style.display !== "none" && pm.style.display !== ""){ closePaywall(); return true; }
+  const cpm = $("countryPickerModal");
+  if(cpm && cpm.style.display !== "none" && cpm.style.display !== ""){ closeCountryPickerModal(); return true; }
+  const am = $("accModal");
+  if(am && am.style.display !== "none" && am.style.display !== ""){ closeAccModal(); return true; }
+  const crm = $("createRoomModal");
+  if(crm && crm.style.display !== "none" && crm.style.display !== ""){ closeCreateRoomModal(); return true; }
+  if(_shareCtx){ closeMpShareSheet(); return true; }
+
+  // 2. If in active race, pause game
+  if(state === "racing" || state === "countdown" || state === "rejoin"){
+    pauseGame();
+    return true;
+  }
+
+  // 3. Screen back mappings
+  const cur = _currentScreenId || "menu";
+  if(cur === "menu") return false;
+
+  const screenBackMap = {
+    settings: () => { $("btnSetBackTop")?.click() || $("btnSetBack")?.click() || setScreen("menu"); },
+    singlePick: () => { $("btnSingleBackTop")?.click() || $("btnSingleBack")?.click() || setScreen("menu"); },
+    ttOpp: () => { $("btnTTOppBackTop")?.click() || $("btnTTOppBack")?.click() || openSingle(); },
+    training: () => { $("btnTrainBackTop")?.click() || $("btnTrainBack")?.click() || setScreen("menu"); },
+    trainInfo: () => { $("btnTrainInfoBackTop")?.click() || $("btnTrainInfoBack")?.click() || openTraining(trainBackScreen); },
+    wcName: () => { $("btnWCNameBackTop")?.click() || $("btnWCNameBack")?.click() || setScreen("menu"); },
+    wcPreview: () => { $("btnWCPrevBackTop")?.click() || $("btnWCPrevBack")?.click() || setScreen("wcName"); },
+    mpHome: () => { $("btnMpBackTop")?.click() || $("btnMpBack")?.click() || setScreen("menu"); },
+    mpLobby: () => { $("btnMpLeaveTop")?.click() || $("btnMpLeave")?.click() || setScreen("mpHome"); },
+    achScreen: () => { $("btnAchBackTop")?.click() || $("btnAchBack")?.click() || setScreen(achBackScreen || "leaderboard"); },
+    clevels: () => { $("btnCareerBackTop")?.click() || $("btnCareerBack")?.click() || setScreen("menu"); },
+    cinfo: () => { $("btnCiBack")?.click() || openCareer(); },
+    garage: () => { $("btnGarageBackTop")?.click() || $("btnGarageBack")?.click() || openCareer(); },
+    career: () => { $("btnCareerStatsBackTop")?.click() || $("btnCareerStatsBack")?.click() || setScreen(careerStatsFrom || "leaderboard"); },
+    leaderboard: () => { $("btnLbBackTop")?.click() || $("btnLbBack")?.click() || setScreen(lbFrom || "menu"); },
+    levels: () => { $("btnBack1Top")?.click() || $("btnBack1")?.click() || setScreen("menu"); },
+    help: () => { $("btnBack2Top")?.click() || $("btnBack2")?.click() || setScreen("menu"); },
+    intro: () => { introDone(); },
+    tutorial: () => { toMenu(); },
+    pause: () => { $("btnMenu1")?.click() || toMenu(); },
+    results: () => { $("btnMenu2")?.click() || toMenu(); }
+  };
+
+  if(screenBackMap[cur]){
+    screenBackMap[cur]();
+    return true;
+  }
+  return false;
+}
+
+window.addEventListener("popstate", (e) => {
+  if(state === "racing" || state === "countdown" || state === "rejoin"){
+    pauseGame();
+    try{ history.pushState({ screen: "racing" }, ""); }catch(_){}
+    return;
+  }
+  const handled = handleAppBack();
+  if(!handled){
+    if(_currentScreenId !== "menu") setScreen("menu");
+  }
+});
+
 function setScreen(id){
   if(_shareCtx && _shareCtx.screen!==id) closeMpShareSheet();   // a share sheet belongs to the screen that opened it
   try{ setTimeout(buddyNetAnnounce, 0); }catch(e){}               // buddies see "in lobby / in a room / racing"
   // The global rank card belongs to the current results screen only (it survives a trip to the leaderboard)
   if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; if($("resWorld")) $("resWorld").style.display="none"; if($("resRaceHead")) $("resRaceHead").style.display="none"; }
   ["menu","levels","help","intro","wcName","wcPreview","singlePick","ttOpp","tutorial","career","leaderboard","wcRaceIntro","wcStand","settings","pause","results","loading","training","trainInfo","clevels","cinfo","repairQ","garage","achScreen","mpHome","mpLobby","langPicker"].forEach(s=>$(s)&&$(s).classList.toggle("on",s===id));
+
+  const prev = _currentScreenId;
+  _currentScreenId = id;
+  if(id !== "loading" && id !== prev){
+    try{
+      if(window.history && window.history.pushState){
+        history.pushState({ screen: id }, "");
+      }
+    }catch(_){}
+  }
 }
 
 const I18N = {
@@ -5221,7 +5316,8 @@ function applyLang(l){
       "<b>4.</b> At <b>100%</b> your engine <b>EXPLODES</b> 💥 and the race ends. If you lift your finger, hold for 1 second on the marker to resume. If you go off track, place your finger where you left the road to continue immediately.<br>" +
       "<b>5.</b> <b>Touching rivals</b> causes damage to both vehicles — overtake carefully! Rivals also make mistakes and pit.<br>" +
       "<b>6.</b> <span class=\"k\" style=\"color:#4da3ff\">PIT LANE 🔧</span> — blue strip on the side before the finish: stay on it to <b>repair</b> your vehicle. Slow down for full repairs!<br>" +
-      "<b>7.</b> Complete all laps and finish in the <b>top 3</b> to advance. 🏆"
+      "<b>7.</b> <span class=\"k\" style=\"color:#38bdf8\">SLIPSTREAM 💨</span> — tuck in <b>close behind a rival</b> to rapidly repair your vehicle (indicated by green/blue auras & streamlines). Overtaking from their pocket triggers a <b>Slingshot</b> with an instant <b>+28% repair boost</b>!<br>" +
+      "<b>8.</b> Complete all laps and finish in the <b>top 3</b> to advance. 🏆"
       :
       "<b>1.</b> Postavi prst na označeni krog <span class=\"k\">za ciljno črto</span>. Sledi odštevanje <b>3&nbsp;&middot;&nbsp;2&nbsp;&middot;&nbsp;1</b> — ob <span class=\"k\">START</span> začni voziti.<br>" +
       "<b>2.</b> S prstom drsi <span class=\"k\">po cesti</span> čim hitreje. Tvoj avto je barvni krogec pod prstom.<br>" +
@@ -5229,7 +5325,8 @@ function applyLang(l){
       "<b>4.</b> Pri <b>100&nbsp;%</b> motor <b>EKSPLODIRA</b> 💥 in dirke je zate konec (odstop). Če <b>dvigneš prst</b>, je nesreča — prst drži <b>1&nbsp;sekundo</b> na označenem mestu. Če zapelješ <b>predaleč s proge</b>, pa čakanja ni: prst samo postaviš na točko, <b>kjer si zapustil cesto</b>, in takoj nadaljuješ.<br>" +
       "<b>5.</b> <b>Dotik tekmeca</b>: oba vibrirata in <b>oba rasteta</b>, dokler se ne razideta — prehitevaj previdno! Tudi tekmeci delajo napake, rastejo in hodijo v bokse.<br>" +
       "<b>6.</b> <span class=\"k\" style=\"color:#4da3ff\">BOKSI 🔧</span> — moder pas ob <b>eni strani</b> ceste pred ciljem: dokler si na njem, se vozilo počasi <b>popravlja</b>. Za polno popravilo upočasni ali se ustavi — a pazi, tekmeci medtem vozijo!<br>" +
-      "<b>7.</b> Prevozi <b>6 krogov</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Tekmeci so različno dobri — najboljši je hud oreh že na prvem levelu, zmaga pa je stvar prestiža. 🏆";
+      "<b>7.</b> <span class=\"k\" style=\"color:#38bdf8\">ZAVETRJE 💨</span> — vožnja <b>tik za tekmecem</b> prinaša hitro popravilo (zelena/modra avra in zračne črte). Če iz zavetrja tekmeca <b>prehitiš</b>, izvedeš <b>Slingshot</b> s takojšnjim dodatnim <b>+28 % popravilom</b> in pospeškom!<br>" +
+      "<b>8.</b> Prevozi <b>vse kroge</b> in končaj <b>med prvimi 3</b>, da odkleneš naslednji level. Tekmeci so različno dobri — najboljši je hud oreh že na prvem levelu, zmaga pa je stvar prestiža. 🏆";
   }
 
   const introData = isEn ? [
@@ -5598,14 +5695,14 @@ const ANIM_CATS=[
   ["fx_squash","53. Stisk v ovinkih","Krožnik se rahlo raztegne in stisne v ostrih ovinkih (živ občutek).",1],
   ["fx_exhaust","54. Izpuh vozil","Rahlo migetanje/dim izpuha za vozili med vožnjo.",1],
   ["fx_draftwind","55. Vetrni tok v zavetrju","Črte zraka med tvojim in nasprotnikovim vozilom v zavetrju.",1],
-  ["fx_repaura","56. Aura popravila","Zeleni obroči okoli vozila, ko se popravljaš v zavetrju.",0],
-  ["57. Tresenje zaslona","Zaslon se strese ob trkih in nesrečah.",1],
-  ["58. Zvezdice ob trku","Zvezdice zakrožijo okoli omamljenega vozila po trku.",1],
+  ["fx_repaura","56. Aura popravila","Zeleni obroči okoli vozila, ko se popravljaš v zavetrju.",1],
+  ["fx_shake","57. Tresenje zaslona","Zaslon se strese ob trkih in nesrečah.",1],
+  ["fx_stars","58. Zvezdice ob trku","Zvezdice zakrožijo okoli omamljenega vozila po trku.",1],
   ["fx_crack","59. Razpoke ob trku","Ob močnem trku se po robovih zaslona pojavijo razpoke.",0],
-  ["60. Val udarca","Krožni sunek zraka se razširi ob eksploziji vozila.",1],
+  ["fx_shock","60. Val udarca","Krožni sunek zraka se razširi ob eksploziji vozila.",1],
   ["fx_heat","61. Migetanje vročine","Vroč zrak migeta nad asfaltom ob sončnem dnevu.",0],
   ["fx_leaves2","62. Plavajoče listje","Listje in cvetni prah plavata čez progo.",0],
-  ["63. Sence oblakov","Mehke sence oblakov drsijo čez progo.",1],
+  ["fx_clouds","63. Sence oblakov","Mehke sence oblakov drsijo čez progo.",1],
   ["fx_puddle","64. Lužice v dežju","Svetlikajoče lužice na progi med dežjem.",0],
   ["fx_mist","65. Jutranja meglica","Meglica ob robovih proge (vzdušje).",0],
   ["fx_combo","67. Combo prehitevanj","Animiran števec zaporednih prehitevanj.",0],
@@ -5625,11 +5722,12 @@ function applyAnimPreset(pk){
     else save.anim[k]=VIVID.includes(k);   // vivid
   }
 }
-const ANIM_DEFAULT=new Set(["finishline","pitdash","skid","spray","trees","barrels","bridge","rocks","explosion","confetti","fireworks","board","decor","smoke","leaves","crowdArms","windTrail","fx_curb","fx_dust","fx_squash","fx_exhaust","fx_draftwind","fx_barpulse"]);
+const ANIM_DEFAULT=new Set(["finishline","pitdash","skid","spray","trees","barrels","bridge","rocks","explosion","confetti","fireworks","board","decor","smoke","leaves","crowdArms","windTrail","fx_curb","fx_dust","fx_squash","fx_exhaust","fx_draftwind","fx_repaura","fx_barpulse"]);
 function ensureAnim(){ if(!save.anim) save.anim={}; for(const it of ANIM_CATS){ if(save.anim[it[0]]==null) save.anim[it[0]]=ANIM_DEFAULT.has(it[0]); }
   if(!save.animMigr2){ for(const k of ["trees","barrels","bridge","rocks","skid","leaves","smoke","windTrail"]) save.anim[k]=true; save.animMigr2=1; try{persist();}catch(e){} }
   if(!save.animMigr3){ for(const it of ANIM_CATS) save.anim[it[0]]=ANIM_DEFAULT.has(it[0]); save.animMigr3=1; save.animPreset=null; try{persist();}catch(e){} }
   if(!save.animMigr4){ for(const k of ["fx_shake","fx_stars","fx_shock","fx_clouds"]) save.anim[k]=false; save.animMigr4=1; save.animPreset=null; try{persist();}catch(e){} }
+  if(!save.animMigr5){ save.anim["fx_repaura"]=true; save.animMigr5=1; try{persist();}catch(e){} }
 }
 function animOn(k){ ensureAnim(); return !!save.anim[k]; }   // enak privzeti nabor za vse proge (brez samodejnega prepisa po levelih)
 function persist(){
@@ -7800,15 +7898,20 @@ function update(dt){
           draftHeat+=dt; draftOutT=0;
           if(_dKey!=="sc"&&_dKey!=="peer"&&draftHeat>=1) sling={car:draftCar,t:0};   // pripravljen na slingshot
         } else { draftOutT+=dt; if(draftOutT>=DRAFT_RECHARGE_T){ draftHeat=0; draftLeadKey=null; } }
-        if(draftOn&&player.dmg>0){
-          const isSC=_dKey==="sc";
-          const tow=(isSC||_dKey==="peer"||draftCar.isCoach)?1:draftTow(draftCar.curV);   // tutorial: učni tekmec vedno polno vleče
-          const rate=draftRate(draftDs,tow,isSC?0:draftHeat)*(isSC?1.8:1)*(fastFillDraftRace?2:1);   // varnostni avto: brez upada, hitreje
-          const before=player.dmg;
-          { const d=Math.min(player.dmg,rate*dt); player.dmg-=d; player.repDraft=(player.repDraft||0)+d; player.draftTime=(player.draftTime||0)+dt; }
-          draftSnd-=dt; if(draftSnd<=0){ draftSnd=0.30-0.23*(1-player.dmg); Snd.draft(); spawnFix(nx,ny,RAD*.8); }  // hitreje proti polnemu
-          if(before>0&&player.dmg<=0){ Snd.fixed(); }                  // 100% popravljen
+        if(draftOn){
+          if(player.dmg>0){
+            const isSC=_dKey==="sc";
+            const tow=(isSC||_dKey==="peer"||draftCar.isCoach)?1:draftTow(draftCar.curV);   // tutorial: učni tekmec vedno polno vleče
+            const rate=draftRate(draftDs,tow,isSC?0:draftHeat)*(isSC?1.8:1)*(fastFillDraftRace?2:1);   // varnostni avto: brez upada, hitreje
+            const before=player.dmg;
+            { const d=Math.min(player.dmg,rate*dt); player.dmg-=d; player.repDraft=(player.repDraft||0)+d; player.draftTime=(player.draftTime||0)+dt; }
+            draftSnd-=dt; if(draftSnd<=0){ draftSnd=0.28-0.20*(1-player.dmg); Snd.draft(false); spawnFix(nx,ny,RAD*.8); }  // hitreje proti polnemu
+            if(before>0&&player.dmg<=0){ Snd.fixed(); }                  // 100% popravljen
+          } else {
+            draftSnd-=dt; if(draftSnd<=0){ draftSnd=0.35; Snd.draft(true); }
+          }
         }
+        if(player._slingFlash>0) player._slingFlash=Math.max(0,player._slingFlash-dt);
         // SLINGSHOT: prehitel si avto, za katerim si vlekel -> takojšnje popravilo
         if(sling){
           const sc=sling.car;
@@ -7822,7 +7925,11 @@ function update(dt){
                 const d=Math.min(player.dmg,SLING_BONUS*draftTow(sc.curV)*(fastFillDraftRace?2:1));
                 player.dmg-=d; player.repDraft=(player.repDraft||0)+d;
               }
-              Snd.draft(); spawnFix(nx,ny,RAD); showComment("💨 "+(save.lang==="en"?"Slingshot!":"Slingshot iz zavetrja!"),0);
+              player._slingFlash=1.3;
+              if(Snd.slingshot) Snd.slingshot(); else Snd.draft(false);
+              spawnFix(nx,ny,RAD*1.4);
+              if(animOn("fx_shock")) fxShock(nx,ny);
+              showComment("💨 "+(save.lang==="en"?"Slingshot! +28% repaired":"Slingshot! +28% popravljeno"),0);
             }
           }
         }
@@ -7887,7 +7994,19 @@ function update(dt){
           bi.style.width=pc+"%";
           // zelena do 50%, nato prehod v rdečo
           const col = pc<=50 ? "#39d353" : (function(){ const f=(pc-50)/50; const r=Math.round(57+f*(255-57)), g=Math.round(211+f*(71-211)), bl=Math.round(83+f*(71-83)); return "rgb("+r+","+g+","+bl+")"; })();
-          bi.style.background=col; db.querySelector("span").textContent="Poškodba "+pc+"%"; } }
+          bi.style.background=col;
+          const isEn=(save.lang==="en");
+          if(draftOn){
+            db.querySelector("span").textContent=(isEn?"⚡ DRAFT REPAIR ":"⚡ POPRAVILO V ZAVETRJU ")+pc+"%";
+            db.style.boxShadow="0 0 14px 2px #3dff8e, inset 0 0 8px #3dff8e";
+            db.style.outline="1.5px solid #3dff8e";
+          } else {
+            db.querySelector("span").textContent=(isEn?"Damage ":"Poškodba ")+pc+"%";
+            db.style.boxShadow="";
+            db.style.outline="";
+          }
+        }
+      }
       const fb=$("fuelBar"); if(fb){ const show=(state==="racing"||state==="crashed");
         fb.style.display=show?"block":"none";
         if(show){ const fp=Math.round(Math.max(0,Math.min(1,player.fuel!=null?player.fuel:1))*100), fi=fb.querySelector("i");
@@ -8971,19 +9090,50 @@ function drawFXWorld(c,u,t){
       for(let k=0;k<8;k++){ c.rotate(6.28/8); c.beginPath(); c.moveTo(0,-RAD*u*8*0.7); c.lineTo(3*u*8,-RAD*u*8*1.5-8*u*8*Math.abs(Math.sin(t*2+k))); c.lineTo(-3*u*8,-RAD*u*8*1.5); c.closePath(); c.fill(); } c.restore(); }
   }
   // draft veter + repair aura sprožitev
-  if(draftOn&&draftCar){ if(animOn("fx_draftwind")){ const a=posAt(player.s,0), b2=posAt(draftCar.s,0); c.save(); c.globalAlpha=0.4; c.strokeStyle="rgba(210,235,255,.8)"; c.lineWidth=1.6*u;
-      for(let j=-1;j<=1;j++){ c.beginPath(); c.moveTo(a.x,a.y+j*6*u*8); c.quadraticCurveTo((a.x+b2.x)/2,(a.y+b2.y)/2+j*8*u*8,b2.x,b2.y+j*6*u*8); c.stroke(); } c.restore(); }
-    // ZELENI OBROČI okoli vozila v zavetrju (popravljanje)
-    { const tm=performance.now()/1000;   // zeleni obroči v zavetrju — vedno
+  if(draftOn&&draftCar){
+    if(animOn("fx_draftwind")){
+      const cx1 = player.x, cy1 = player.y;
+      const cx2 = draftCar.px != null ? draftCar.px : posAt(draftCar.s,0).x;
+      const cy2 = draftCar.py != null ? draftCar.py : posAt(draftCar.s,0).y;
+      const tm = performance.now()/1000;
       c.save();
-      for(let ri=0;ri<2;ri++){ const ph=(tm*0.9+ri*0.5)%1; const rr=(RAD*0.7+ph*RAD*0.9)*u*scale; // rastoč obroč
-        c.globalAlpha=0.55*(1-ph); c.strokeStyle="#3dff8e"; c.lineWidth=2.4*u;
-        c.beginPath(); c.arc(player.x,player.y,rr,0,6.28); c.stroke(); }
-      c.globalAlpha=0.9; c.strokeStyle="#7dffb0"; c.lineWidth=2.2*u;   // stalni notranji obroč
-      c.beginPath(); c.arc(player.x,player.y,RAD*0.62*u*scale,0,6.28); c.stroke();
+      c.globalAlpha = 0.65;
+      c.strokeStyle = "rgba(180,240,255,.85)";
+      c.lineWidth = 2.4*u;
+      c.setLineDash([8*u, 6*u]);
+      c.lineDashOffset = -tm * 180 * u;
+      for(let j=-1; j<=1; j++){
+        const perpX = -(cy2 - cy1), perpY = cx2 - cx1;
+        const pLen = Math.hypot(perpX, perpY) || 1;
+        const ox = (perpX/pLen) * j * 7 * u, oy = (perpY/pLen) * j * 7 * u;
+        c.beginPath();
+        c.moveTo(cx1 + ox, cy1 + oy);
+        c.lineTo(cx2 + ox*0.5, cy2 + oy*0.5);
+        c.stroke();
+      }
       c.restore();
     }
-    if(player.dmg>0) fxRepAura(player.x,player.y);
+    // ZELENI/MODRI OBROČI okoli vozila v zavetrju (popravljanje ali pripravljenost)
+    {
+      const tm = performance.now()/1000;
+      c.save();
+      const isFull = (player.dmg <= 0.005);
+      const ringCol = isFull ? "#38bdf8" : "#3dff8e";
+      for(let ri=0; ri<2; ri++){
+        const ph = (tm*1.1 + ri*0.5) % 1;
+        const rr = (RAD*0.65 + ph*RAD*1.0) * u * scale;
+        c.globalAlpha = 0.65 * (1 - ph);
+        c.strokeStyle = ringCol;
+        c.lineWidth = 2.6*u;
+        c.beginPath(); c.arc(player.x, player.y, rr, 0, 6.28); c.stroke();
+      }
+      c.globalAlpha = 0.95;
+      c.strokeStyle = isFull ? "#7dd3fc" : "#7dffb0";
+      c.lineWidth = 2.4*u;
+      c.beginPath(); c.arc(player.x, player.y, RAD*0.62*u*scale, 0, 6.28); c.stroke();
+      c.restore();
+    }
+    if(player.dmg>0) fxRepAura(player.x, player.y);
   }
 }
 function drawFXScreen(c,t){
@@ -9318,6 +9468,43 @@ function drawCore(){
           c.restore(); 
         }
         drawPlayerVehicle(c,player.x,player.y,Math.atan2(TYa[player.idx],TXa[player.idx]),pt.t,pt.d,playerColor(),Math.max(0,1-fr),fr,u);
+        if(draftOn && state==="racing"){
+          c.save();
+          const isEn = (save.lang === "en");
+          const isFull = (player.dmg <= 0.005);
+          const pillText = isFull ? (isEn ? "⚡ SLIPSTREAM READY" : "⚡ ZAVETRJE PRIPRAVLJENO") : (isEn ? "⚡ DRAFT REPAIR" : "⚡ ZAVETRJE POPRAVILO");
+          const pillY = player.y - RAD*1.15*u - 15*u;
+          c.font = "900 " + Math.max(9, Math.round(10.5*u)) + "px sans-serif";
+          const tw = c.measureText(pillText).width;
+          const pw = tw + 14*u, ph = 18*u;
+          c.fillStyle = isFull ? "rgba(10,24,38,0.92)" : "rgba(8,28,14,0.92)";
+          c.strokeStyle = isFull ? "#38bdf8" : "#3dff8e";
+          c.lineWidth = 1.8*u;
+          c.beginPath();
+          if(c.roundRect) c.roundRect(player.x - pw/2, pillY - ph/2, pw, ph, 8*u);
+          else c.rect(player.x - pw/2, pillY - ph/2, pw, ph);
+          c.fill(); c.stroke();
+          c.fillStyle = isFull ? "#7dd3fc" : "#86efac";
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          c.fillText(pillText, player.x, pillY);
+          c.restore();
+        }
+        if(player._slingFlash > 0 && state==="racing"){
+          c.save();
+          const sf = player._slingFlash;
+          const popY = player.y - RAD*1.35*u - (1.3 - sf)*30*u;
+          const popScale = 1 + (1.3 - sf)*0.18;
+          c.globalAlpha = Math.min(1, sf * 1.2);
+          c.font = "900 " + Math.round(13*u*popScale) + "px sans-serif";
+          c.shadowColor = "#ffd21f";
+          c.shadowBlur = 10*u;
+          c.fillStyle = "#fff";
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          c.fillText("💨 SLINGSHOT! +28%", player.x, popY);
+          c.restore();
+        }
         if(save.fingerOff==="rope" && state==="racing"){
           drawRope(c, player.x, player.y, pointer.x, pointer.y, u, pointer.down);
         }
@@ -10101,13 +10288,38 @@ async function loadBuddyTrackLeaderboard(trackNum) {
     return;
   }
 
+  let uniqueBuddyIds = Array.from(new Set((ids || []).filter(id => id && id !== save.uid)));
+
   let best = {};
-  try { best = await buddyBestTimes(trackNum, [save.uid].concat(ids)); } catch(e) { console.warn("Buddy times error:", e); }
+  try { best = await buddyBestTimes(trackNum, [save.uid].concat(uniqueBuddyIds)); } catch(e) { console.warn("Buddy times error:", e); }
   if (stale()) return;
   // My local best counts even if it hasn't synced yet
   if (myBest && (!best[save.uid] || myBest < best[save.uid])) best[save.uid] = myBest;
 
-  const rows = [save.uid].concat(ids).map(id => ({ id, t: best[id] || null }));
+  // Deduplicate buddies by normalized name: if a friend reinstalled or created a new UID with the same name,
+  // prefer the UID with a recorded track time, or currently online, or the newer ID.
+  const nameToBuddy = new Map();
+  uniqueBuddyIds.forEach(id => {
+    const rawName = buddyName(id);
+    const key = rawName.trim().toLowerCase();
+    const existing = nameToBuddy.get(key);
+    if (!existing) {
+      nameToBuddy.set(key, id);
+    } else {
+      const existingHasTime = best[existing] != null;
+      const curHasTime = best[id] != null;
+      if (!existingHasTime && curHasTime) {
+        nameToBuddy.set(key, id);
+      } else if (existingHasTime && curHasTime && (best[id] < best[existing])) {
+        nameToBuddy.set(key, id);
+      } else if (!existingHasTime && !curHasTime && buddyIsOnline(id) && !buddyIsOnline(existing)) {
+        nameToBuddy.set(key, id);
+      }
+    }
+  });
+  const filteredBuddyIds = Array.from(nameToBuddy.values());
+
+  const rows = [save.uid].concat(filteredBuddyIds).map(id => ({ id, t: best[id] || null }));
   rows.sort((a, b) => (a.t == null) - (b.t == null) || (a.t || 0) - (b.t || 0));
   l.innerHTML = bar;
   bindBar();
@@ -11617,7 +11829,7 @@ const TRAIN_STEPS=[
   {n:2, title:"2 · Moč zavetrja", laps:4, nai:2, goal:1, track:0, aiMul:0.9,
    desc:"<canvas class='tIll' data-ill='draft' width='300' height='130' style='width:100%;max-width:300px;border-radius:10px;display:block;margin:0 auto 8px'></canvas>"
        +"<b>4 krogi · 3 tekmovalci · ZMAGAJ.</b><br><br><div style='background:rgba(255,255,255,.06);border-radius:10px;padding:10px'>"
-       +"🚗💨 <b>Zavetrje</b>: vozi tik <b>za</b> nasprotnikom in poškodba se <span style='color:#7fe08a'>popravlja med vožnjo</span> (zdaj še hitreje!).<br><br>"
+       +"🚗💨 <b>Zavetrje</b>: vozi tik <b>za</b> nasprotnikom in poškodba se <span style='color:#7fe08a'>popravlja med vožnjo</span>. Prehiti ga za <b>💨 Slingshot bonus (+28 %)</b>!<br><br>"
        +"🌿🌲 Dlje ko greš iz proge (pesek → trava → gozd), hitreje se poškoduješ.</div>"},
   {n:3, title:"3 · Brez boksov!", laps:4, nai:2, goal:1, track:0, aiMul:0.92, noPit:true,
    desc:"<canvas class='tIll' data-ill='draft_nopit' width='300' height='130' style='width:100%;max-width:300px;border-radius:10px;display:block;margin:0 auto 8px'></canvas>"
