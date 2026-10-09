@@ -1214,6 +1214,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
 /* ---------- Room screen: one phone screen, no scrolling ---------- */
 #mpLobby .mpRoomHead { flex-wrap:nowrap; align-items:flex-start; margin-bottom:6px; }
+/* top Leave button: icon only here (the footer has the full "← Leave"), so title + code still fit on a phone */
+#mpLobby .mpRoomHead > div:first-child { flex:1; min-width:0; }
+#mpLobby .mpRoomHead .topBackBtn { padding:6px 9px; align-self:center; }
+#mpLobby .mpRoomHead .topBackBtn .tbbTxt { display:none; }
 #mpLobby .mpRoomTitleWrap { flex:1; min-width:0; }
 #mpLobby #mpRoomHeading { font-size:clamp(17px,5.4vw,22px)!important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #mpLobby #mpRoomSub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -1222,15 +1226,16 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 #mpLobby .mpRoomHead .mpPillStatus { flex:none; align-self:center; }
 #mpLobby .mpStatusBar { text-align:center; }
 
-.mpInviteRow { display:flex; gap:8px; margin:6px 0 8px; }
-.mpInviteBtn { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; min-height:52px; padding:10px 14px; border:none; border-radius:14px; cursor:pointer;
-  background:linear-gradient(180deg,#ffd84d,#ffb81f); color:#1a1300; font:inherit; font-size:clamp(16px,4.6vw,19px); font-weight:900; font-style:italic; letter-spacing:.5px;
-  box-shadow:0 4px 0 #b9800a, 0 8px 20px rgba(255,190,30,.35); -webkit-tap-highlight-color:transparent; }
-.mpInviteBtn:active { transform:translateY(3px); box-shadow:0 1px 0 #b9800a, 0 4px 10px rgba(255,190,30,.3); }
-.mpQrBtn { flex:none; width:58px; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; border-radius:14px; cursor:pointer;
-  background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.25); color:#fff; font:inherit; font-size:10px; font-weight:900; letter-spacing:.5px; }
-.mpQrBtn .ico { font-size:20px; line-height:1; }
-.mpQrBtn:active { transform:scale(.95); }
+/* One big yellow Invite button; its right end is a QR section behind a thin divider */
+.mpInviteRow { display:flex; align-items:stretch; margin:6px 0 8px; min-height:52px; border-radius:14px; overflow:hidden;
+  background:linear-gradient(180deg,#ffd84d,#ffb81f); box-shadow:0 4px 0 #b9800a, 0 8px 20px rgba(255,190,30,.35); }
+.mpInviteRow:has(button:active) { transform:translateY(3px); box-shadow:0 1px 0 #b9800a, 0 4px 10px rgba(255,190,30,.3); }
+.mpInviteBtn { flex:1; min-width:0; display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 8px 10px 14px; border:none; background:transparent; cursor:pointer;
+  color:#1a1300; font:inherit; font-size:clamp(16px,4.6vw,19px); font-weight:900; font-style:italic; letter-spacing:.5px; white-space:nowrap; -webkit-tap-highlight-color:transparent; }
+.mpQrBtn { flex:none; width:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:none; cursor:pointer;
+  background:rgba(0,0,0,.06); border-left:1.5px solid rgba(26,19,0,.22); color:#1a1300; font:inherit; font-size:9.5px; font-weight:900; letter-spacing:.6px; -webkit-tap-highlight-color:transparent; }
+.mpQrBtn svg { width:20px; height:20px; display:block; }
+.mpInviteBtn:active, .mpQrBtn:active { background:rgba(0,0,0,.1); }
 
 /* racer chips: 2 per row, one line each */
 #mpLobby .mpRacerGrid { grid-template-columns:1fr 1fr; gap:6px; margin:0 0 8px; }
@@ -1876,7 +1881,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <!-- Invite: the main way to fill the room -->
       <div class="mpInviteRow">
         <button class="mpInviteBtn" id="btnMpShare">📨 <span id="mpInviteTxt">INVITE FRIENDS</span></button>
-        <button class="mpQrBtn" id="btnMpQr" title="Show QR code"><span class="ico">🔳</span><span>QR</span></button>
+        <button class="mpQrBtn" id="btnMpQr" title="Show QR code" aria-label="Show QR code"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm2 2h2v2h-2v-2zm-4 2h2v2h-2v-2zm4 2h2v2h-2v-2zm2-2h2v2h-2v-2zm-2-4h2v2h-2v-2zm2 6h2v2h-2v-2zm-6 0h2v2h-2v-2z"/></svg><span>QR</span></button>
       </div>
 
       <!-- Racers (compact chips, rendered by mpUpdateRoomView) -->
@@ -5102,7 +5107,7 @@ function applyLang(l){
   document.querySelectorAll(".topBackBtn .tbbTxt").forEach(el=>{
     const btn = el.closest(".topBackBtn");
     if(btn && btn.id === "btnMpLeaveTop"){
-      el.textContent = tr.mpLeaveRoom || (isEn ? "Leave" : "Zapusti");
+      el.textContent = (tr.mpLeaveRoom || (isEn ? "Leave" : "Zapusti")).replace(/^←\s*/, "");   // the button has its own ← icon
     } else {
       el.textContent = tr.back || (isEn ? "Back" : "Nazaj");
     }
