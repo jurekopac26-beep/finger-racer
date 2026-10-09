@@ -415,6 +415,14 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .rgRow.pb .rgRowL{color:var(--green)}
 .resRaceHead{margin:4px auto 6px;width:min(300px,86vw);text-align:left;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#9aa887}
 .resRaceHead b{color:var(--paper)}
+/* "Save my progress" suggestion card (results / World Cup) + passive Buddies-tab hint */
+.rgSave{margin-top:10px;padding:9px 10px;border-radius:10px;background:rgba(255,216,77,.09);border:1.5px solid rgba(255,216,77,.45);text-align:left}
+.rgSave .rsTxt{font-size:12.5px;line-height:1.4;color:#f4efe3}
+.rgSave .rsTxt b{color:#ffd84d}
+.rgSave .rsBtns{display:flex;gap:6px;margin-top:7px}
+.rgSave .rsSave{flex:1;border:none;border-radius:9px;padding:8px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,#ffd84d,#ffb81f);color:#1a1300}
+.rgSave .rsLater{flex:none;border-radius:9px;padding:8px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;background:transparent;border:1px solid rgba(244,239,227,.3);color:#cfd8bd}
+.bdSaveHint{display:block;width:calc(100% - 16px);margin:2px 8px 4px;padding:6px 10px;border-radius:9px;border:1px dashed rgba(255,216,77,.45);background:rgba(255,216,77,.06);color:#ffd84d;font:inherit;font-size:11.5px;font-weight:800;text-align:left;cursor:pointer}
 .rgCard{margin:0 auto 12px;width:min(340px,90vw);text-align:left;background:rgba(10,12,9,.8);
   border:1px solid rgba(244,239,227,.18);border-radius:14px;padding:10px 12px 12px;animation:scrIn .3s ease-out}
 .rgCard.wr{border-color:rgba(255,204,38,.7);box-shadow:0 0 22px rgba(255,204,38,.3);background:linear-gradient(160deg,rgba(255,204,38,.18),rgba(10,12,9,.85) 60%)}
@@ -3770,6 +3778,7 @@ function accDone(){
   accCloudSave().catch(() => {});
   buddySyncProfile().catch(() => {});
   renderAccountCard();
+  document.querySelectorAll(".rgSave, .bdSaveHint").forEach(el => el.remove());   // no more save suggestions
   showBanner((isEn ? "✅ Progress saved · " : "✅ Napredek shranjen · ") + accLabel(), 2800, true);
 }
 
@@ -3869,8 +3878,11 @@ function openAccModal(reason){
   const m = $("accModal");
   if(!m) return;
   const isEn = (save.lang === "en");
-  $("accIco").textContent = reason === "buddy" ? "👥🔒" : "🔒";
-  $("accTitle").textContent = reason === "buddy" ? (isEn ? "DON'T LOSE YOUR BUDDIES" : "NE IZGUBI PRIJATELJEV") : (isEn ? "SAVE MY PROGRESS" : "SHRANI NAPREDEK");
+  $("accIco").textContent = reason === "buddy" ? "👥🔒" : (reason === "record" || reason === "cup") ? "🏆🔒" : "🔒";
+  $("accTitle").textContent = reason === "buddy" ? (isEn ? "DON'T LOSE YOUR BUDDIES" : "NE IZGUBI PRIJATELJEV")
+    : reason === "record" ? (isEn ? "KEEP YOUR RECORDS" : "OHRANI SVOJE REKORDE")
+    : reason === "cup" ? (isEn ? "KEEP YOUR CUP PROGRESS" : "OHRANI NAPREDEK V POKALU")
+    : (isEn ? "SAVE MY PROGRESS" : "SHRANI NAPREDEK");
   $("accDesc").textContent = isEn ? "Keep your racer, buddies and records safe, and get them back on a new phone. Already saved before? Sign in the same way to restore."
                                   : "Ohrani dirkača, prijatelje in rekorde ter jih dobi nazaj na novem telefonu. Si že shranil? Prijavi se enako in obnovi.";
   $("accGoogleTxt").textContent = isEn ? "Continue with Google" : "Nadaljuj z Googlom";
@@ -3904,9 +3916,48 @@ function renderAccountCard(){
 }
 
 // After the first buddy: suggest saving progress once
+/* "Save my progress" suggestions — only when the player has something to lose, never on first launch:
+   first buddy (modal, once) · new personal best (card: 1st PB, then every 3rd PB, max 3×) ·
+   World Cup finished (card, once). At most one automatic suggestion per 24 h. */
+const ACC_NUDGE_GAP = 24 * 3600 * 1000;
+function accNudgeState(){
+  if(!save.accNudge || typeof save.accNudge !== "object") save.accNudge = { pbSeen: 0, pbAtLast: 0, shown: 0, lastShown: 0, wcShown: false };
+  return save.accNudge;
+}
+function accNudgeAllowed(){
+  if(!fbAuth || accIsLinked()) return false;
+  return Date.now() - (accNudgeState().lastShown || 0) > ACC_NUDGE_GAP;
+}
+function accNudgeMark(){ accNudgeState().lastShown = Date.now(); persist(); }
+
+// Called once for every new personal best; true = show the save card now
+function accPBNudge(){
+  if(!fbAuth || accIsLinked()) return false;
+  const n = accNudgeState();
+  n.pbSeen = (n.pbSeen || 0) + 1;
+  const due = (n.shown || 0) < 3 && ((n.shown || 0) === 0 || n.pbSeen - (n.pbAtLast || 0) >= 3) && accNudgeAllowed();
+  if(due){ n.shown = (n.shown || 0) + 1; n.pbAtLast = n.pbSeen; n.lastShown = Date.now(); }
+  persist();
+  return due;
+}
+
+// Small inline card (results / World Cup): [Save] opens the sign-in modal, [Not now] hides it
+function accNudgeCard(reason){
+  const isEn = (save.lang === "en");
+  const d = document.createElement("div");
+  d.className = "rgSave";
+  d.innerHTML = '<div class="rsTxt">' + (reason === "cup"
+      ? (isEn ? "🏆 Cup finished! <b>Save your progress</b> so you never lose it." : "🏆 Pokal končan! <b>Shrani napredek</b>, da ga nikoli ne izgubiš.")
+      : (isEn ? "🏆 New record! <b>Save your progress</b> so you never lose it." : "🏆 Nov rekord! <b>Shrani napredek</b>, da ga nikoli ne izgubiš.")) +
+    '</div><div class="rsBtns"><button class="rsSave">🔒 ' + (isEn ? "Save" : "Shrani") + '</button><button class="rsLater">' + (isEn ? "Not now" : "Ne zdaj") + '</button></div>';
+  d.querySelector(".rsSave").onclick = () => { Snd.click && Snd.click(); openAccModal(reason); };
+  d.querySelector(".rsLater").onclick = () => { Snd.click && Snd.click(); d.remove(); };
+  return d;
+}
+
 function accSuggestAfterBuddy(){
-  if(accIsLinked() || save.accPromptedBuddy) return;
-  save.accPromptedBuddy = true; persist();
+  if(accIsLinked() || save.accPromptedBuddy || !accNudgeAllowed()) return;
+  save.accPromptedBuddy = true; accNudgeMark();
   setTimeout(() => openAccModal("buddy"), 1800);
 }
 
@@ -10270,6 +10321,15 @@ async function loadBuddyTrackLeaderboard(trackNum) {
   const bindBar = () => {
     if ($("btnBdAdd")) $("btnBdAdd").onclick = () => { Snd.click && Snd.click(); buddyInvite(false); };
     if ($("btnBdQr")) $("btnBdQr").onclick = () => { Snd.click && Snd.click(); buddyInvite(true); };
+    // Passive hint (never a pop-up) while the player isn't signed in
+    const bdBarEl = l.querySelector(".bdBar");
+    if (bdBarEl && fbAuth && !accIsLinked() && !l.querySelector(".bdSaveHint")) {
+      const h = document.createElement("button");
+      h.type = "button"; h.className = "bdSaveHint";
+      h.innerHTML = "🔒 " + (isEn ? "Save your progress so you don't lose your buddies" : "Shrani napredek, da ne izgubiš prijateljev") + " ›";
+      h.onclick = () => { Snd.click && Snd.click(); openAccModal("buddy"); };
+      bdBarEl.insertAdjacentElement("afterend", h);
+    }
   };
   l.innerHTML = bar + '<div class="lbEmpty">' + (isEn ? "Loading buddies… ⏳" : "Nalagam prijatelje… ⏳") + '</div>';
   bindBar();
@@ -10484,6 +10544,8 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
       currentLbTrack = trackNum; lbFrom = "results"; lbScrollMe = true;
       openLeaderboard("single");
     });
+    // New personal best → suggest saving progress (1st PB, then every 3rd, max 3×, ≤ 1 per day)
+    if (isPB) { try { if (accPBNudge()) c.appendChild(accNudgeCard("record")); } catch(e){} }
 
     if (isWR && isPB) {
       c.classList.add("wr");
@@ -16329,6 +16391,11 @@ function showWCStand(final, gains, dnf, qfail){
     for(let ki=0;ki<WC_TRACKS.length;ki++){ const k=WC_TRACKS[ki]; const b=save.best["wc"+k]; rec+="P"+(ki+1)+": "+(b?fmt(b):"—")+"   "; }
     html+="<span style='opacity:.75'>"+rec+"</span>";
     $("wcRecords").innerHTML=html;
+    // Whole cup finished → suggest saving progress (once)
+    try{
+      const n = accNudgeState();
+      if(!n.wcShown && accNudgeAllowed()){ n.wcShown = true; accNudgeMark(); $("wcRecords").appendChild(accNudgeCard("cup")); }
+    }catch(e){}
   } else $("wcRecords").textContent="";
   $("btnWCNext").querySelector("span").textContent = final ? "Nazaj v meni" : (wc.race>=WC_TRACKS.length-1 ? "Končna lestvica 🏆" : "Naslednja dirka 🏁");
   $("hud").style.display="none"; $("standings").style.display="none"; if($("penBadge"))$("penBadge").style.display="none"; if($("dmgBar"))$("dmgBar").style.display="none"; if($("fuelBar"))$("fuelBar").style.display="none"; if($("commentBar"))$("commentBar").style.display="none"; if($("ghostDelta"))$("ghostDelta").style.display="none";
