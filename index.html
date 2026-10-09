@@ -356,6 +356,24 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 #buddyToast .btTitle b{color:#ffb15c}
 #buddyToast .btSub{font-size:11.5px;color:#cfd8bd;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #buddyToast .btGo{flex:none;border:none;border-radius:10px;padding:9px 11px;background:linear-gradient(180deg,#5dffa0,#2fdd7a);color:#0a1a0e;font:inherit;font-size:12.5px;font-weight:900;cursor:pointer;white-space:nowrap}
+/* Buddies online: lobby strip, menu badge, leaderboard dot */
+.mpBuddyStrip{margin:0 0 8px;padding:8px 10px;border-radius:12px;background:rgba(10,12,16,.7);border:1.5px solid rgba(255,255,255,.12);text-align:left}
+.mpBuddyStrip:empty{display:none}
+.mbsHead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:900;color:#fff}
+.mbsHead b{color:var(--green);font-weight:800;margin-left:4px;font-size:11.5px}
+.mbsAdd{border:1px solid rgba(255,216,77,.5);background:rgba(255,216,77,.12);color:#ffd84d;border-radius:8px;padding:4px 9px;font:inherit;font-size:11.5px;font-weight:900;cursor:pointer}
+.mbsEmpty{font-size:11.5px;color:#cfd8bd;margin-top:5px}
+.mbsList{display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.mbsChip{flex:none;display:flex;align-items:center;gap:6px;padding:5px 6px 5px 8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);opacity:.6}
+.mbsChip.on{opacity:1;border-color:rgba(61,255,142,.4);background:rgba(61,255,142,.07)}
+.mbsChip .dot,.bdOn{width:8px;height:8px;border-radius:50%;background:#7a828c;flex:none;display:inline-block}
+.mbsChip.on .dot,.bdOn{background:#3dff8e;box-shadow:0 0 6px #3dff8e}
+.bdOn{margin-right:6px;vertical-align:middle}
+.mbsChip .nm{font-size:12px;font-weight:900;color:#fff;line-height:1.15;white-space:nowrap}
+.mbsChip .nm small{display:block;font-size:10px;font-weight:700;color:#cfd8bd}
+.mbsGo{border:none;border-radius:8px;width:32px;height:30px;background:linear-gradient(180deg,#ffd84d,#ffb81f);font-size:15px;cursor:pointer}
+.mbsGo:disabled{opacity:.4;cursor:default}
+.mbBuddyBadge{position:absolute;top:6px;right:8px;z-index:2;align-items:center;gap:3px;padding:2px 7px;border-radius:9px;background:rgba(61,255,142,.9);color:#04120a;font-size:11px;font-weight:900;font-style:normal}
 /* Account (save my progress) */
 .accCard{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;border-radius:14px;text-align:left;background:rgba(255,216,77,.08);border:1.5px solid rgba(255,216,77,.4)}
 .accCard.ok{background:rgba(61,255,142,.07);border-color:rgba(61,255,142,.4)}
@@ -1621,6 +1639,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <button class="modeBtn multi disp" id="btnMulti">
           <div class="mbImg" id="mbMulti"></div>
           <div class="mbTxt"><div class="mbT">MULTIPLAYER</div><div class="mbD">Dirkaj proti prijatelju · koda sobe</div></div>
+          <span class="mbBuddyBadge" id="mbBuddyBadge" style="display:none">👥 0</span>
           <div class="mbCheck"></div>
         </button>
         <!-- 3. World Cup -->
@@ -1721,6 +1740,9 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
           <button class="mpBtnAction quick" id="btnMpCreateModalOpen">➕ Create room</button>
         </div>
       </div>
+
+      <!-- Buddies: who's online + ⚔️ challenge (rendered by buddyRenderOnline) -->
+      <div id="mpBuddyStrip" class="mpBuddyStrip"></div>
 
       <!-- Active Hosting Banner (shown when host is browsing lobby) -->
       <div id="mpHostingBar" class="mpHostingBanner" style="display:none">
@@ -3491,6 +3513,7 @@ async function buddyLoadList(force){
     const snap = await db.collection("players").doc(save.uid).collection("buddies").get();
     _buddyIds = snap.docs.map(d => d.id).filter(id => BUDDY_RE.test(id) && id !== save.uid);
     await buddyLoadProfiles(_buddyIds);
+    try{ buddyNetStart(); buddyNetSync(); buddyRenderOnline(); }catch(e){}   // who's online + challenges
     return _buddyIds;
   }catch(e){ console.warn("Buddy list error:", e && e.code); return _buddyIds || []; }
 }
@@ -3906,6 +3929,180 @@ function accSuggestAfterBuddy(){
   setTimeout(() => openAccModal("buddy"), 1800);
 }
 
+/* ================= BUDDIES ONLINE + CHALLENGES =================
+   A small MQTT connection of its own (separate from the multiplayer lobby, which would list everyone
+   as "in lobby"). Only runs when the player has buddies.
+   finger-racer/v2/buddy/p/{racerId}  retained presence {id,name,st,t}; the will publishes {off:true}
+   finger-racer/v2/buddy/in/{racerId}  inbox: {t:"challenge", from, name, code, pub, track, ts}
+   Presence never contains room codes; challenges go only to the buddy's inbox. */
+const BUDDY_NET = "finger-racer/v2/buddy/";
+const BUDDY_ONLINE_MS = 75000;                     // heartbeat 30 s → stale after 75 s
+const buddyNet = { client: null, connected: false, connecting: false, brokerIdx: 0, fails: 0, online: {}, subs: new Set(), hb: null };
+
+function buddyNetActivity(){
+  if(typeof state !== "undefined" && (state === "racing" || state === "countdown")) return "racing";
+  if(mp) return "room";
+  if($("mpHome") && $("mpHome").classList.contains("on")) return "lobby";
+  return "menu";
+}
+function buddyActivityText(st){
+  const isEn = (save.lang === "en");
+  return ({ racing: isEn ? "Racing 🏎️" : "Dirka 🏎️", room: isEn ? "In a room" : "V sobi", lobby: isEn ? "In MP lobby" : "V lobiju", menu: isEn ? "Online" : "Na spletu" })[st] || (isEn ? "Online" : "Na spletu");
+}
+function buddyIsOnline(id){
+  const p = buddyNet.online[id];
+  return !!(p && !p.off && Date.now() - p.t < BUDDY_ONLINE_MS);
+}
+function buddyOnlineIds(){ return (_buddyIds || []).filter(buddyIsOnline); }
+
+function buddyNetPublish(topic, obj, retained){
+  if(!buddyNet.connected || !buddyNet.client) return false;
+  try{
+    const m = new Paho.MQTT.Message(JSON.stringify(obj));
+    m.destinationName = topic; m.qos = 0; m.retained = !!retained;
+    buddyNet.client.send(m);
+    return true;
+  }catch(e){ return false; }
+}
+function buddyNetAnnounce(){
+  if(!save.uid) return;
+  buddyNetPublish(BUDDY_NET + "p/" + save.uid, { id: save.uid, name: buddyProfileData().name, st: buddyNetActivity(), t: Date.now() }, true);
+}
+
+// Subscribe to presence of every buddy (call after the buddy list changes)
+function buddyNetSync(){
+  if(!buddyNet.connected || !buddyNet.client) return;
+  (_buddyIds || []).forEach(id => {
+    if(buddyNet.subs.has(id)) return;
+    try{ buddyNet.client.subscribe(BUDDY_NET + "p/" + id); buddyNet.subs.add(id); }catch(e){}
+  });
+}
+
+function buddyNetStart(){
+  if(buddyNet.client || buddyNet.connecting || !save.uid || !(_buddyIds && _buddyIds.length)) return;
+  if(typeof Paho === "undefined" || !Paho.MQTT || !Paho.MQTT.Client){ setTimeout(buddyNetStart, 1000); return; }
+  if(location.protocol === "file:") return;                     // tests / local file: no network
+  buddyNet.connecting = true;
+  const b = MP_BROKERS[buddyNet.brokerIdx % MP_BROKERS.length];
+  let client;
+  try{ client = new Paho.MQTT.Client(b.host, b.port, b.path, "FRB-" + save.uid.slice(-10) + "-" + ((Math.random() * 1e4) | 0)); }
+  catch(e){ buddyNet.connecting = false; return; }
+  client.onMessageArrived = (msg) => { try{ buddyNetHandle(msg.destinationName, JSON.parse(msg.payloadString)); }catch(e){} };
+  client.onConnectionLost = () => {
+    buddyNet.connected = false; buddyNet.client = null; buddyNet.subs.clear();
+    clearInterval(buddyNet.hb);
+    setTimeout(() => { if(document.visibilityState !== "hidden") buddyNetStart(); }, 3000);
+  };
+  const will = new Paho.MQTT.Message(JSON.stringify({ id: save.uid, off: true, t: Date.now() }));
+  will.destinationName = BUDDY_NET + "p/" + save.uid; will.qos = 0; will.retained = true;
+  client.connect({
+    useSSL: true, timeout: 8, keepAliveInterval: 30, willMessage: will,
+    onSuccess: () => {
+      buddyNet.client = client; buddyNet.connected = true; buddyNet.connecting = false; buddyNet.fails = 0;
+      try{ client.subscribe(BUDDY_NET + "in/" + save.uid); }catch(e){}
+      buddyNetSync();
+      buddyNetAnnounce();
+      clearInterval(buddyNet.hb);
+      buddyNet.hb = setInterval(() => { buddyNetAnnounce(); buddyRenderOnline(); }, 30000);
+    },
+    onFailure: () => {
+      buddyNet.connecting = false; buddyNet.client = null;
+      // Both buddies must use the same broker to see each other, so only switch after repeated failures
+      if(++buddyNet.fails >= 3){ buddyNet.brokerIdx++; buddyNet.fails = 0; }
+      setTimeout(buddyNetStart, 5000);
+    }
+  });
+}
+
+function buddyNetHandle(topic, d){
+  if(!d) return;
+  if(topic.indexOf(BUDDY_NET + "p/") === 0){
+    const id = topic.slice((BUDDY_NET + "p/").length);
+    if(!(_buddyIds || []).includes(id)) return;
+    buddyNet.online[id] = d.off ? { off: true, t: d.t || 0 } : { st: String(d.st || "menu"), t: Number(d.t) || 0, name: String(d.name || "").slice(0, 14) };
+    buddyRenderOnline();
+  } else if(topic === BUDDY_NET + "in/" + save.uid && d.t === "challenge"){
+    // Only from my buddies, only fresh, never in the middle of a race
+    if(!(_buddyIds || []).includes(d.from) || Date.now() - (Number(d.ts) || 0) > 120000) return;
+    if(buddyNetActivity() === "racing") return;
+    showBuddyChallengeToast(d);
+  }
+}
+
+// ⚔️ Challenge a buddy: host a private room (or use the one I'm hosting) and send them the code
+function buddyChallenge(id){
+  const isEn = (save.lang === "en");
+  if(!buddyIsOnline(id)){ showBanner(isEn ? "Your buddy just went offline." : "Prijatelj je ravnokar odšel.", 2200, true); return; }
+  if(mp && !mp.isHost){ showBanner(isEn ? "Leave this room first to host a challenge." : "Za izziv najprej zapusti to sobo.", 2400, true); return; }
+  if(!mp){ mpCreateRoom({ isPublic: false }, (buddyProfileData().name + " vs " + buddyName(id)).slice(0, 24)); }
+  if(!mp || !mp.code) return;
+  const sent = buddyNetPublish(BUDDY_NET + "in/" + id, { t: "challenge", from: save.uid, name: buddyProfileData().name, code: mp.code, pub: !!mp.isPublic, track: mp.track | 0, ts: Date.now() }, false);
+  showBanner(sent ? ("⚔️ " + (isEn ? "Challenge sent to " : "Izziv poslan: ") + buddyName(id) + (isEn ? ". Waiting in your room…" : ". Čakam v sobi…"))
+                  : (isEn ? "Couldn't reach your buddy. Try again." : "Prijatelja ni bilo mogoče doseči."), 2800, true);
+}
+
+function showBuddyChallengeToast(d){
+  const el = $("buddyToast");
+  if(!el) return;
+  const isEn = (save.lang === "en");
+  $("buddyToastTitle").innerHTML = "⚔️ <b>" + lbEsc(buddyName(d.from)) + "</b> " + (isEn ? "challenges you!" : "te izziva!");
+  $("buddyToastSub").textContent = (isEn ? "Private room · " : "Zasebna soba · ") + mpTrackName(d.track | 0);
+  $("btnBuddyToastGo").textContent = isEn ? "Join 🏁" : "Pridruži se 🏁";
+  const code = String(d.code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  $("btnBuddyToastGo").onclick = () => {
+    el.style.display = "none";
+    Snd.unlock && Snd.unlock();
+    const go = () => {
+      openMP();
+      if(d.pub) mpJoinPublicSlot("PUB-" + code, isEn ? "Public room" : "Javna soba", false);
+      else mpJoinCode(code);
+    };
+    if(hasCustomPlayerName()) go(); else showNameOnboarding(go);
+  };
+  $("btnBuddyToastClose").onclick = () => { el.style.display = "none"; };
+  el.style.display = "flex";
+  try{ Snd.beep && Snd.beep(880, .08, "square", .06); Snd.beep && Snd.beep(1320, .1, "square", .06, .1); }catch(e){}
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = "none"; }, 20000);
+}
+
+// Lobby strip + menu badge + leaderboard dots
+function buddyRenderOnline(){
+  const isEn = (save.lang === "en");
+  const ids = _buddyIds || [];
+  const on = buddyOnlineIds();
+  const badge = $("mbBuddyBadge");
+  if(badge){ badge.style.display = on.length ? "flex" : "none"; badge.textContent = "👥 " + on.length; badge.title = isEn ? on.length + " buddies online" : on.length + " prijateljev na spletu"; }
+  const strip = $("mpBuddyStrip");
+  if(!strip) return;
+  if(!ids.length){
+    strip.innerHTML = '<div class="mbsHead"><span>👥 ' + (isEn ? "Buddies" : "Prijatelji") + '</span><button class="mbsAdd" id="btnMbsAdd">＋ ' + (isEn ? "Add buddy" : "Dodaj") + '</button></div>' +
+      '<div class="mbsEmpty">' + (isEn ? "Add buddies to see when they're online and challenge them here." : "Dodaj prijatelje, da vidiš, kdaj so na spletu, in jih izzoveš.") + '</div>';
+  } else {
+    const sorted = ids.slice().sort((a, b) => buddyIsOnline(b) - buddyIsOnline(a) || buddyName(a).localeCompare(buddyName(b)));
+    strip.innerHTML = '<div class="mbsHead"><span>👥 ' + (isEn ? "Buddies" : "Prijatelji") + ' <b>' + on.length + ' ' + (isEn ? "online" : "na spletu") + '</b></span>' +
+      '<button class="mbsAdd" id="btnMbsAdd">＋ ' + (isEn ? "Add" : "Dodaj") + '</button></div><div class="mbsList">' +
+      sorted.map(id => {
+        const online = buddyIsOnline(id), p = buddyNet.online[id] || {};
+        const sub = online ? buddyActivityText(p.st) : (isEn ? "Offline" : "Ni na spletu");
+        const busy = online && p.st === "racing";
+        return '<div class="mbsChip' + (online ? " on" : "") + '"><span class="dot"></span><div class="nm">' + lbEsc(buddyName(id)) + '<small>' + sub + '</small></div>' +
+          (online ? '<button class="mbsGo" data-id="' + lbEsc(id) + '"' + (busy ? ' disabled title="' + (isEn ? "Racing right now" : "Ravno dirka") + '"' : "") + '>⚔️</button>' : "") + '</div>';
+      }).join("") + '</div>';
+  }
+  const add = $("btnMbsAdd");
+  if(add) add.onclick = () => { Snd.click && Snd.click(); buddyInvite(false); };
+  strip.querySelectorAll(".mbsGo").forEach(b => b.onclick = () => { Snd.click && Snd.click(); buddyChallenge(b.dataset.id); });
+}
+
+// Keep my status fresh: announce on screen changes / visibility
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible"){ if(!buddyNet.client) buddyNetStart(); else buddyNetAnnounce(); }
+});
+window.addEventListener("pagehide", () => {
+  if(save.uid) buddyNetPublish(BUDDY_NET + "p/" + save.uid, { id: save.uid, off: true, t: Date.now() }, true);
+});
+
 const save={unlocked:3,best:{},sound:true,diff:0,diffMode:"easy",fingerOff:0,lang:"en",country:"GB",countryFlag:"🇬🇧",countryName:"English",freemiumMode:false,ghostMode:"off",showFps:false};
 window.save = save;
 const DIFFS=[{n:"lahko",m:.82},{n:"normalno",m:1},{n:"težko",m:1.22},{n:"Xtra Hard",m:1.42}];
@@ -4070,6 +4267,7 @@ let trackImg=null;
 
 function setScreen(id){
   if(_shareCtx && _shareCtx.screen!==id) closeMpShareSheet();   // a share sheet belongs to the screen that opened it
+  try{ setTimeout(buddyNetAnnounce, 0); }catch(e){}               // buddies see "in lobby / in a room / racing"
   // The global rank card belongs to the current results screen only (it survives a trip to the leaderboard)
   if(id!=="results" && id!=="leaderboard" && $("resGlobal")){ $("resGlobal").style.display="none"; $("resGlobal")._tok=null; if($("resWorld")) $("resWorld").style.display="none"; if($("resRaceHead")) $("resRaceHead").style.display="none"; }
   ["menu","levels","help","intro","wcName","wcPreview","singlePick","ttOpp","tutorial","career","leaderboard","wcRaceIntro","wcStand","settings","pause","results","loading","training","trainInfo","clevels","cinfo","repairQ","garage","achScreen","mpHome","mpLobby","langPicker"].forEach(s=>$(s)&&$(s).classList.toggle("on",s===id));
@@ -9961,7 +10159,7 @@ async function loadBuddyTrackLeaderboard(trackNum) {
   rows.forEach((r, i) => {
     const isMe = r.id === save.uid;
     const p = isMe ? { flag: save.countryFlag } : ((save.buddyCache || {})[r.id] || {});
-    const name = (p.flag ? lbEsc(p.flag) + " " : "") + lbEsc(buddyName(r.id));
+    const name = (!isMe && buddyIsOnline(r.id) ? '<span class="bdOn" title="online"></span>' : "") + (p.flag ? lbEsc(p.flag) + " " : "") + lbEsc(buddyName(r.id));
     let gap = "";
     if (!isMe && r.t && mine) {
       const d = r.t - mine;
@@ -13834,6 +14032,7 @@ function openMP(preserveSession = false){
   if(!preserveSession){
     mpReset();
   }
+  try{ buddyRenderOnline(); buddyLoadList(); }catch(e){}   // 👥 buddies strip: who's online, ⚔️ challenge
   const isEn = (save.lang === "en");
   const myName = save.playerName;
   const nameInput = $("mpName");
@@ -16611,6 +16810,7 @@ function boot(){
       try{ tryLoadChallenge(); }catch(e){}
       try{ ensureAuth().then(u=>u&&ensurePlayerClaim(u)).then(ok=>{ if(ok) buddySyncProfile(); }); }catch(e){}   // background sign-in, ready before the first record
       setTimeout(()=>{ try{ buddyCheckBeaten(); }catch(e){} }, 4000);   // "🔥 a buddy beat your time" on the menu
+      setTimeout(()=>{ try{ buddyLoadList(); }catch(e){} }, 2500);       // buddies online (starts the buddy connection)
       try{ accHandleEmailLink(); }catch(e){}                              // returning from the "save my progress" email
       requestAnimationFrame(loop);
     });
