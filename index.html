@@ -310,6 +310,23 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 @keyframes lbInR{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
 #lbMine .lbMyRk{color:var(--yellow);font-size:13px;margin-left:8px}.lbTrackTitle{font-weight:900;font-size:15px;line-height:1.15;color:var(--yellow);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lbTrackSub{font-size:11px;font-weight:700;color:#9aa887;margin-top:1px}
+.lbPeriod{display:flex;align-items:center;gap:8px;padding:8px 10px 4px}
+.lbPerSeg{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(244,239,227,.07);border:1px solid rgba(244,239,227,.12)}
+.lbPerBtn{border:none;border-radius:8px;padding:6px 12px;background:transparent;color:#cfd8bd;font:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+.lbPerBtn.on{background:var(--paper);color:var(--ink)}
+.lbResetIn{margin-left:auto;font-size:11px;font-weight:700;color:#9aa887;text-align:right;white-space:nowrap}
+#chModal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9997;align-items:center;justify-content:center;padding:16px}
+#chModal .chCard{background:var(--asphalt,#14171a);border:2px solid var(--red,#ff3b30);border-radius:18px;max-width:380px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;box-sizing:border-box;padding:20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.8)}
+#chModal .chIcon{font-size:38px;margin-bottom:4px}
+#chModal h2{font-size:21px;color:var(--yellow,#ffcc26);margin:0 0 12px;line-height:1.15;overflow-wrap:anywhere}
+#chModal .chTrack{display:flex;gap:12px;align-items:center;text-align:left;margin-bottom:10px}
+#chModal .chThumb{flex:none;width:76px;height:56px;border-radius:10px;background:#222 center/cover;border:1px solid rgba(244,239,227,.2)}
+#chModal .chTrackTxt{min-width:0}
+#chModal .chTn{font-size:14px;font-weight:900;color:var(--paper)}
+#chModal .chTg{font-size:12.5px;font-weight:700;color:#cfd8bd;margin-top:3px;line-height:1.4}
+#chModal .chTg b{color:var(--yellow);font-size:16px;font-variant-numeric:tabular-nums}
+#chModal .chBoard{text-align:left;background:rgba(10,12,9,.6);border:1px solid rgba(244,239,227,.12);border-radius:12px;padding:8px 12px;margin-bottom:6px}
+#chModal .chBoard:empty{display:none}
 .lbHintBar{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9aa887;padding:8px 12px 4px;text-align:left}
 #lbList{flex:1 1 auto;min-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 8px 8px}
 .lbRow{display:flex;align-items:center;gap:10px;padding:9px 10px;margin:3px 0;border-radius:9px;background:rgba(244,239,227,.04);
@@ -440,6 +457,37 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   background:rgba(244,239,227,.1);color:var(--paper);font-weight:900;font-size:14px;cursor:pointer}
 .rgBtn:active{transform:translateY(2px)}
 #resStats{font-size:12.5px;color:#b8c49f;margin-bottom:10px}
+/* Single Race / challenge results: records first, then actions; the AI field and the stats fold away */
+#results.sr .panel{display:flex;flex-direction:column;align-items:center}
+#results.sr .panel>*{flex:none}
+#results.sr .panel>.btn{width:100%}
+#results.sr #resPlace{order:1}#results.sr #resSub{order:2}#results.sr #resWorld{order:3}#results.sr .checker{order:4}
+#results.sr #resGlobal{order:5}#results.sr #btnChallenge{order:6}#results.sr #btnRetry{order:7}#results.sr #btnNext{order:8}
+#results.sr #btnShareGhost{order:9}#results.sr #btnMenu2{order:9}
+#results.sr #resRaceHead{order:10}#results.sr #resList{order:11}#results.sr #resMoreBtn{order:12}#results.sr #resStats{order:13}
+#results.sr #btnNext{background:rgba(244,239,227,.12);color:var(--paper);border:1px solid rgba(244,239,227,.3)}
+#results.sr #btnChallenge{font-size:20px;padding:16px 14px;box-shadow:0 5px 0 rgba(0,0,0,.45),0 0 18px rgba(255,59,48,.35)}
+#results.sr #resRaceHead{display:block!important;cursor:pointer;margin-top:12px;padding:9px 12px;border-radius:10px;background:rgba(244,239,227,.06);border:1px solid rgba(244,239,227,.12);box-sizing:border-box}
+#results.sr #resRaceHead .chev{float:right;transition:transform .2s}
+#results.sr.aiOpen #resRaceHead .chev{transform:rotate(180deg)}
+#results.sr #resList{display:none;margin-top:4px}
+#results.sr.aiOpen #resList{display:block}
+#results.sr #resStats{display:none;margin-top:4px}
+#results.sr.moreOpen #resStats{display:block}
+#results.ch #resRaceHead,#results.ch #resList{display:none!important}
+#results.ch.lost #btnRetry{order:6}#results.ch.lost #btnChallenge{order:7;font-size:16px;padding:13px 14px;box-shadow:none}
+.resMoreBtn{display:block;margin:8px auto 0;padding:7px 14px;border:none;background:transparent;color:#9aa887;font:inherit;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.resBadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;background:rgba(195,155,255,.18);color:#c39bff;font-size:11px;letter-spacing:0;text-transform:none}
+.rgRow.wk .rgRowL{color:#7fd3ff}
+.rgRow.wk .rgRowR{color:#7fd3ff}
+.chRow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(244,239,227,.08);font-size:13.5px;font-weight:700}
+.chRow:last-child{border-bottom:none}
+.chRow .rk{width:26px;text-align:center;font-weight:900;color:#9aa887}
+.chRow .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chRow .tm{font-variant-numeric:tabular-nums;color:var(--paper)}
+.chRow.me{color:var(--green)}
+.chRow.me .tm{color:var(--green)}
+.chRow .gh{flex:none;border:1px solid rgba(244,239,227,.25);background:rgba(244,239,227,.08);color:var(--paper);border-radius:8px;padding:3px 7px;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
 #loading{z-index:60}
 .spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(244,239,227,.2);border-top-color:var(--yellow);
   animation:sp 1s linear infinite;margin:0 auto 14px}
@@ -2060,6 +2108,13 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
           </div>
           <button class="lbArrow" id="btnLbTrackNext" aria-label="Next track">▶</button>
         </div>
+        <div class="lbPeriod" id="lbPeriod" style="display:none">
+          <div class="lbPerSeg" role="tablist">
+            <button type="button" class="lbPerBtn on" id="btnLbAll" role="tab">All time</button>
+            <button type="button" class="lbPerBtn" id="btnLbWeek" role="tab">This week</button>
+          </div>
+          <span class="lbResetIn" id="lbResetIn"></span>
+        </div>
         <div class="lbHintBar" id="lbHint">Globalni rekordi prog (najboljši časi)</div>
         <div id="lbList"></div>
         <div id="lbMine"></div>
@@ -2099,6 +2154,21 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
         <button class="btn disp" id="btnBuddyModalOk" style="flex:1"><span>ADD</span></button>
         <button class="btn ghost disp" id="btnBuddyModalCancel" style="flex:1"><span>NOT NOW</span></button>
       </div>
+    </div>
+  </div>
+
+  <!-- Challenge link: "Peter challenges you!" (filled by chShowIntro) -->
+  <div id="chModal" style="display:none">
+    <div class="chCard">
+      <div class="chIcon">⚔️</div>
+      <h2 class="disp" id="chTitle">CHALLENGE!</h2>
+      <div class="chTrack">
+        <div class="chThumb" id="chThumb"></div>
+        <div class="chTrackTxt"><div class="chTn" id="chTrackName"></div><div class="chTg" id="chTarget"></div></div>
+      </div>
+      <div class="chBoard" id="chBoard"></div>
+      <button class="btn primary disp" id="btnChGo"><span>RACE NOW 🏁</span></button>
+      <button class="btn ghost small disp" id="btnChLater"><span>Not now</span></button>
     </div>
   </div>
 
@@ -2409,7 +2479,9 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
       <div id="resGlobal" class="rgCard" style="display:none"></div>
       <div id="resRaceHead" class="resRaceHead" style="display:none"></div>
       <div id="resList"></div>
+      <button type="button" class="resMoreBtn" id="resMoreBtn" style="display:none">▸ More details</button>
       <div id="resStats"></div>
+      <button class="btn primary disp" id="btnChallenge" style="display:none"><span>⚔️ Challenge a friend</span></button>
       <button class="btn primary disp" id="btnNext"><span>Naslednji level</span></button>
       <button class="btn disp" id="btnRetry"><span>Ponovi</span></button>
       <button class="btn ghost disp" id="btnShareGhost" style="display:none"><span>Deli duha 📤</span></button>
@@ -5292,7 +5364,8 @@ function applyLang(l){
   if($("btnLbTabWC")) $("btnLbTabWC").querySelector("span").textContent = tr.lbTabWC;
   if($("btnCareerLb")) { $("btnCareerLb").title = tr.myCareerBtn; $("btnCareerLb").setAttribute("aria-label", tr.myCareerBtn); }
   if($("btnLbAch")) { $("btnLbAch").title = tr.achTab; $("btnLbAch").setAttribute("aria-label", tr.achTab); }
-  if($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = tr.shareResult;
+  if($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = (typeof lbShareLabel === "function") ? lbShareLabel() : tr.shareResult;
+  if(typeof lbRenderPeriod === "function") lbRenderPeriod();
   if($("btnLbBack")) $("btnLbBack").querySelector("span").textContent = tr.back;
   if(typeof currentLbTab !== "undefined" && (currentLbTab === "single" || currentLbTab === "buddies") && typeof updateTrackTitle === "function") updateTrackTitle();
   if($("btnLbTabBuddies")) $("btnLbTabBuddies").querySelector("span").textContent = l === "en" ? "👥 Buddies" : "👥 Prijatelji";
@@ -7055,7 +7128,10 @@ function startRace(){
   if(mpMode&&mp&&mp.weather!=null) _tw=mp.weather;   // multiplayer: everybody gets the host's weather
   mode="race"; finishOrder=[]; particles=[]; groundMarks=[]; fastestLap={name:null,time:1e9,me:false};
   ghostRec=[]; ghostPlayIdx=0; ghostT=0; ghostDelta=null; recordBeat=false;
-  if(!timeTrial){                                   // ghost izbira v Single/Trening/WC/Kariera
+  chActive=chArmed; chArmed=null;                   // challenge race only when startChallengeRace armed it
+  if(chActive){
+    ghostPlay=chActive.target.ghost; ghostIsFriend=true; ghostKind="friend";
+  } else if(!timeTrial){                            // ghost izbira v Single/Trening/WC/Kariera
     const gm = isFreemiumActive() ? "off" : (save.ghostMode || "off");
     if(gm === "personal"){
       const gk=_ghostKey(); if(!save.ghosts) save.ghosts={};
@@ -7089,10 +7165,12 @@ function startRace(){
   player.dmgTaken=0; player.repDraft=0; player.repPit=0; player.pits=0; player.dmgFuel=0; player.pitTime=0; player.draftTime=0; draftHeat=0; draftLeadKey=null; draftOutT=0; sling=null; player.fuel=1; player.fuelUsed=0; player.fuelWarn=false; player.fuelWarn2=false; player.pitDone=false; player.fuelFull=false;
   racers.forEach(r=>{ r.dmgTaken=0; r.repDraft=0; r.repPit=0; r.pits=0; });
   try{ $("btnMenu2").style.display=""; $("btnShareGhost").style.display="none"; }catch(e){}
+  try{ $("results").classList.remove("sr","ch","lost","aiOpen","moreOpen"); $("btnChallenge").style.display="none"; $("btnChallenge").className="btn primary disp"; $("btnRetry").className="btn disp"; $("resMoreBtn").style.display="none"; }catch(e){}
   raceTime=0; shake=0; holdT=0; cdShown=-1; raceStarted=false; crashAnimT=0;
   player.crossings=0; player.finished=false; player.crashes=0; player.trail.length=0; player.spd=0;
   player.dmg=0; vibT=0; pitOn=false; pitSnd=0; dmgFlash=0; dnf=false; colT=0; pitSafe=false; player.dmgPhase=Math.random()*6.28;
   raceGrid=Math.max(1,Math.min(NRACERS,qPos))-1;    // igralec starta iz kvalifikacijskega mesta
+  if(chActive) raceGrid=Math.max(0,Math.min(5,chActive.grid|0));   // challenge: the slot the chased ghost started from
   startSlot=gridSlot(raceGrid);
   player.s=startSlot.s; player.idx=startSlot.i; player.x=startSlot.x; player.y=startSlot.y;
   lastOn={x:startSlot.x,y:startSlot.y,s:startSlot.s}; resetCP(); player.ang=Math.atan2(TYa[startSlot.i],TXa[startSlot.i]); player.path=[{x:startSlot.x,y:startSlot.y}]; player.v=0; player.vx=0; player.vy=0;
@@ -7173,6 +7251,7 @@ function finishDNF(){
     const order=[...finishers,...racing,...dnfs];
     const pos=order.findIndex(r=>r.me)+1;
     if(wc){ if(mode==="qualify") wcQualFail(); else wcAfterRace(order,t,pos,true); return; }
+    if(chActive){ chResults(t,true); return; }
     if(timeTrial){
       resultMode="single";
       $("resPlace").textContent="Razbil si se 💥"; $("resPlace").classList.remove("win");
@@ -7381,12 +7460,25 @@ function dmgStatsHTML(){
   const fuelUsed=(player.fuelUsed||0)*100;         // porabljeno gorivo
   const pitS=(player.pitTime||0), pitPct=Math.round((player.repPit||0)*100);
   const drS=(player.draftTime||0), drPct=Math.round((player.repDraft||0)*100);
-  let h="<br>🌿 Nabrana poškodba (obraba + izven proge + trki): <b>"+Math.round(off)+"%</b>.";
-  h+="<br>⛽ Porabljeno gorivo: <b>"+Math.round(fuelUsed)+"%</b> ("+((fuelUsed/50).toFixed(1))+" krogov).";
-  h+="<br><br><b>🔧 Popravilo vozila:</b>";
-  h+="<br>&nbsp;&nbsp;🔧 V boksih popravljeno: <b>"+pitPct+"%</b>"+(pitS>0.2?" ("+pitS.toFixed(1)+" s)":"");
-  h+="<br>&nbsp;&nbsp;🚗💨 V zavetrju popravljeno: <b>"+drPct+"%</b>"+(drS>0.2?" ("+drS.toFixed(1)+" s)":"");
+  const en=(save.lang==="en");
+  let h="<br>🌿 "+(en?"Damage taken (wear + off track + crashes)":"Nabrana poškodba (obraba + izven proge + trki)")+": <b>"+Math.round(off)+"%</b>.";
+  h+="<br>⛽ "+(en?"Fuel used":"Porabljeno gorivo")+": <b>"+Math.round(fuelUsed)+"%</b> ("+((fuelUsed/50).toFixed(1))+(en?" laps).":" krogov).");
+  h+="<br><br><b>🔧 "+(en?"Repairs":"Popravilo vozila")+":</b>";
+  h+="<br>&nbsp;&nbsp;🔧 "+(en?"Repaired in the pits":"V boksih popravljeno")+": <b>"+pitPct+"%</b>"+(pitS>0.2?" ("+pitS.toFixed(1)+" s)":"");
+  h+="<br>&nbsp;&nbsp;🚗💨 "+(en?"Repaired in the slipstream":"V zavetrju popravljeno")+": <b>"+drPct+"%</b>"+(drS>0.2?" ("+drS.toFixed(1)+" s)":"");
   return h;
+}
+// Time, crashes, fastest lap and damage: the "More details" fold of the Single Race / challenge results
+function resStatsHTML(t){
+  const en=(save.lang==="en");
+  return (en?"Time: ":"Čas: ")+fmt(t)+"  ·  "+(en?"Crashes: ":"Nesreče: ")+player.crashes
+    +(fastestLap.name?"<br>⚡ "+(en?"Fastest lap":"Najhitrejši krog")+": <b style=\"color:#c39bff\">"+(fastestLap.me?(en?"you":"ti"):fastestLap.name)+"</b> "+fmt(fastestLap.time):"")
+    +dmgStatsHTML();
+}
+function resMoreReset(){
+  const rs=$("results"), b=$("resMoreBtn");
+  if(rs) rs.classList.remove("aiOpen","moreOpen");
+  if(b){ b.style.display="block"; b.textContent="▸ "+(save.lang==="en"?"More details":"Več podrobnosti"); }
 }
 function winCinematic(pos, rec){
   const wc=$("winCine"); if(!wc) return;
@@ -7403,7 +7495,9 @@ function winCinematic(pos, rec){
 }
 function finishRace(){
   player.finished=true; state="finished"; Snd.engineStop(); resultMode="race";
-  const pos=finishOrder.filter(i=>!racers[i].dnf).length+1, win=pos===1, adv=pos<=3;
+  const pos=finishOrder.filter(i=>!racers[i].dnf).length+1;
+  let win=pos===1, adv=pos<=3;
+  if(chActive){ win=!player.dnf && raceTime<chActive.target.time; adv=win; }   // challenge: winning = beating the ghost
   const pen=0;
   try{
     if(win) unlockAch("firstWin","🥇 Prva zmaga");
@@ -7413,19 +7507,19 @@ function finishRace(){
   const t=raceTime;
   // Global records: only plain Single Races (fixed laps/field) count, keyed by the track actually driven
   const recTrack=curTrack+1;
-  const globalRun=singleMode && !timeTrial && !coneHunt && !wc && !careerLv && !training && !testDrive && !mp && !mpMode && !player.dnf && curTrack!==ROOKIE;   // vadnica (Rookie Ring) ne gre na svetovno lestvico
+  const globalRun=singleMode && !timeTrial && !coneHunt && !wc && !careerLv && !training && !testDrive && !mp && !mpMode && !chActive && !player.dnf && curTrack!==ROOKIE;   // vadnica (Rookie Ring) ne gre na svetovno lestvico
   if(!save.trackBest) save.trackBest={};
   const prevBest=save.trackBest[recTrack]||null;   // before this race updates it (for the global rank card)
   if(adv){ Snd.finishWin(); spawnConfetti(player.x,player.y);
     if(navigator.vibrate&&save.haptics!==false){ try{ navigator.vibrate(win?[120,60,120,60,220]:[120,60,120]); }catch(e){} }
     if(win) setTimeout(()=>{ if(state==="finished"){ spawnConfetti(player.x,player.y); spawnFireworks(); } },350);
-    try{ winCinematic(pos, (!save.best[level]||t<save.best[level])); }catch(e){}   // (1)(7) filmski trenutek zmage
+    try{ winCinematic(chActive?1:pos, !chActive && (!save.best[level]||t<save.best[level])); }catch(e){}   // (1)(7) filmski trenutek zmage
     if(level<MAXLVL&&level+1>save.unlocked) save.unlocked=level+1; }
   else Snd.finishLose();
-  if(win){ save.careerWins=(save.careerWins||0)+1; persist();
+  if(win){ if(!chActive) save.careerWins=(save.careerWins||0)+1; persist();
     speak(pick([ME()+" wins it! What a drive!","Victory for "+ME()+"!","And "+ME()+" takes the checkered flag!"])); Snd.cheer(true); setTimeout(()=>Snd.cheer(true),700);
     const M=[10,25,50,100]; if(M.includes(save.careerWins)) setTimeout(()=>showBanner("🏅 MEJNIK: "+save.careerWins+" zmag v karieri!",2600,true),1500); }
-  if(!save.best[level]||t<save.best[level]){
+  if(!chActive && (!save.best[level]||t<save.best[level])){
     if(!timeTrial && ghostRec.length){ if(!save.ghosts)save.ghosts={}; save.ghosts[_ghostKey()]=ghostRec.slice(0,2600); }   // shrani rekordni ghost
     if(save.best[level] && !player.dnf) recordBeat=true;                                                                     // premagan osebni rekord
     save.best[level]=Math.round(t*1000)/1000;
@@ -7437,6 +7531,12 @@ function finishRace(){
   worldHead = globalRun ? (db ? {state:"loading", t:Math.round(t*1000)/1000, track:recTrack} : {state:"fail"}) : null;
   resWorldMode = false;
   if(globalRun){
+    // This run's ghost backs the "Challenge a friend" button; a personal best keeps its ghost per track
+    try {
+      chLastRun={track:recTrack, time:Math.round(t*1000)/1000, g:chEncodeGhost(ghostRec), laps:LAPS, grid:raceGrid};
+      if(!prevBest || t<prevBest) chStorePbGhost(recTrack, chLastRun.time, chLastRun.g);
+    } catch(e){}
+    try { noteWeeklyRun(recTrack, t); } catch(e){}
     try { submitGlobalRecord(recTrack, t); } catch(e){}
     // Unnamed players get the name prompt on the results screen; its callback shows the rank card after the name is saved
     if(hasCustomPlayerName()){ try { showGlobalRankCard(recTrack, t, prevBest); } catch(e){} }
@@ -7450,6 +7550,7 @@ function finishRace(){
     const nonDnf=[...finishers,...racing]; nonDnf.splice(pos-1,0,{me:true});
     const order=[...nonDnf,...dnfs];
     if(wc){ wcAfterRace(order,t,pos); return; }
+    if(chActive){ chResults(t); return; }
     if(timeTrial){
       resultMode="single";
       if(!save.tt) save.tt={};
@@ -7556,15 +7657,19 @@ function finishRace(){
       resWorldMode = !!(worldHead && worldHead.state!=="fail");
       if(resWorldMode) renderWorldHead();
       else { $("resPlace").textContent=raceHeadFallback.place; $("resPlace").classList.toggle("win",raceHeadFallback.win); $("resSub").innerHTML=raceHeadFallback.sub; if($("resWorld")) $("resWorld").style.display="none"; }
-      // The race against the AI becomes a small heading above the finishing order
+      // Records first; the race against the AI folds into one line (tap to see the order), stats go behind "More details"
+      $("results").classList.add("sr");
       const rh=$("resRaceHead");
-      if(rh){ rh.innerHTML="🏁 "+(isEnR?"Race vs AI: ":"Dirka proti AI: ")+"<b>"+lbOrdinal(pos,isEnR)+"</b> "+(isEnR?"of ":"od ")+order.length; rh.style.display=resWorldMode?"block":"none"; }
+      if(rh){ rh.innerHTML='<span class="chev">▾</span>🏁 '+(isEnR?"Race vs AI: ":"Dirka proti AI: ")+"<b>"+lbOrdinal(pos,isEnR)+"</b> "+(isEnR?"of ":"od ")+order.length
+        +(fastestLap.me?'<span class="resBadge">⚡ '+(isEnR?"fastest lap":"najhitrejši krog")+'</span>':''); rh.style.display="block"; }
       $("btnNext").querySelector("span").textContent=((I18N[save.lang]||I18N.en).mainMenu||"Glavni meni");
       const rl=$("resList"); rl.innerHTML="";
       buildResRows(rl,order,t);
-      $("resStats").innerHTML="Čas: "+fmt(t)+"  ·  Nesreče: "+player.crashes+(fastestLap.name?"<br>⚡ Najhitrejši krog: <b style=\"color:#c39bff\">"+fastestLap.name+"</b> "+fmt(fastestLap.time):"")+dmgStatsHTML();
+      $("resStats").innerHTML=resStatsHTML(t);
+      resMoreReset();
+      chSetupFinishButton(recTrack, t);
       $("btnNext").style.display="block"; $("btnMenu2").style.display="none";
-      $("btnRetry").style.display="block"; $("btnRetry").querySelector("span").textContent=((I18N[save.lang]||I18N.en).restartRace||"🔄 Ponovi dirko");
+      $("btnRetry").style.display="block"; $("btnRetry").querySelector("span").textContent=(isEnR?"🔄 Race again":"🔄 Ponovi dirko");
       $("hud").style.display="none"; $("standings").style.display="none"; if($("penBadge"))$("penBadge").style.display="none"; if($("dmgBar"))$("dmgBar").style.display="none"; if($("fuelBar"))$("fuelBar").style.display="none"; if($("commentBar"))$("commentBar").style.display="none"; if($("ghostDelta"))$("ghostDelta").style.display="none";
       setScreen("results");
       if(typeof hasCustomPlayerName === "function" && !hasCustomPlayerName() && globalRun && !player.dnf){
@@ -9471,7 +9576,7 @@ function drawCore(){
     drawVehicle(c,gx,gy,ga,0,1,gCol,0.6,0,1/scale,true);
     c.restore();
     c.save(); c.globalAlpha=0.8; c.fillStyle="#cdd6e0"; c.font="bold "+(11/scale)+"px sans-serif"; c.textAlign="center";
-    const gMark = (typeof ghostKind !== "undefined" && ghostKind === "world") ? "👑" : (ghostIsFriend ? "👥" : "👻");
+    const gMark = (typeof ghostKind !== "undefined" && ghostKind === "world") ? "👑" : (ghostIsFriend ? (chActive ? "👥 "+chActive.target.name : "👥") : "👻");
     c.fillText(gMark,gx,gy-RAD*0.9/scale*scale); c.restore();
   }
   if(mpMode) drawMpOpp(c);
@@ -10064,6 +10169,582 @@ function tryLoadChallenge(){
   const m=h.match(/[#&]c=([^&]+)/);
   if(m){ const ch=parseChallengeCode(decodeURIComponent(m[1])); if(ch){ importChallenge(ch); try{history.replaceState(null,"",location.href.split("#")[0]);}catch(e){} } }
 }
+
+/* ================= CHALLENGE LINKS + WEEKLY BOARDS =================
+   challenges/{cid}                 the creator's run: by, name, flag, track (1..8), time, laps, grid, ghost, key, createdAt, owner
+   challenges/{cid}/runs/{racerId}  everybody's best on this challenge (the group board)
+   challenges/{cid}/ghosts/{id}     their ghost, read only when someone races it
+   Link: ?ch=CID races the creator's ghost; ?ch=CID&g=RACERID races that racer's ghost ("send it back").
+   key = the creator's buddy-invite key: racing the challenge makes you buddies.
+   tracks/{t}/weeks/{2026-W44}/times/{racerId}  best Single Race time per racer this week (resets Monday 00:00 UTC) */
+const CH_RE = /^[a-z0-9]{8,12}$/;
+let chActive = null, chArmed = null;   // challenge of the current race (startChallengeRace arms it, startRace takes it)
+let chLastRun = null;                  // last plain Single Race {track, time, g} for the "Challenge a friend" button
+let lbPeriod = "all";                  // Single Race leaderboard: "all" | "week"
+
+// Ghost v2: time, position, angle and progress per point (progress drives the live ▲/▼ gap), every 2nd sample
+function chEncodeGhost(g){
+  if(!g || !g.length) return "";
+  const pts = [];
+  for(let i = 0; i < g.length; i += 2) pts.push(g[i]);
+  if(pts[pts.length - 1] !== g[g.length - 1]) pts.push(g[g.length - 1]);
+  const u = new Uint8Array(1 + pts.length * 11), dv = new DataView(u.buffer);
+  const cl = (v, a, b) => Math.max(a, Math.min(b, Math.round(v || 0)));
+  u[0] = 2;
+  pts.forEach((p, i) => {
+    const o = 1 + i * 11;
+    dv.setUint16(o, cl(p.t * 20, 0, 65535));
+    dv.setInt16(o + 2, cl(p.x, -32000, 32000));
+    dv.setInt16(o + 4, cl(p.y, -32000, 32000));
+    dv.setInt8(o + 6, cl(p.a * 20, -127, 127));
+    dv.setUint32(o + 7, cl(p.p, 0, 4e9));
+  });
+  let s = "";
+  for(let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+  return btoa(s);
+}
+function chDecodeGhost(code){
+  try{
+    const s = atob(String(code || ""));
+    if(s.charCodeAt(0) !== 2) return null;
+    const u = new Uint8Array(s.length);
+    for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+    const dv = new DataView(u.buffer), n = Math.floor((s.length - 1) / 11), g = [];
+    for(let i = 0; i < n; i++){
+      const o = 1 + i * 11;
+      g.push({ t: dv.getUint16(o) / 20, x: dv.getInt16(o + 2), y: dv.getInt16(o + 4), a: dv.getInt8(o + 6) / 20, p: dv.getUint32(o + 7) });
+    }
+    if(!g.length) return null;
+    const last = g[g.length - 1];
+    g.push({ t: last.t + 3, x: last.x, y: last.y, a: last.a, p: last.p });   // parks on the line after the finish
+    return g;
+  }catch(e){ return null; }
+}
+
+// Personal-best ghost per track (own localStorage key: too big for the save / cloud backup)
+function chPbGhosts(){
+  try{ return JSON.parse(localStorage.getItem("fr_pbGhosts") || "{}") || {}; }catch(e){ return {}; }
+}
+function chStorePbGhost(track, time, g){
+  if(!g) return;
+  try{ const all = chPbGhosts(); all[track] = { time, g }; localStorage.setItem("fr_pbGhosts", JSON.stringify(all)); }catch(e){}
+}
+
+function chTrackName(track){
+  const isEn = (save.lang === "en");
+  const p = (typeof getPreview === "function" && PREVIEWS[track - 1]) ? getPreview(track - 1) : null;
+  const nm = p && p.name ? p.name.split(" · ").slice(1).join(" · ") : "";
+  return (isEn ? "Track " : "Proga ") + track + (nm ? " · " + nm : "");
+}
+
+function chNewId(){
+  const A = "abcdefghijkmnpqrstuvwxyz23456789", rnd = new Uint32Array(10);
+  (window.crypto || {}).getRandomValues ? crypto.getRandomValues(rnd) : rnd.forEach((_, i) => rnd[i] = Math.random() * 1e9);
+  let id = "";
+  rnd.forEach(n => id += A[n % A.length]);
+  return id;
+}
+
+// Boards I'm on (created or raced): {cid: {track, by, name, best, ts, synced}}, newest 30 kept
+function chRememberBoard(cid, b){
+  if(!save.chBoards) save.chBoards = {};
+  save.chBoards[cid] = Object.assign(save.chBoards[cid] || {}, b, { ts: Date.now() });
+  const ids = Object.keys(save.chBoards).sort((a, c) => (save.chBoards[c].ts || 0) - (save.chBoards[a].ts || 0));
+  ids.slice(30).forEach(id => delete save.chBoards[id]);
+  persist();
+}
+
+// Write a challenge doc for a run ({track, time, g}); the same run shared twice reuses its link
+async function chCreate(src){
+  if(!save.chMade) save.chMade = {};
+  const time = Math.round(src.time * 1000) / 1000;
+  const sig = src.track + ":" + Math.round(time * 1000);
+  if(save.chMade[sig]) return save.chMade[sig];
+  const user = await buddyAuthReady();
+  if(!user) return null;
+  let key = null;
+  try{ key = await buddyInviteKey(); }catch(e){}
+  const p = buddyProfileData(), cid = chNewId();
+  const doc = { by: save.uid, name: p.name, flag: p.flag, track: src.track, time, laps: src.laps || 5, grid: src.grid != null ? src.grid : 2,
+    ghost: src.g, owner: user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+  if(key) doc.key = key;
+  await db.collection("challenges").doc(cid).set(doc);
+  save.chMade[sig] = cid;
+  const keys = Object.keys(save.chMade);
+  keys.slice(0, Math.max(0, keys.length - 40)).forEach(k => delete save.chMade[k]);
+  chRememberBoard(cid, { track: src.track, by: save.uid, name: p.name, best: time, synced: true });
+  return cid;
+}
+
+function chShareCtx(cid, g, text){
+  const isEn = (save.lang === "en");
+  return {
+    url: location.href.split(/[?#]/)[0] + "?ch=" + cid + (g ? "&g=" + encodeURIComponent(g) : ""),
+    screen: "results",
+    title: isEn ? "Scan to race my ghost" : "Skeniraj in premagaj mojega duha",
+    hint: isEn ? "Your friend opens it and races your ghost straight away. Everyone who plays it lands on one board."
+               : "Prijatelj odpre povezavo in takoj dirka proti tvojemu duhu. Vsi, ki jo odprejo, so na isti lestvici.",
+    text
+  };
+}
+
+// Share a link: the phone's share menu right away, or the QR / link sheet when the database round trip took too long
+// for the browser to still count it as part of the tap
+function chShare(ctx, t0){
+  if(Date.now() - t0 < 2500) shareInvite(ctx);
+  else openShareSheet(ctx);
+}
+
+// ⚔️ Challenge a friend with a run {track, time, g}
+async function chChallengeFriend(src){
+  const isEn = (save.lang === "en"), t0 = Date.now();
+  if(!src || !src.g){ showBanner(isEn ? "Finish a race on this track first, then challenge a friend." : "Najprej odpelji dirko na tej progi, nato izzovi prijatelja.", 2600, true); return; }
+  showBanner(isEn ? "Preparing your challenge… ⚔️" : "Pripravljam izziv… ⚔️", 1200, true);
+  let cid = null;
+  try{ cid = await chCreate(src); }catch(e){ console.warn("Challenge create error:", e && e.code); }
+  if(!cid){ showBanner(isEn ? "Can't connect right now. Try again in a moment." : "Povezava trenutno ni mogoča. Poskusi znova.", 2400, true); return; }
+  const text = isEn ? ("⚔️ I did " + chTrackName(src.track) + " in " + fmt(src.time) + " in Finger Racer. Beat my ghost:")
+                    : ("⚔️ " + chTrackName(src.track) + " sem odpeljal v " + fmt(src.time) + " v Finger Racerju. Premagaj mojega duha:");
+  chShare(chShareCtx(cid, "", text), t0);
+}
+
+// Single Race results: the challenge button uses this run, or the stored personal best when that is faster
+function chSetupFinishButton(track, t){
+  const b = $("btnChallenge");
+  if(!b) return;
+  const isEn = (save.lang === "en");
+  let src = (chLastRun && chLastRun.track === track && chLastRun.g) ? chLastRun : null;
+  const pb = chPbGhosts()[track];
+  if(pb && pb.g && (!src || pb.time < src.time)) src = { track, time: pb.time, g: pb.g, laps: 5, grid: 2 };
+  if(!src || !db){ b.style.display = "none"; b._go = null; return; }
+  b.className = "btn primary disp";
+  b.querySelector("span").textContent = "⚔️ " + (isEn ? "Challenge a friend" : "Izzovi prijatelja");
+  b._go = () => chChallengeFriend(src);
+  b.style.display = "block";
+  buddyAuthReady().then(u => { if(u) return buddyInviteKey(); }).catch(() => {});   // warm up, so the tap can share at once
+}
+
+// Leaderboard footer on the Single Race tab: challenge with my best on this track
+function lbChallenge(track){
+  const pb = chPbGhosts()[track];
+  if(pb && pb.g){ chChallengeFriend({ track, time: pb.time, g: pb.g, laps: 5, grid: 2 }); return true; }
+  return false;
+}
+
+// Load a challenge and the ghost to race: the creator's, or racer g's from the same board
+async function chLoad(cid, g){
+  if(!db) return null;
+  const ref = db.collection("challenges").doc(cid);
+  const snap = await ref.get();
+  if(!snap.exists) return null;
+  const d = snap.data() || {};
+  const track = d.track | 0;
+  if(track < 1 || track > PREVIEWS.length || typeof d.time !== "number") return null;
+  const ch = { cid, track, laps: (d.laps | 0) || 5, grid: d.grid != null ? (d.grid | 0) : 2,
+    by: d.by, byName: d.name || "Racer", byFlag: d.flag || "", byTime: d.time, key: d.key || "" };
+  if(g && g !== d.by){
+    try{
+      const [gs, rs] = await Promise.all([ref.collection("ghosts").doc(g).get(), ref.collection("runs").doc(g).get()]);
+      const gd = gs.exists ? (gs.data() || {}) : {}, rd = rs.exists ? (rs.data() || {}) : {};
+      const gh = chDecodeGhost(gd.ghost);
+      if(gh && typeof gd.time === "number") ch.target = { id: g, name: rd.name || "Racer", flag: rd.flag || "", time: gd.time, ghost: gh };
+    }catch(e){ console.warn("Challenge ghost error:", e && e.code); }
+  }
+  if(!ch.target){
+    const gh = chDecodeGhost(d.ghost);
+    if(!gh) return null;
+    ch.target = { id: d.by, name: ch.byName, flag: ch.byFlag, time: d.time, ghost: gh };
+  }
+  return ch;
+}
+
+// The group board: the creator plus everyone's best, my local best included before it syncs
+async function chLoadBoard(ch){
+  const best = {};
+  best[ch.by] = { id: ch.by, name: ch.byName, flag: ch.byFlag, time: ch.byTime };
+  const snap = await db.collection("challenges").doc(ch.cid).collection("runs").orderBy("time", "asc").limit(50).get();
+  snap.forEach(doc => {
+    const r = doc.data() || {};
+    if(typeof r.time !== "number") return;
+    if(!best[doc.id] || r.time < best[doc.id].time) best[doc.id] = { id: doc.id, name: r.name || "Racer", flag: r.flag || "", time: r.time };
+  });
+  const mine = ((save.chBoards || {})[ch.cid] || {}).best;
+  if(mine && (!best[save.uid] || mine < best[save.uid].time)) best[save.uid] = { id: save.uid, name: buddyProfileData().name, flag: save.countryFlag || "", time: mine };
+  return Object.values(best).sort((a, b) => a.time - b.time);
+}
+
+function chBoardHTML(ch, rows, opts){
+  const isEn = (save.lang === "en");
+  opts = opts || {};
+  const n = rows.length;
+  let h = '<div class="rgHead">⚔️ ' + (ch.by === save.uid ? (isEn ? "Your challenge" : "Tvoj izziv") : lbEsc(ch.byName) + (isEn ? "'s challenge" : " · izziv")) +
+    ' · ' + n + ' ' + (isEn ? (n === 1 ? "racer" : "racers") : "dirkačev") + '</div>';
+  const myIdx = rows.findIndex(r => r.id === save.uid);
+  const lim = opts.limit || 10;
+  rows.forEach((r, i) => {
+    if(i >= lim && i !== myIdx) return;
+    const me = r.id === save.uid, isTgt = ch.target && r.id === ch.target.id;
+    h += '<div class="chRow' + (me ? ' me' : '') + '"><span class="rk">' + (["🥇", "🥈", "🥉"][i] || (i + 1)) + '</span>' +
+      '<span class="nm">' + (r.flag ? lbEsc(r.flag) + ' ' : '') + lbEsc(me ? (isEn ? "You" : "Ti") : r.name) + (r.id === ch.by ? ' 👑' : '') + '</span>' +
+      '<span class="tm">' + fmt(r.time) + '</span>' +
+      (opts.ghostBtns && !me && !isTgt ? '<button type="button" class="gh" data-id="' + lbEsc(r.id) + '" title="' + (isEn ? "Race this ghost" : "Dirkaj proti temu duhu") + '">👻</button>' : '') +
+      '</div>';
+  });
+  return h;
+}
+
+// Opened via a challenge link (?ch=CID[&g=RACERID])
+function chTakeFromUrl(){
+  let cid = "", g = "";
+  try{
+    const q = new URLSearchParams(location.search);
+    if(!q.has("ch")) return false;
+    cid = (q.get("ch") || "").trim().toLowerCase();
+    g = (q.get("g") || "").trim();
+    ["ch", "g"].forEach(k => q.delete(k));
+    const rest = q.toString();
+    try{ history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); }catch(e){}
+  }catch(e){ return false; }
+  if(!CH_RE.test(cid)) return false;
+  if(!BUDDY_RE.test(g)) g = "";
+  autoPickLang();
+  toMenu();
+  chOpen(cid, g);
+  return true;
+}
+
+async function chOpen(cid, g){
+  const isEn = (save.lang === "en");
+  showBanner(isEn ? "Loading challenge… ⚔️" : "Nalagam izziv… ⚔️", 1500, true);
+  let ch = null;
+  try{ ch = await chLoad(cid, g); }catch(e){ console.warn("Challenge load error:", e && e.code); }
+  if(!ch){ showBanner(isEn ? "This challenge link doesn't work anymore." : "Ta povezava do izziva ne deluje več.", 2800, true); return; }
+  chShowIntro(ch);
+}
+
+// "Peter challenges you!": track, time to beat, the board so far, one tap to race
+function chShowIntro(ch){
+  const m = $("chModal");
+  if(!m) return;
+  const isEn = (save.lang === "en"), tg = ch.target, mine = tg.id === save.uid;
+  $("chTitle").textContent = mine ? (isEn ? "BEAT YOUR GHOST" : "PREMAGAJ SVOJEGA DUHA")
+                                  : (tg.name + (isEn ? " challenges you!" : " te izziva!")).toUpperCase();
+  $("chTrackName").textContent = chTrackName(ch.track);
+  $("chTarget").innerHTML = (isEn ? "Time to beat: " : "Čas za premagati: ") + "<b>" + fmt(tg.time) + "</b><br>" +
+    ch.laps + (isEn ? " laps · race the ghost 👻" : " krogov · dirka proti duhu 👻");
+  const p = PREVIEWS[ch.track - 1];
+  $("chThumb").style.backgroundImage = (p && p.img) ? 'url("' + p.img + '")' : "";
+  const bd = $("chBoard");
+  bd.innerHTML = '<div class="rgWait">' + (isEn ? "Loading the board… ⏳" : "Nalagam lestvico… ⏳") + '</div>';
+  chLoadBoard(ch).then(rows => { if(m._ch === ch) bd.innerHTML = chBoardHTML(ch, rows, { limit: 5 }); }).catch(() => { bd.innerHTML = ""; });
+  $("btnChGo").querySelector("span").textContent = isEn ? "RACE NOW 🏁" : "DIRKAJ ZDAJ 🏁";
+  $("btnChLater").querySelector("span").textContent = isEn ? "Not now" : "Ne zdaj";
+  $("btnChGo").onclick = () => { m.style.display = "none"; m._ch = null; Snd.unlock && Snd.unlock(); startChallengeRace(ch); };
+  $("btnChLater").onclick = () => { m.style.display = "none"; m._ch = null; };
+  m._ch = ch;
+  m.style.display = "flex";
+}
+
+// Ghost race on the challenge track: no AI, same laps and grid slot as the run being chased. Free in the free version.
+function startChallengeRace(ch){ training = 0; careerOff(); testDrive = false;
+  const isEn = (save.lang === "en");
+  singleMode = true; timeTrial = false; coneHunt = false; wc = null; level = 1; finishOrder = []; particles = [];
+  const tIdx = ch.track - 1;
+  loadTrack(tIdx);
+  LAPS = ch.laps || 5; NRACERS = 1; CROSS_NEED = LAPS + 1;
+  const SKILLS = getCompetitiveSkills(tIdx, 0);
+  aiParams = { SKILLS, base: BASE1, NAI: 0 };
+  vRef = Math.max(60, BASE1 * (SKILLS[0] || 1) * MEANFAC);
+  qPos = 1; raceStarted = false;
+  chArmed = ch;
+  setTimeout(() => { if(chActive === ch && (state === "racing" || state === "countdown" || state === "prestart"))
+    showBanner("⚔️ " + (isEn ? "Beat " : "Premagaj ") + ch.target.name + ": " + fmt(ch.target.time) + "!", 2600, true); }, 700);
+  startRace();
+}
+
+// Challenge race results: win/lose vs the ghost, the group board, send it back / share / try again
+function chResults(t, dnfFlag){
+  const ch = chActive, tg = ch.target, isEn = (save.lang === "en");
+  const tR = Math.round(t * 1000) / 1000, dnfd = !!dnfFlag || !!player.dnf, beat = !dnfd && tR < tg.time, gap = Math.abs(tR - tg.time);
+  const g = dnfd ? "" : chEncodeGhost(ghostRec);
+  resultMode = "single";
+  const rs = $("results");
+  rs.classList.add("sr", "ch");
+  rs.classList.toggle("lost", !beat);
+  const P = $("resPlace"), S = $("resSub"), W = $("resWorld");
+  P.textContent = beat ? (isEn ? "YOU WIN!" : "ZMAGA!") : (dnfd ? "DNF" : (gap < 1.5 ? (isEn ? "SO CLOSE!" : "ZA LAS!") : (isEn ? "NOT YET!" : "ŠE NE!")));
+  P.classList.toggle("win", beat);
+  const who = "<b>" + lbEsc(tg.id === save.uid ? (isEn ? "your ghost" : "svojega duha") : tg.name) + "</b>";
+  S.innerHTML = dnfd ? (isEn ? "You didn't finish. Try again!" : "Nisi prišel do cilja. Poskusi znova!")
+    : beat ? (isEn ? "You beat " : "Premagal si ") + who + (isEn ? " by " : " za ") + gap.toFixed(3) + "s"
+    : (tg.id === save.uid ? (isEn ? "Your ghost is " : "Tvoj duh je ") : who + (isEn ? " is " : " je ")) + gap.toFixed(3) + "s " + (isEn ? "faster" : "hitrejši");
+  W.innerHTML = "<b>" + fmt(tR) + "</b> · " + lbEsc(chTrackName(ch.track));
+  W.style.display = "block";
+  $("resList").innerHTML = "";
+  $("resStats").innerHTML = resStatsHTML(t);
+  resMoreReset();
+
+  // Buttons: beat it → send it back; otherwise try again first, sharing the challenge second
+  const b = $("btnChallenge");
+  b.className = "btn disp " + (beat ? "primary" : "ghost");
+  if(beat){
+    b.querySelector("span").textContent = "⚔️ " + (isEn ? "Send it back" : "Pošlji nazaj");
+    b._go = () => chSendBack(ch, tR);
+  } else {
+    b.querySelector("span").textContent = "📣 " + (isEn ? "Share this challenge" : "Deli ta izziv");
+    b._go = () => chShare(chShareCtx(ch.cid, tg.id === ch.by ? "" : tg.id,
+      isEn ? ("⚔️ Can you beat " + tg.name + "'s " + fmt(tg.time) + " on " + chTrackName(ch.track) + " in Finger Racer?")
+           : ("⚔️ Lahko premagaš " + tg.name + " (" + fmt(tg.time) + ") na " + chTrackName(ch.track) + " v Finger Racerju?")), Date.now());
+  }
+  b.style.display = db ? "block" : "none";
+  $("btnRetry").style.display = "block";
+  $("btnRetry").className = "btn disp " + (beat ? "" : "primary");
+  $("btnRetry").querySelector("span").textContent = "🔄 " + (isEn ? "Try again" : "Poskusi znova");
+  $("btnNext").style.display = "block"; $("btnMenu2").style.display = "none";
+  $("btnNext").querySelector("span").textContent = ((I18N[save.lang] || I18N.en).mainMenu || "Glavni meni");
+
+  const c = $("resGlobal"), tok = c._tok = {};
+  c.classList.remove("wr");
+  c.innerHTML = '<div class="rgHead">⚔️ ' + (isEn ? "Challenge board" : "Lestvica izziva") + '</div><div class="rgWait">' + (isEn ? "Loading the board… ⏳" : "Nalagam lestvico… ⏳") + '</div>';
+  c.style.display = db ? "block" : "none";
+  if(beat){ try{ spawnFireworks(); }catch(e){} }
+
+  $("hud").style.display = "none"; $("standings").style.display = "none"; if($("penBadge")) $("penBadge").style.display = "none"; if($("dmgBar")) $("dmgBar").style.display = "none"; if($("fuelBar")) $("fuelBar").style.display = "none"; if($("commentBar")) $("commentBar").style.display = "none"; if($("ghostDelta")) $("ghostDelta").style.display = "none";
+  setScreen("results");
+
+  const fill = () => {
+    if(!db) return;
+    chLoadBoard(ch).then(rows => {
+      if(c._tok !== tok) return;
+      c.innerHTML = chBoardHTML(ch, rows, { ghostBtns: true });
+      c.querySelectorAll(".gh").forEach(x => x.onclick = () => { Snd.click && Snd.click(); chOpen(ch.cid, x.dataset.id); });
+    }).catch(e => { console.warn("Challenge board error:", e && e.code); if(c._tok === tok) c.style.display = "none"; });
+  };
+  if(dnfd){ fill(); return; }
+  chRecordRun(ch, tR, g).then(fill, fill);
+}
+
+// My best on this board → runs/ghosts in Firestore (name asked first), then become buddies with the creator
+async function chRecordRun(ch, tR, g){
+  const prev = ((save.chBoards || {})[ch.cid] || {}).best;
+  const improved = !prev || tR < prev;
+  chRememberBoard(ch.cid, { track: ch.track, by: ch.by, name: ch.byName, best: improved ? tR : prev });
+  if(!db || !improved) return;
+  if(!hasCustomPlayerName()){
+    const isEn = (save.lang === "en");
+    await new Promise(res => showNameOnboarding({
+      icon: "⚔️🏁", title: isEn ? "YOUR RACER NAME" : "TVOJE DIRKAŠKO IME",
+      desc: isEn ? "Your name on the challenge board:" : "Tvoje ime na lestvici izziva:",
+      saveBtn: isEn ? "SAVE 🏁" : "SHRANI 🏁"
+    }, res));
+  }
+  const user = await buddyAuthReady();
+  if(!user) return;
+  const p = buddyProfileData(), ts = firebase.firestore.FieldValue.serverTimestamp();
+  const ref = db.collection("challenges").doc(ch.cid);
+  try{
+    if(g) await ref.collection("ghosts").doc(save.uid).set({ ghost: g, time: tR, owner: user.uid, updatedAt: ts });
+    await ref.collection("runs").doc(save.uid).set({ uid: save.uid, name: p.name, flag: p.flag, time: tR, owner: user.uid, updatedAt: ts });
+    chRememberBoard(ch.cid, { synced: true });
+  }catch(e){ console.warn("Challenge run error:", e && e.code); chRememberBoard(ch.cid, { synced: false }); }
+  // Racing someone's challenge makes you buddies (their link carries their invite key)
+  if(ch.by !== save.uid && ch.key){
+    try{
+      const ids = await buddyLoadList();
+      if(!(ids || []).includes(ch.by) && await buddyAdd(ch.by, ch.key)){
+        const isEn = (save.lang === "en");
+        showBanner((isEn ? "👥 You and " : "👥 S ") + ch.byName + (isEn ? " are now buddies!" : " sta zdaj prijatelja!"), 2600, true);
+      }
+    }catch(e){}
+  }
+}
+
+// ⚔️ Send it back: the same board, with my ghost as the one to beat
+function chSendBack(ch, tR){
+  const isEn = (save.lang === "en"), tg = ch.target;
+  const vs = tg.id === save.uid ? "" : (isEn ? " and beat " + tg.name + "'s " + fmt(tg.time) : " in premagal " + tg.name + " (" + fmt(tg.time) + ")");
+  chShare(chShareCtx(ch.cid, save.uid,
+    isEn ? ("⚔️ I did " + chTrackName(ch.track) + " in " + fmt(tR) + vs + ". Your move:")
+         : ("⚔️ " + chTrackName(ch.track) + " sem odpeljal v " + fmt(tR) + vs + ". Ti si na vrsti:")), Date.now());
+}
+
+// On app open: did someone beat my time on a challenge board I'm on?
+async function chCheckBeaten(){
+  if(!db || !save.chBoards) return;
+  const now = Date.now();
+  if(!save.chSeen) save.chSeen = {};
+  const ids = Object.keys(save.chBoards)
+    .filter(id => { const b = save.chBoards[id]; return b && b.best && now - (b.ts || 0) < 30 * 864e5; })
+    .sort((a, b) => (save.chBoards[b].ts || 0) - (save.chBoards[a].ts || 0)).slice(0, 12);
+  let top = null;
+  for(const cid of ids){
+    const b = save.chBoards[cid];
+    try{
+      const snap = await db.collection("challenges").doc(cid).collection("runs").where("time", "<", b.best).orderBy("time", "asc").limit(5).get();
+      snap.forEach(doc => {
+        if(doc.id === save.uid) return;
+        const r = doc.data() || {}, k = cid + ":" + doc.id;
+        if(typeof r.time !== "number" || save.chSeen[k] === r.time) return;
+        save.chSeen[k] = r.time;
+        const gap = b.best - r.time;
+        if(!top || gap > top.gap) top = { cid, id: doc.id, name: r.name || "Racer", time: r.time, gap, track: b.track, mine: b.by === save.uid, byName: b.name };
+      });
+    }catch(e){}
+  }
+  persist();
+  const toast = $("buddyToast");
+  if(top && $("menu") && $("menu").classList.contains("on") && toast && toast.style.display !== "flex") chShowBeatenToast(top);
+}
+
+function chShowBeatenToast(b){
+  const el = $("buddyToast"), isEn = (save.lang === "en");
+  $("buddyToastTitle").innerHTML = "🔥 <b>" + lbEsc(b.name) + "</b> " + (b.mine ? (isEn ? "beat your challenge!" : "je premagal tvoj izziv!")
+    : (isEn ? "beat you on " : "te je premagal na izzivu ") + lbEsc(b.byName || "") + (isEn ? "'s challenge!" : "!"));
+  $("buddyToastSub").textContent = chTrackName(b.track) + " · " + fmt(b.time) + " (−" + b.gap.toFixed(2) + "s)";
+  $("btnBuddyToastGo").textContent = isEn ? "Race back ⚔️" : "Vrni mu ⚔️";
+  $("btnBuddyToastGo").onclick = () => { el.style.display = "none"; Snd.unlock && Snd.unlock(); chOpen(b.cid, b.id); };
+  $("btnBuddyToastClose").onclick = () => { el.style.display = "none"; };
+  el.style.display = "flex";
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = "none"; }, 12000);
+}
+
+/* ---- Weekly Single Race boards ---- */
+function lbWeekKey(now){
+  const d = new Date(now || Date.now());
+  const u = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = u.getUTCDay() || 7;
+  u.setUTCDate(u.getUTCDate() + 4 - day);                 // Thursday of this ISO week decides the year
+  const y = u.getUTCFullYear();
+  const wk = Math.ceil(((u - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
+  return y + "-W" + String(wk).padStart(2, "0");
+}
+// Time left until Monday 00:00 UTC, e.g. "2d 4h" / "5h 12m"
+function lbWeekLeftTxt(now){
+  now = now || Date.now();
+  const d = new Date(now), day = d.getUTCDay() || 7;
+  const end = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 8 - day);
+  const m = Math.max(0, Math.floor((end - now) / 60000)), dd = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60);
+  return dd > 0 ? dd + "d " + hh + "h" : hh + "h " + (m % 60) + "m";
+}
+function lbWeekCol(track, wk){
+  return db.collection("tracks").doc(String(track)).collection("weeks").doc(wk || lbWeekKey()).collection("times");
+}
+// This week's best on a track (null when it's from an older week)
+function lbMyWeekBest(track){
+  const wb = (save.weekBest || {})[track];
+  return (wb && wb.wk === lbWeekKey()) ? wb.t : null;
+}
+function noteWeeklyRun(track, t){
+  const wk = lbWeekKey(), tR = Math.round(t * 1000) / 1000;
+  if(!save.weekBest) save.weekBest = {};
+  const wb = save.weekBest[track];
+  if(wb && wb.wk === wk && wb.t <= tR) return;
+  save.weekBest[track] = { wk, t: tR, synced: false };
+  persist();
+  submitWeeklyRecord(track);
+}
+async function submitWeeklyRecord(track){
+  const wb = (save.weekBest || {})[track];
+  if(!db || !wb || wb.wk !== lbWeekKey()) return;
+  try{
+    const user = await buddyAuthReady();
+    if(!user) return;
+    const p = buddyProfileData();
+    await lbWeekCol(track, wb.wk).doc(save.uid).set({ uid: save.uid, name: p.name, flag: p.flag, time: wb.t, owner: user.uid,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const cur = save.weekBest[track];
+    if(cur && cur.wk === wb.wk && cur.t === wb.t){ cur.synced = true; persist(); }
+  }catch(e){ console.warn("Weekly record error:", e && e.code); }
+}
+// Unsynced weekly bests (offline races), or all of this week's after a rename
+async function syncWeeklyBests(force){
+  for(let i = 1; i <= LB_TRACKS; i++){
+    const wb = (save.weekBest || {})[i];
+    if(wb && wb.wk === lbWeekKey() && (force || !wb.synced)) await submitWeeklyRecord(i);
+  }
+}
+// My place this week on a track: {t, rank, capped, faster[]} (faster = records ahead of me, fastest first)
+async function lbWeekStanding(track){
+  const mine = lbMyWeekBest(track);
+  if(!db || !mine) return null;
+  const CAP = 1000;
+  const snap = await lbWeekCol(track).where("time", "<", mine).orderBy("time", "asc").limit(CAP).get();
+  const faster = snap.docs.filter(d => d.id !== save.uid).map(d => d.data());
+  return { t: mine, rank: faster.length + 1, capped: snap.size >= CAP, faster };
+}
+function lbWeekLineHTML(ws){
+  const isEn = (save.lang === "en");
+  if(ws.rank === 1) return '<div class="rgLine">📅 ' + (isEn ? "<b>Fastest this week!</b> Resets in " : "<b>Najhitrejši ta teden!</b> Ponastavitev čez ") + lbWeekLeftTxt() + '</div>';
+  if(ws.capped) return "";
+  const who = d => lbEsc(d.name || "Racer");
+  if(ws.rank > 10){
+    const tenth = ws.faster[9];
+    return '<div class="rgLine">📅 <b>' + (ws.t - tenth.time).toFixed(3) + 's</b> ' + (isEn ? "to this week's top 10" : "do top 10 tega tedna") + '</div>';
+  }
+  const next = ws.faster[ws.faster.length - 1];
+  return '<div class="rgLine">📅 <b>' + (ws.t - next.time).toFixed(3) + 's</b> ' + (isEn ? "behind " : "za ") + lbOrdinal(ws.rank - 1, isEn) + ' (' + who(next) + ') ' + (isEn ? "this week" : "ta teden") + '</div>';
+}
+
+async function loadWeeklyTrackLeaderboard(trackNum){
+  const l = $("lbList");
+  if(!l) return;
+  const isEn = (save.lang === "en");
+  const mine = lbMyWeekBest(trackNum), lab = isEn ? "Your best this week" : "Tvoj najboljši ta teden";
+  lbSetMine(lab, mine ? fmt(mine) + " ⏱️" : "", null, trackNum);
+  l.innerHTML = '<div class="lbEmpty">' + (isEn ? "Loading this week's times... ⏳" : "Nalagam čase tega tedna... ⏳") + '</div>';
+  if(!db){ l.innerHTML = '<div class="lbEmpty" style="color:#ff8a80">' + (isEn ? "Database connection not available" : "Povezava z bazo ni na voljo") + '</div>'; return; }
+  const stale = () => currentLbTab !== "single" || currentLbTrack !== trackNum || lbPeriod !== "week";
+  try{
+    const snap = await lbWeekCol(trackNum).orderBy("time", "asc").limit(100).get();
+    if(stale()) return;
+    l.innerHTML = "";
+    if(snap.empty){
+      l.innerHTML = '<div class="lbEmpty">' + (isEn ? "No times this week yet.<br>Set the first one! 🏁" : "Ta teden še ni časov.<br>Postavi prvega! 🏁") + '</div>';
+    } else {
+      let idx = 0, myRank = 0;
+      snap.forEach(doc => {
+        const d = doc.data(), isMe = !!save.uid && doc.id === save.uid;
+        if(isMe && !myRank) myRank = idx + 1;
+        l.appendChild(lbRow(idx, (d.flag ? lbEsc(d.flag) + " " : "") + lbEsc(d.name || "Racer"), "", fmt(d.time), isMe));
+        idx++;
+      });
+      if(mine && myRank) lbSetMine(lab, fmt(mine) + " ⏱️", myRank, trackNum);
+      if(lbScrollMe){ const me = l.querySelector(".lbRow.me"); if(me){ me.scrollIntoView({ block: "center" }); me.classList.add("flash"); } }
+    }
+    lbScrollMe = false;
+    if(mine && !l.querySelector(".lbRow.me")){
+      try{
+        const ws = await lbWeekStanding(trackNum);
+        if(ws && !stale()) lbSetMine(lab, fmt(mine) + " ⏱️", ws.capped ? "1000+" : ws.rank, trackNum);
+      }catch(e){}
+    }
+  }catch(err){
+    console.error("Weekly leaderboard error:", err);
+    if(!stale()) l.innerHTML = '<div class="lbEmpty" style="color:#ff8a80">' + (isEn ? "Could not fetch this week's times." : "Časov tega tedna ni bilo mogoče naložiti.") + '</div>';
+  }
+}
+
+// All time / This week switch above the Single Race list
+function lbRenderPeriod(){
+  const isEn = (save.lang === "en"), wkOn = lbPeriod === "week";
+  if($("btnLbAll")){ $("btnLbAll").classList.toggle("on", !wkOn); $("btnLbAll").textContent = isEn ? "All time" : "Vseh časov"; }
+  if($("btnLbWeek")){ $("btnLbWeek").classList.toggle("on", wkOn); $("btnLbWeek").textContent = isEn ? "This week" : "Ta teden"; }
+  if($("lbResetIn")) $("lbResetIn").textContent = wkOn ? (isEn ? "Resets in " : "Nov teden čez ") + lbWeekLeftTxt() : (isEn ? "🌍 Top 100" : "🌍 Top 100");
+}
+function lbSetPeriod(p){
+  if(lbPeriod === p) return;
+  lbPeriod = p;
+  lbRenderPeriod();
+  loadGlobalTrackLeaderboard(currentLbTrack);
+}
+// Footer button text per tab: ⚔️ Challenge (Single Race) · Invite buddy · Share result (World Cup)
+function lbShareLabel(){
+  const isEn = (save.lang === "en");
+  if(currentLbTab === "buddies") return isEn ? "Invite buddy 👥" : "Povabi prijatelja 👥";
+  if(currentLbTab === "single") return isEn ? "⚔️ Challenge" : "⚔️ Izzovi";
+  return (I18N[isEn ? "en" : "sl"] || {}).shareResult || (isEn ? "Share Result 📤" : "Deli rezultat 📤");
+}
 function hasCustomPlayerName() {
   if (!save || !save.playerName) return false;
   const n = String(save.playerName).trim();
@@ -10146,6 +10827,7 @@ function showRecordNamePrompt(trackNum, t, prevBest) {
     try { submitGlobalRecord(trackNum, t); } catch(e){}
     try { showGlobalRankCard(trackNum, t, prevBest); } catch(e){}
     try { syncLocalRecordsToGlobal(); } catch(e){}
+    try { syncWeeklyBests(true); } catch(e){}   // this week's rows carry the new name too
   });
 }
 
@@ -10270,6 +10952,7 @@ async function syncLocalRecordsToGlobal(force = false) {
         }
       }
     }
+    await syncWeeklyBests(force);
   } catch(e) {}
 }
 
@@ -10499,6 +11182,7 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
   c.innerHTML = head + '<div class="rgWait">' + (isEn ? "Checking global rank… ⏳" : "Preverjam svetovno uvrstitev… ⏳") + '</div>';
   c.style.display = "block";
 
+  const wkP = lbWeekStanding(trackNum).catch(() => null);   // this week's place, fetched alongside
   try {
     // All records faster than max(this run, previous best) — enough to rank both times. Capped like the leaderboard.
     const CAP = 1000;
@@ -10529,6 +11213,9 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
     let h = head + '<div class="rgRows">' +
       row(isEn ? "This race" : "Ta dirka", ord(runRank), fmt(t), isPB ? "pb" : "");
     if (prevBest && !isPB) h += row(isEn ? "Your best" : "Tvoj rekord", ord(bestRank) + (bestRank === 1 && !capped ? " 🥇" : ""), fmt(prevBest), "");
+    const ws = await wkP;
+    if (c._tok !== tok) return;
+    if (ws) h += row("📅 " + (isEn ? "This week" : "Ta teden"), ws.capped ? lbOrdinal("1000+", isEn) : lbOrdinal(ws.rank, isEn), fmt(ws.t), "wk");
     h += '</div>';
     if (isWR) {
       h += '<div class="rgLine gold">' + (isPB ? (isEn ? "🌍 NEW WORLD RECORD!" : "🌍 NOV SVETOVNI REKORD!") : (isEn ? "🥇 Fastest time on this track" : "🥇 Najhitrejši čas na tej progi")) + '</div>';
@@ -10537,6 +11224,7 @@ async function showGlobalRankCard(trackNum, t, prevBest) {
       h += '<div class="rgLine"><b>' + (t - next.time).toFixed(3) + 's</b> ' + (isEn ? "behind" : "za") + ' ' + lbOrdinal(runRank - 1, isEn) + ' (' + who(next) + ')</div>';
       h += '<div class="rgLine">🥇 ' + (isEn ? "World record" : "Svetovni rekord") + ': <b>' + fmt(faster[0].time) + '</b> (' + who(faster[0]) + ')</div>';
     }
+    if (ws) h += lbWeekLineHTML(ws);
     h += '<button class="rgBtn" id="btnResLb">' + (isEn ? "View leaderboard →" : "Poglej lestvico →") + '</button>';
     c.innerHTML = h;
     $("btnResLb").addEventListener("click", () => {
@@ -10599,6 +11287,7 @@ function renderWorldHead() {
 }
 
 async function loadGlobalTrackLeaderboard(trackNum) {
+  if (lbPeriod === "week") return loadWeeklyTrackLeaderboard(trackNum);
   const l = $("lbList");
   if (!l) return;
   const isEn = (save.lang === "en");
@@ -10674,9 +11363,11 @@ function openLeaderboard(tabOverride){
 
   // Track selector visibility
   if ($("lbTrackBar")) $("lbTrackBar").style.display = (tab === "single" || tab === "buddies" ? "flex" : "none");
-  if ($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = tab === "buddies"
-    ? (isEn ? "Invite buddy 👥" : "Povabi prijatelja 👥")
-    : (I18N[isEn ? "en" : "sl"] || {}).shareResult || (isEn ? "Share Result 📤" : "Deli rezultat 📤");
+  if ($("btnLbShare")) $("btnLbShare").querySelector("span").textContent = lbShareLabel();
+  // Single Race: All time / This week switch replaces the hint line
+  if ($("lbPeriod")) $("lbPeriod").style.display = tab === "single" ? "flex" : "none";
+  if ($("lbHint")) $("lbHint").style.display = tab === "single" ? "none" : "";
+  if (tab === "single") lbRenderPeriod();
 
   if (tab === "buddies") {
     if ($("lbHint")) $("lbHint").textContent = isEn ? "👥 You vs your buddies on this track" : "👥 Ti proti prijateljem na tej progi";
@@ -11274,13 +11965,16 @@ function startTutorial(opts){
   setTimeout(()=>{ if(TUT.on&&TUT.step===1&&state==="prestart") tutCard(welcome?"welcome":1, welcome?()=>tutCard(1):null); },350);
 }
 // prvi zagon: brez uvodnega zaslona z besedilom — igralec pristane naravnost na Rookie Ringu
-function firstRunStart(){
+function autoPickLang(){
   if(!save.langPicked){                            // jezik iz brskalnika (privzeto angleščina)
     const pre=String((navigator.languages&&navigator.languages[0])||navigator.language||"en").slice(0,2).toLowerCase();
     const it=COUNTRY_LANGS.find(c=>c.lang===pre)||COUNTRY_LANGS.find(c=>c.lang==="en")||COUNTRY_LANGS[0];
     if(it){ save.country=it.countryCode; save.countryFlag=it.flag; save.countryName=it.name; save.lang=it.lang; save.commLang=(it.lang==="sl")?"sl":"en"; }
     applyLang(save.lang||"en");
   }
+}
+function firstRunStart(){
+  autoPickLang();
   startTutorial({welcome:true});              // tutSeen se shrani šele ob izbiri na kartici dobrodošlice
 }
 function tutEnd(){
@@ -16613,6 +17307,7 @@ function bindUI(){
     const isEn = (save.lang === "en");
     if (typeof currentLbTab !== "undefined" && currentLbTab === "buddies") { buddyInvite(false); return; }   // share = invite a buddy
     if (typeof currentLbTab !== "undefined" && currentLbTab === "single") {
+      if (lbChallenge(currentLbTrack)) return;   // ⚔️ challenge link with my best ghost; plain text share for older records without one
       const myTime = (save.trackBest && save.trackBest[currentLbTrack]);
       const tIdx = (currentLbTrack - 1);
       const tName = (typeof PREVIEWS !== "undefined" && PREVIEWS[tIdx] && PREVIEWS[tIdx].name) ? PREVIEWS[tIdx].name : ("Track " + currentLbTrack);
@@ -16832,9 +17527,19 @@ function bindUI(){
     if(training){ startTraining(training); return; }
     if(coneHunt){ startConeHunt(ttTrack); return; }
     if(timeTrial){ startTimeTrial(ttTrack,ttNumOpp); return; }
+    if(chActive){ startChallengeRace(chActive); return; }
     if(singleMode){ startSingle(curTrack); return; }
     startLevel(level);
   };
+  // Results folds: the AI finishing order and "More details"
+  $("resRaceHead").addEventListener("click",()=>{ const rs=$("results"); if(rs.classList.contains("sr")) rs.classList.toggle("aiOpen"); });
+  $("resMoreBtn").addEventListener("click",()=>{
+    const rs=$("results"), open=rs.classList.toggle("moreOpen"), en=(save.lang==="en");
+    $("resMoreBtn").textContent=(open?"▾ ":"▸ ")+(open?(en?"Less":"Manj"):(en?"More details":"Več podrobnosti"));
+  });
+  $("btnChallenge").addEventListener("click",()=>{ const f=$("btnChallenge")._go; if(f) f(); });
+  $("btnLbAll").addEventListener("click",()=>lbSetPeriod("all"));
+  $("btnLbWeek").addEventListener("click",()=>lbSetPeriod("week"));
   $("btnRestart1").addEventListener("click",retryRace);
   $("btnMenu1").addEventListener("click",toMenu);
   $("btnMenu2").addEventListener("click",toMenu);
@@ -16924,7 +17629,7 @@ function boot(){
       layout();
       applyLang(save.lang || "en");
       let viaInvite=false;
-      try{ viaInvite=mpTakeRoomFromUrl() || buddyTakeFromUrl(); }catch(e){ console.warn("Invite link error:",e); }
+      try{ viaInvite=mpTakeRoomFromUrl() || buddyTakeFromUrl() || chTakeFromUrl(); }catch(e){ console.warn("Invite link error:",e); }
       if(viaInvite){
         // opened from a room invite (QR / shared link): straight into multiplayer
       } else if(!save.tutSeen){
@@ -16935,6 +17640,7 @@ function boot(){
       try{ tryLoadChallenge(); }catch(e){}
       try{ ensureAuth().then(u=>u&&ensurePlayerClaim(u)).then(ok=>{ if(ok) buddySyncProfile(); }); }catch(e){}   // background sign-in, ready before the first record
       setTimeout(()=>{ try{ buddyCheckBeaten(); }catch(e){} }, 4000);   // "🔥 a buddy beat your time" on the menu
+      setTimeout(()=>{ try{ chCheckBeaten(); }catch(e){} }, 9000);      // "🔥 Ana beat your challenge" (after the buddy toast had its turn)
       setTimeout(()=>{ try{ buddyLoadList(); }catch(e){} }, 2500);       // buddies online (starts the buddy connection)
       try{ accHandleEmailLink(); }catch(e){}                              // returning from the "save my progress" email
       requestAnimationFrame(loop);
@@ -16943,7 +17649,7 @@ function boot(){
   // varovalka: če se nalaganje ne konča v 8 s, vseeno zaženi
   setTimeout(()=>{ if(!booted){ booted=true; toLoad=0;
     loadTrack(0); drawBG();
-    loadSave().then(()=>{ Snd.on=save.sound!==false; layout(); applyLang(save.lang || "en"); let viaInvite=false; try{ viaInvite=mpTakeRoomFromUrl() || buddyTakeFromUrl(); }catch(e){} if(!viaInvite){ if(!save.tutSeen){ firstRunStart(); } else { toMenu(); } } requestAnimationFrame(loop); });
+    loadSave().then(()=>{ Snd.on=save.sound!==false; layout(); applyLang(save.lang || "en"); let viaInvite=false; try{ viaInvite=mpTakeRoomFromUrl() || buddyTakeFromUrl() || chTakeFromUrl(); }catch(e){} if(!viaInvite){ if(!save.tutSeen){ firstRunStart(); } else { toMenu(); } } requestAnimationFrame(loop); });
   } },8000);
   TRACKS.forEach(t=>{
     prepTrack(t);
