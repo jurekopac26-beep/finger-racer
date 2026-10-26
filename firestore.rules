@@ -69,6 +69,86 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Weekly Single Race boards: tracks/{1..8}/weeks/{2026-W44}/times/{racerId} = that racer's best this week.
+    // New feature, so only signed-in owners write; a racer can only improve (or re-save) their time.
+    match /tracks/{trackId}/weeks/{wk}/times/{rid} {
+      allow read: if true;
+      allow create: if weekOk() && validWeekTime(request.resource.data);
+      allow update: if weekOk() && validWeekTime(request.resource.data)
+        && request.resource.data.time <= resource.data.time;
+      allow delete: if false;
+
+      function weekOk() {
+        return trackId in ['1', '2', '3', '4', '5', '6', '7', '8']
+          && wk.matches('^20[0-9]{2}-W[0-5][0-9]$');
+      }
+      function validWeekTime(d) {
+        return d.keys().hasOnly(['uid', 'name', 'flag', 'time', 'owner', 'updatedAt'])
+          && d.keys().hasAll(['uid', 'name', 'time', 'owner', 'updatedAt'])
+          && d.uid == rid && rid.matches('^[A-Za-z0-9_]{3,40}$')
+          && d.owner == request.auth.uid && ownsRacer(rid)
+          && d.name is string && d.name.size() >= 1 && d.name.size() <= 14
+          && (!('flag' in d) || (d.flag is string && d.flag.size() <= 16))
+          && d.time is number && d.time >= 8 && d.time <= 900
+          && d.updatedAt == request.time;
+      }
+    }
+
+    // Challenge links: challenges/{cid} = the creator's run + ghost. Readable by link (get), never listed.
+    // `key` is the creator's buddy-invite key: racing their challenge makes you buddies.
+    match /challenges/{cid} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null
+        && cid.matches('^[a-z0-9]{8,12}$')
+        && request.resource.data.keys().hasOnly(['by', 'name', 'flag', 'track', 'time', 'laps', 'grid', 'ghost', 'key', 'owner', 'createdAt'])
+        && request.resource.data.keys().hasAll(['by', 'name', 'track', 'time', 'laps', 'grid', 'ghost', 'owner', 'createdAt'])
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.by is string && ownsRacer(request.resource.data.by)
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 14
+        && (!('flag' in request.resource.data) || (request.resource.data.flag is string && request.resource.data.flag.size() <= 16))
+        && request.resource.data.track is int && request.resource.data.track >= 1 && request.resource.data.track <= 8
+        && request.resource.data.time is number && request.resource.data.time >= 8 && request.resource.data.time <= 900
+        && request.resource.data.laps is int && request.resource.data.laps >= 1 && request.resource.data.laps <= 20
+        && request.resource.data.grid is int && request.resource.data.grid >= 0 && request.resource.data.grid <= 9
+        && request.resource.data.ghost is string && request.resource.data.ghost.size() <= 150000
+        && (!('key' in request.resource.data) || (request.resource.data.key is string && request.resource.data.key.size() <= 40))
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+
+      // The group board: each racer's best on this challenge (only improves)
+      match /runs/{rid} {
+        allow read: if true;
+        allow create: if validRun(request.resource.data);
+        allow update: if validRun(request.resource.data) && request.resource.data.time <= resource.data.time;
+        allow delete: if false;
+
+        function validRun(d) {
+          return d.keys().hasOnly(['uid', 'name', 'flag', 'time', 'owner', 'updatedAt'])
+            && d.keys().hasAll(['uid', 'name', 'time', 'owner', 'updatedAt'])
+            && d.uid == rid && rid.matches('^[A-Za-z0-9_]{3,40}$')
+            && d.owner == request.auth.uid && ownsRacer(rid)
+            && d.name is string && d.name.size() >= 1 && d.name.size() <= 14
+            && (!('flag' in d) || (d.flag is string && d.flag.size() <= 16))
+            && d.time is number && d.time >= 8 && d.time <= 900
+            && d.updatedAt == request.time;
+        }
+      }
+
+      // The ghost behind each board time (fetched one at a time when someone races it)
+      match /ghosts/{rid} {
+        allow get: if true;
+        allow list: if false;
+        allow create, update: if rid.matches('^[A-Za-z0-9_]{3,40}$')
+          && request.resource.data.keys().hasOnly(['ghost', 'time', 'owner', 'updatedAt'])
+          && request.resource.data.owner == request.auth.uid && ownsRacer(rid)
+          && request.resource.data.ghost is string && request.resource.data.ghost.size() <= 150000
+          && request.resource.data.time is number && request.resource.data.time >= 8 && request.resource.data.time <= 900
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+    }
+
     // Global Single Race records: tracks/{1..8}/records/{uid}_{timeMs}
     match /tracks/{trackId}/records/{recId} {
       allow read: if true;
