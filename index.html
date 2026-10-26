@@ -6974,114 +6974,188 @@ function drawOverpasses(c,u){
     c.restore();
   }
 }
+/* ===== STATIC PROP LAYER =====
+   Standing trees / tire walls / props (1000+ per track) almost never change, so they are painted once into a
+   screen-sized canvas that drawBG composites over the track image (pixel-for-pixel what fg would draw). Only flying,
+   shaking or animated ones are drawn per frame on fg. When an object changes (knocked over, lands, starts/stops
+   shaking) only its area is repainted. While the camera moves (finish replay) everything is drawn live as before. */
+const propBake={cv:null,ctx:null,u:1,sc:0,ox:0,oy:0,cones:null,img:null,n:0,full:true};
+function propBakeInvalidate(){ propBake.full=true; }
+function propBakeValid(){ const B=propBake; return !!B.cv&&!B.full&&B.cones===cones&&B.img===trackImg&&B.sc===scale&&B.ox===offX&&B.oy===offY&&B.cv.width===bgC.width&&B.cv.height===bgC.height; }
+function propBakeable(co){ return co.state!=="fly" && !(co.shakeT>0) && !(co.prop && !co.broken && (co.kind==="windmill"||co.kind==="flag")); }
+function propKey(co){ return (co.state==="up"?1:2)+(co.broken?4:0)+(co.stumpX!=null?8:0); }
+function propBox(co,u){   // image-space bounds of everything drawCone paints for this object (generous)
+  const r=co.prop?(co.sz||1)*(PROP_R[co.kind]||7)*2.6+6:(co.tree?(co.sz||1)*5.5*u*2.3+4*u:16*u*(co.sz||1)+12);
+  let x0=co.x-r, y0=co.y-r, x1=co.x+r, y1=co.y+r;
+  if(co.stumpX!=null){ const s=5*u; x0=Math.min(x0,co.stumpX-s); y0=Math.min(y0,co.stumpY-s); x1=Math.max(x1,co.stumpX+s); y1=Math.max(y1,co.stumpY+s); }
+  return [x0,y0,x1,y1];
+}
+function propBakeMark(co){ co._bk=propKey(co); co._bx=co.x; co._by=co.y; co._bb=propBox(co,propBake.u); }
+function propBakeXf(c){ c.setTransform(dpr*scale,0,0,dpr*scale,dpr*offX,dpr*offY); }   // same world transform as drawCore
+function propBakeRebuild(){
+  const B=propBake;
+  if(!B.cv){ B.cv=document.createElement("canvas"); B.ctx=B.cv.getContext("2d"); }
+  if(B.cv.width!==bgC.width||B.cv.height!==bgC.height){ B.cv.width=bgC.width; B.cv.height=bgC.height; }
+  B.u=1/scale; B.sc=scale; B.ox=offX; B.oy=offY; B.cones=cones; B.img=trackImg; B.full=false;
+  const c=B.ctx; c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,B.cv.width,B.cv.height); propBakeXf(c);
+  let n=0;
+  for(const co of cones){
+    if(!propBakeable(co)){ co._bk=0; continue; }
+    propBakeMark(co); n++;
+    drawCone(c,co,B.u);
+  }
+  B.n=n;
+  drawBG();
+}
+function propBakeRepaint(x0,y0,x1,y1){   // image-space rect -> redo those device pixels on the layer and on bg
+  const B=propBake, c=B.ctx, s=dpr*scale;
+  const px0=Math.max(0,Math.floor(dpr*offX+Math.max(0,x0)*s)), py0=Math.max(0,Math.floor(dpr*offY+Math.max(0,y0)*s));
+  const px1=Math.min(B.cv.width,Math.ceil(dpr*offX+Math.min(IW,x1)*s)), py1=Math.min(B.cv.height,Math.ceil(dpr*offY+Math.min(IH,y1)*s));
+  if(px1<=px0||py1<=py0) return;
+  c.save(); c.setTransform(1,0,0,1,0,0); c.beginPath(); c.rect(px0,py0,px1-px0,py1-py0); c.clip(); c.clearRect(px0,py0,px1-px0,py1-py0);
+  propBakeXf(c);
+  for(const co of cones){ const b=co._bk&&co._bb; if(b&&b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0) drawCone(c,co,B.u); }
+  c.restore();
+  // same pixels on bg: the (opaque) track image, then the updated layer
+  bg.save(); bg.setTransform(1,0,0,1,0,0); bg.beginPath(); bg.rect(px0,py0,px1-px0,py1-py0); bg.clip();
+  bg.setTransform(dpr,0,0,dpr,0,0); bg.drawImage(trackImg,offX,offY,IW*scale,IH*scale);
+  bg.setTransform(1,0,0,1,0,0); bg.drawImage(B.cv,0,0);
+  bg.restore();
+}
+function propBakeSync(){   // true = objects with co._bk are on the background and must be skipped on fg
+  const B=propBake;
+  if(!bg||!trackImg||!trackImg.width||!IW) return false;
+  if(B.full||B.cones!==cones||B.img!==trackImg||B.cv.width!==bgC.width||B.cv.height!==bgC.height){ propBakeRebuild(); return true; }
+  if(B.sc!==scale||B.ox!==offX||B.oy!==offY) return false;   // camera moving (finish replay): draw everything live
+  let n=0, added=0, gone=0, d=null;
+  const grow=b=>{ if(!d) d=b.slice(); else { if(b[0]<d[0])d[0]=b[0]; if(b[1]<d[1])d[1]=b[1]; if(b[2]>d[2])d[2]=b[2]; if(b[3]>d[3])d[3]=b[3]; } };
+  for(const co of cones){
+    if(propBakeable(co)){
+      n++;
+      if(co._bk!==propKey(co)||co._bx!==co.x||co._by!==co.y){
+        if(co._bk) grow(co._bb); else added++;
+        propBakeMark(co); grow(co._bb);
+      }
+    } else if(co._bk){ grow(co._bb); co._bk=0; gone++; }
+  }
+  if(B.n+added-gone!==n){ propBakeRebuild(); return true; }   // a baked object was removed from cones
+  B.n=n;
+  if(d){ if((d[2]-d[0])*(d[3]-d[1])>IW*IH*0.4) propBakeRebuild(); else propBakeRepaint(d[0],d[1],d[2],d[3]); }
+  return true;
+}
 function drawCones(c,u){
+  const baked=propBakeSync();
   const mX=25, mY=25;
   for(const co of cones){
+    if(baked&&co._bk) continue;                          // already painted into the background (static layer)
     const sx=offX+co.x*scale, sy=offY+co.y*scale;
     if(sx<-mX||sx>W+mX||sy<-mY||sy>H+mY) continue;    // preskoči izven zaslona
-    c.save(); c.translate(co.x,co.y);
-    if(co.prop){ drawProp(c,co,u); c.restore(); continue; }
-    if(co.barrel){
-      const r=(co.sz||1)*5.5*u;
-      c.fillStyle="rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(1*u,2*u,r*0.9,r*0.5,0,0,6.28); c.fill();
-      const grd=c.createLinearGradient(-r,0,r,0); grd.addColorStop(0,"#000000"); grd.addColorStop(.5,co.col||"#c0562a"); grd.addColorStop(1,"#000000");
-      c.globalAlpha=0.35; c.fillStyle=co.col||"#c0562a"; c.beginPath(); c.ellipse(0,0,r*0.85,r*0.95,0,0,6.28); c.fill(); c.globalAlpha=1;
-      c.fillStyle=co.col||"#c0562a"; c.beginPath(); c.ellipse(0,0,r*0.8,r*0.9,0,0,6.28); c.fill();
-      c.strokeStyle="rgba(0,0,0,.35)"; c.lineWidth=1*u; c.beginPath(); c.ellipse(0,-r*0.3,r*0.8,r*0.25,0,0,6.28); c.stroke(); c.beginPath(); c.ellipse(0,r*0.3,r*0.8,r*0.25,0,0,6.28); c.stroke();
-      c.fillStyle="rgba(255,255,255,.18)"; c.beginPath(); c.ellipse(-r*0.3,-r*0.2,r*0.16,r*0.5,0,0,6.28); c.fill();
-      c.restore(); continue;
-    }
-    if(co.brick){
-      c.rotate(co.ang||0);
-      if(co.tire){ const R=11, ring=(co.col==="#f2f2f4")?"#f2f2f4":"#c62828";
-        c.fillStyle="rgba(0,0,0,.22)"; c.beginPath(); c.ellipse(R*0.12,R*0.2,R*0.66,R*0.5,0,0,6.28); c.fill();
-        c.fillStyle="#161616"; c.beginPath(); c.arc(0,0,R*0.6,0,6.28); c.fill();
-        c.fillStyle=ring; c.beginPath(); c.arc(0,0,R*0.48,0,6.28); c.fill();
-        c.fillStyle="#141414"; c.beginPath(); c.arc(0,0,R*0.2,0,6.28); c.fill();
-        c.fillStyle="rgba(255,255,255,.18)"; c.beginPath(); c.arc(-R*0.15,-R*0.16,R*0.13,0,6.28); c.fill();
-        c.restore(); continue; }
-      if(co.plank){ const L2=10*u*(co.sz||1), W2=2.6*u*(co.sz||1); const wc=co.col||"#a67c3b";
-        c.fillStyle="rgba(0,0,0,.2)"; c.fillRect(-L2*0.5+0.8*u,-W2*0.5+0.8*u,L2,W2);
-        c.fillStyle=wc; c.fillRect(-L2*0.5,-W2*0.5,L2,W2);
-        c.fillStyle="rgba(0,0,0,.25)"; c.fillRect(-L2*0.5,W2*0.2,L2,W2*0.3);            // lesna reža
-        c.fillStyle="rgba(255,255,255,.14)"; c.fillRect(-L2*0.5,-W2*0.5,L2,W2*0.22);   // svetli rob
-        c.restore(); continue; }
-      if(co.rock){ const r=4.5*u*(co.sz||1); const cc=co.col||"#8a8d92";
-        c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.arc(1*u,1*u,r,0,6.28); c.fill();
-        c.fillStyle=cc; c.beginPath(); c.arc(0,0,r,0,6.28); c.fill();
-        c.fillStyle="rgba(255,255,255,.14)"; c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.5,0,6.28); c.fill();
-        c.restore(); continue; }
-      if(co.leaf){ const r=5*u*(co.sz||1);
-        c.fillStyle="rgba(0,0,0,.20)"; c.beginPath(); c.ellipse(1*u,1*u,r,r*0.55,0,0,6.28); c.fill();
-        c.fillStyle=co.col||"#2f7d33"; c.beginPath(); c.ellipse(0,0,r,r*0.55,0,0,6.28); c.fill();
-        c.strokeStyle="#5a3f22"; c.lineWidth=0.8*u; c.beginPath(); c.moveTo(-r,0); c.lineTo(r*1.1,0); c.stroke();
-        c.restore(); continue; }
-      // preostale razbitine kot lesene letvice (brez sivih/pravokotnih kock)
-      { const L2=9*u*(co.sz||1), W2=2.4*u*(co.sz||1); let wc=co.col||"#a67c3b";
-        if(/^#?(8|9|6|7|a|b)[0-9a-f]{1,5}$/i.test((wc||"").replace("#",""))&&/8a8d92|6a6d72|8a837|9a908|9aa0a|d8d8d/i.test(wc)) wc="#a67c3b"; // sive -> les
-        c.fillStyle="rgba(0,0,0,.22)"; c.fillRect(-L2*0.5+0.8*u,-W2*0.5+0.8*u,L2,W2);
-        c.fillStyle=wc; c.fillRect(-L2*0.5,-W2*0.5,L2,W2);
-        c.fillStyle="rgba(0,0,0,.25)"; c.fillRect(-L2*0.5,W2*0.15,L2,W2*0.32);
-        c.fillStyle="rgba(255,255,255,.13)"; c.fillRect(-L2*0.5,-W2*0.5,L2,W2*0.22); }
-      c.restore(); continue;
-    }
-    if(co.tree){
-      const r=(co.sz||1)*5.5*u;
-      const cD=co.colD||"#18461b", cM=co.col||"#2f7d33", cL=co.colL||"#49a94e";
-      // PANJ/sled na izvornem mestu podrtega drevesa (2)
-      if(co.stumpX!=null){
-        c.fillStyle="rgba(60,40,22,.5)"; c.beginPath(); c.ellipse((co.stumpX-co.x),(co.stumpY-co.y),3.2*u,2.2*u,0,0,6.28); c.fill();
-        c.fillStyle="#8a6a3a"; c.beginPath(); c.arc((co.stumpX-co.x),(co.stumpY-co.y),1.7*u,0,6.28); c.fill(); }
-      if(co.state==="up"){
-        const wob=(co.shakeT>0)?Math.sin(performance.now()/1000*40+(co.ang||0))*co.shakeT*0.5*r:0;  // trese se le ob bližnjem trku
-        c.translate(wob,0);
-        c.fillStyle="rgba(0,0,0,.10)"; c.beginPath(); c.ellipse(r*0.5,r*0.6,r*1.15,r*0.62,0,0,6.28); c.fill();
-        c.fillStyle="rgba(0,0,0,.14)"; c.beginPath(); c.ellipse(r*0.5,r*0.6,r*0.78,r*0.42,0,0,6.28); c.fill();
-        const ty=(co.kind||0);
-        if(ty===1){ // IGLAVEC (koničast, plasten)
-          for(const [rr,col] of [[r*1.1,cD],[r*0.82,cM],[r*0.54,cL]]){ c.fillStyle=col; c.beginPath(); const P=14; for(let q=0;q<=P;q++){ const a=q/P*6.28, rad=rr*(q%2?0.74:1); c.lineTo(Math.cos(a)*rad-r*0.06,Math.sin(a)*rad-r*0.07); } c.closePath(); c.fill(); }
-          c.fillStyle="#5a3f22"; c.beginPath(); c.arc(-r*0.06,-r*0.07,r*0.12,0,6.28); c.fill();
-        } else if(ty===2){ // GRM (nizek, bujen)
-          const lob=[[-r*0.42,r*0.08,r*0.62],[r*0.4,-r*0.04,r*0.66],[0,-r*0.36,r*0.54],[r*0.08,r*0.34,r*0.5]];
-          c.fillStyle=cD; for(const L of lob){ c.beginPath(); c.arc(L[0],L[1],L[2],0,6.28); c.fill(); }
-          c.fillStyle=cM; for(const L of lob){ c.beginPath(); c.arc(L[0]-r*0.1,L[1]-r*0.12,L[2]*0.72,0,6.28); c.fill(); }
-          c.fillStyle=cL; for(let i=0;i<lob.length;i+=2){ const L=lob[i]; c.beginPath(); c.arc(L[0]-r*0.2,L[1]-r*0.24,L[2]*0.42,0,6.28); c.fill(); }
-        } else { // LISTAVEC (okrogel, bujen — »brokoli«)
-          const N=6, lob=[]; const seed=co.x*2.7+co.y*1.9;
-          for(let i=0;i<N;i++){ const a=i/N*6.28+_fr(seed+i)*0.9, d=r*(0.40+_fr(seed+i*3.1)*0.32), rr=r*(0.50+_fr(seed+i*7.3)*0.28); lob.push([Math.cos(a)*d,Math.sin(a)*d*0.94,rr]); }
-          lob.push([0,-r*0.04,r*0.74]);
-          c.fillStyle=cD; for(const L of lob){ c.beginPath(); c.arc(L[0],L[1],L[2],0,6.28); c.fill(); }
-          c.fillStyle=cM; for(const L of lob){ c.beginPath(); c.arc(L[0]-r*0.11,L[1]-r*0.13,L[2]*0.73,0,6.28); c.fill(); }
-          c.fillStyle=cL; for(let i=0;i<lob.length;i+=2){ const L=lob[i]; c.beginPath(); c.arc(L[0]-r*0.22,L[1]-r*0.27,L[2]*0.44,0,6.28); c.fill(); }
-        }
-      } else {
-        c.rotate(co.ang);
-        c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(r*0.3,r*0.3,r*1.4,r*0.65,0,0,6.28); c.fill();
-        c.strokeStyle="#6b4a2b"; c.lineWidth=2.2*u; c.beginPath(); c.moveTo(-r*1.2,0); c.lineTo(r*0.3,0); c.stroke();
-        c.fillStyle=cD; c.beginPath(); c.ellipse(r*0.5,0,r*0.9,r*0.65,0,0,6.28); c.fill();
-        c.fillStyle=cM; c.beginPath(); c.ellipse(r*0.45,-r*0.1,r*0.48,r*0.34,0,0,6.28); c.fill();
-      }
-      c.restore(); continue;
-    }
+    drawCone(c,co,u);
+  }
+}
+function drawCone(c,co,u){
+  c.save(); c.translate(co.x,co.y);
+  if(co.prop){ drawProp(c,co,u); c.restore(); return; }
+  if(co.barrel){
+    const r=(co.sz||1)*5.5*u;
+    c.fillStyle="rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(1*u,2*u,r*0.9,r*0.5,0,0,6.28); c.fill();
+    const grd=c.createLinearGradient(-r,0,r,0); grd.addColorStop(0,"#000000"); grd.addColorStop(.5,co.col||"#c0562a"); grd.addColorStop(1,"#000000");
+    c.globalAlpha=0.35; c.fillStyle=co.col||"#c0562a"; c.beginPath(); c.ellipse(0,0,r*0.85,r*0.95,0,0,6.28); c.fill(); c.globalAlpha=1;
+    c.fillStyle=co.col||"#c0562a"; c.beginPath(); c.ellipse(0,0,r*0.8,r*0.9,0,0,6.28); c.fill();
+    c.strokeStyle="rgba(0,0,0,.35)"; c.lineWidth=1*u; c.beginPath(); c.ellipse(0,-r*0.3,r*0.8,r*0.25,0,0,6.28); c.stroke(); c.beginPath(); c.ellipse(0,r*0.3,r*0.8,r*0.25,0,0,6.28); c.stroke();
+    c.fillStyle="rgba(255,255,255,.18)"; c.beginPath(); c.ellipse(-r*0.3,-r*0.2,r*0.16,r*0.5,0,0,6.28); c.fill();
+    c.restore(); return;
+  }
+  if(co.brick){
+    c.rotate(co.ang||0);
+    if(co.tire){ const R=11, ring=(co.col==="#f2f2f4")?"#f2f2f4":"#c62828";
+      c.fillStyle="rgba(0,0,0,.22)"; c.beginPath(); c.ellipse(R*0.12,R*0.2,R*0.66,R*0.5,0,0,6.28); c.fill();
+      c.fillStyle="#161616"; c.beginPath(); c.arc(0,0,R*0.6,0,6.28); c.fill();
+      c.fillStyle=ring; c.beginPath(); c.arc(0,0,R*0.48,0,6.28); c.fill();
+      c.fillStyle="#141414"; c.beginPath(); c.arc(0,0,R*0.2,0,6.28); c.fill();
+      c.fillStyle="rgba(255,255,255,.18)"; c.beginPath(); c.arc(-R*0.15,-R*0.16,R*0.13,0,6.28); c.fill();
+      c.restore(); return; }
+    if(co.plank){ const L2=10*u*(co.sz||1), W2=2.6*u*(co.sz||1); const wc=co.col||"#a67c3b";
+      c.fillStyle="rgba(0,0,0,.2)"; c.fillRect(-L2*0.5+0.8*u,-W2*0.5+0.8*u,L2,W2);
+      c.fillStyle=wc; c.fillRect(-L2*0.5,-W2*0.5,L2,W2);
+      c.fillStyle="rgba(0,0,0,.25)"; c.fillRect(-L2*0.5,W2*0.2,L2,W2*0.3);            // lesna reža
+      c.fillStyle="rgba(255,255,255,.14)"; c.fillRect(-L2*0.5,-W2*0.5,L2,W2*0.22);   // svetli rob
+      c.restore(); return; }
+    if(co.rock){ const r=4.5*u*(co.sz||1); const cc=co.col||"#8a8d92";
+      c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.arc(1*u,1*u,r,0,6.28); c.fill();
+      c.fillStyle=cc; c.beginPath(); c.arc(0,0,r,0,6.28); c.fill();
+      c.fillStyle="rgba(255,255,255,.14)"; c.beginPath(); c.arc(-r*0.3,-r*0.3,r*0.5,0,6.28); c.fill();
+      c.restore(); return; }
+    if(co.leaf){ const r=5*u*(co.sz||1);
+      c.fillStyle="rgba(0,0,0,.20)"; c.beginPath(); c.ellipse(1*u,1*u,r,r*0.55,0,0,6.28); c.fill();
+      c.fillStyle=co.col||"#2f7d33"; c.beginPath(); c.ellipse(0,0,r,r*0.55,0,0,6.28); c.fill();
+      c.strokeStyle="#5a3f22"; c.lineWidth=0.8*u; c.beginPath(); c.moveTo(-r,0); c.lineTo(r*1.1,0); c.stroke();
+      c.restore(); return; }
+    // preostale razbitine kot lesene letvice (brez sivih/pravokotnih kock)
+    { const L2=9*u*(co.sz||1), W2=2.4*u*(co.sz||1); let wc=co.col||"#a67c3b";
+      if(/^#?(8|9|6|7|a|b)[0-9a-f]{1,5}$/i.test((wc||"").replace("#",""))&&/8a8d92|6a6d72|8a837|9a908|9aa0a|d8d8d/i.test(wc)) wc="#a67c3b"; // sive -> les
+      c.fillStyle="rgba(0,0,0,.22)"; c.fillRect(-L2*0.5+0.8*u,-W2*0.5+0.8*u,L2,W2);
+      c.fillStyle=wc; c.fillRect(-L2*0.5,-W2*0.5,L2,W2);
+      c.fillStyle="rgba(0,0,0,.25)"; c.fillRect(-L2*0.5,W2*0.15,L2,W2*0.32);
+      c.fillStyle="rgba(255,255,255,.13)"; c.fillRect(-L2*0.5,-W2*0.5,L2,W2*0.22); }
+    c.restore(); return;
+  }
+  if(co.tree){
+    const r=(co.sz||1)*5.5*u;
+    const cD=co.colD||"#18461b", cM=co.col||"#2f7d33", cL=co.colL||"#49a94e";
+    // PANJ/sled na izvornem mestu podrtega drevesa (2)
+    if(co.stumpX!=null){
+      c.fillStyle="rgba(60,40,22,.5)"; c.beginPath(); c.ellipse((co.stumpX-co.x),(co.stumpY-co.y),3.2*u,2.2*u,0,0,6.28); c.fill();
+      c.fillStyle="#8a6a3a"; c.beginPath(); c.arc((co.stumpX-co.x),(co.stumpY-co.y),1.7*u,0,6.28); c.fill(); }
     if(co.state==="up"){
-      // manjši, realističen stožec (3/4 pogled): senca + podstavek + stožast trikotnik + 2 odsevna pasova
-      const H=13*u, W=6.5*u;
-      c.fillStyle="rgba(0,0,0,.32)"; c.beginPath(); c.ellipse(1*u,2.2*u,W*1.05,W*0.55,0,0,6.28); c.fill();   // senca
-      c.fillStyle="#e15a00"; c.beginPath(); c.ellipse(0,2*u,W*1.15,W*0.6,0,0,6.28); c.fill();                 // podstavek
-      const grd=c.createLinearGradient(-W,0,W,0); grd.addColorStop(0,"#c94e00"); grd.addColorStop(.5,"#ff8322"); grd.addColorStop(1,"#c94e00");
-      c.fillStyle=grd; c.beginPath(); c.moveTo(0,-H); c.lineTo(-W,2*u); c.quadraticCurveTo(0,3.2*u,W,2*u); c.closePath(); c.fill();
-      c.fillStyle="#fff4e6"; c.beginPath(); c.moveTo(-W*0.7,-H*0.28); c.lineTo(W*0.7,-H*0.28); c.lineTo(W*0.58,-H*0.05); c.lineTo(-W*0.58,-H*0.05); c.closePath(); c.fill();   // odsevni pas
-      c.fillStyle="rgba(255,255,255,.4)"; c.fillRect(-W*0.28,-H*0.95,W*0.22,H*0.8);                            // sij
+      const wob=(co.shakeT>0)?Math.sin(performance.now()/1000*40+(co.ang||0))*co.shakeT*0.5*r:0;  // trese se le ob bližnjem trku
+      c.translate(wob,0);
+      c.fillStyle="rgba(0,0,0,.10)"; c.beginPath(); c.ellipse(r*0.5,r*0.6,r*1.15,r*0.62,0,0,6.28); c.fill();
+      c.fillStyle="rgba(0,0,0,.14)"; c.beginPath(); c.ellipse(r*0.5,r*0.6,r*0.78,r*0.42,0,0,6.28); c.fill();
+      const ty=(co.kind||0);
+      if(ty===1){ // IGLAVEC (koničast, plasten)
+        for(const [rr,col] of [[r*1.1,cD],[r*0.82,cM],[r*0.54,cL]]){ c.fillStyle=col; c.beginPath(); const P=14; for(let q=0;q<=P;q++){ const a=q/P*6.28, rad=rr*(q%2?0.74:1); c.lineTo(Math.cos(a)*rad-r*0.06,Math.sin(a)*rad-r*0.07); } c.closePath(); c.fill(); }
+        c.fillStyle="#5a3f22"; c.beginPath(); c.arc(-r*0.06,-r*0.07,r*0.12,0,6.28); c.fill();
+      } else if(ty===2){ // GRM (nizek, bujen)
+        const lob=[[-r*0.42,r*0.08,r*0.62],[r*0.4,-r*0.04,r*0.66],[0,-r*0.36,r*0.54],[r*0.08,r*0.34,r*0.5]];
+        c.fillStyle=cD; for(const L of lob){ c.beginPath(); c.arc(L[0],L[1],L[2],0,6.28); c.fill(); }
+        c.fillStyle=cM; for(const L of lob){ c.beginPath(); c.arc(L[0]-r*0.1,L[1]-r*0.12,L[2]*0.72,0,6.28); c.fill(); }
+        c.fillStyle=cL; for(let i=0;i<lob.length;i+=2){ const L=lob[i]; c.beginPath(); c.arc(L[0]-r*0.2,L[1]-r*0.24,L[2]*0.42,0,6.28); c.fill(); }
+      } else { // LISTAVEC (okrogel, bujen — »brokoli«)
+        const N=6, lob=[]; const seed=co.x*2.7+co.y*1.9;
+        for(let i=0;i<N;i++){ const a=i/N*6.28+_fr(seed+i)*0.9, d=r*(0.40+_fr(seed+i*3.1)*0.32), rr=r*(0.50+_fr(seed+i*7.3)*0.28); lob.push([Math.cos(a)*d,Math.sin(a)*d*0.94,rr]); }
+        lob.push([0,-r*0.04,r*0.74]);
+        c.fillStyle=cD; for(const L of lob){ c.beginPath(); c.arc(L[0],L[1],L[2],0,6.28); c.fill(); }
+        c.fillStyle=cM; for(const L of lob){ c.beginPath(); c.arc(L[0]-r*0.11,L[1]-r*0.13,L[2]*0.73,0,6.28); c.fill(); }
+        c.fillStyle=cL; for(let i=0;i<lob.length;i+=2){ const L=lob[i]; c.beginPath(); c.arc(L[0]-r*0.22,L[1]-r*0.27,L[2]*0.44,0,6.28); c.fill(); }
+      }
     } else {
       c.rotate(co.ang);
-      if(co.state==="fly"){ c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(2.5*u,3*u,7*u,3.5*u,0,0,6.28); c.fill(); }
-      const H=11*u, W=5*u;
-      const grd=c.createLinearGradient(-H*0.4,0,H*0.6,0); grd.addColorStop(0,"#c94e00"); grd.addColorStop(1,"#ff8322");
-      c.fillStyle=grd; c.beginPath(); c.moveTo(H*0.6,0); c.lineTo(-H*0.4,-W); c.quadraticCurveTo(-H*0.5,0,-H*0.4,W); c.closePath(); c.fill();
-      c.fillStyle="#fff4e6"; c.fillRect(H*0.05,-W*0.6,2.2*u,W*1.2);
+      c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(r*0.3,r*0.3,r*1.4,r*0.65,0,0,6.28); c.fill();
+      c.strokeStyle="#6b4a2b"; c.lineWidth=2.2*u; c.beginPath(); c.moveTo(-r*1.2,0); c.lineTo(r*0.3,0); c.stroke();
+      c.fillStyle=cD; c.beginPath(); c.ellipse(r*0.5,0,r*0.9,r*0.65,0,0,6.28); c.fill();
+      c.fillStyle=cM; c.beginPath(); c.ellipse(r*0.45,-r*0.1,r*0.48,r*0.34,0,0,6.28); c.fill();
     }
-    c.restore();
+    c.restore(); return;
   }
+  if(co.state==="up"){
+    // manjši, realističen stožec (3/4 pogled): senca + podstavek + stožast trikotnik + 2 odsevna pasova
+    const H=13*u, W=6.5*u;
+    c.fillStyle="rgba(0,0,0,.32)"; c.beginPath(); c.ellipse(1*u,2.2*u,W*1.05,W*0.55,0,0,6.28); c.fill();   // senca
+    c.fillStyle="#e15a00"; c.beginPath(); c.ellipse(0,2*u,W*1.15,W*0.6,0,0,6.28); c.fill();                 // podstavek
+    const grd=c.createLinearGradient(-W,0,W,0); grd.addColorStop(0,"#c94e00"); grd.addColorStop(.5,"#ff8322"); grd.addColorStop(1,"#c94e00");
+    c.fillStyle=grd; c.beginPath(); c.moveTo(0,-H); c.lineTo(-W,2*u); c.quadraticCurveTo(0,3.2*u,W,2*u); c.closePath(); c.fill();
+    c.fillStyle="#fff4e6"; c.beginPath(); c.moveTo(-W*0.7,-H*0.28); c.lineTo(W*0.7,-H*0.28); c.lineTo(W*0.58,-H*0.05); c.lineTo(-W*0.58,-H*0.05); c.closePath(); c.fill();   // odsevni pas
+    c.fillStyle="rgba(255,255,255,.4)"; c.fillRect(-W*0.28,-H*0.95,W*0.22,H*0.8);                            // sij
+  } else {
+    c.rotate(co.ang);
+    if(co.state==="fly"){ c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(2.5*u,3*u,7*u,3.5*u,0,0,6.28); c.fill(); }
+    const H=11*u, W=5*u;
+    const grd=c.createLinearGradient(-H*0.4,0,H*0.6,0); grd.addColorStop(0,"#c94e00"); grd.addColorStop(1,"#ff8322");
+    c.fillStyle=grd; c.beginPath(); c.moveTo(H*0.6,0); c.lineTo(-H*0.4,-W); c.quadraticCurveTo(-H*0.5,0,-H*0.4,W); c.closePath(); c.fill();
+    c.fillStyle="#fff4e6"; c.fillRect(H*0.05,-W*0.6,2.2*u,W*1.2);
+  }
+  c.restore();
 }
 function _ghostKey(){ const m = careerLv?("c"+careerLv):(wc?"wc":(training?("tr"+training):(singleMode?"s":"r"))); return m+"_"+curTrack; }
 function generateWorldRecordGhost(trackIdx, crossNeed){
@@ -8542,6 +8616,7 @@ function layout(){
     offX=(W-IW*scale)/2;
     offY=top+Math.max(0,(H-top-12-IH*scale)/2);
   }
+  propBakeInvalidate();   // prop sizes/line widths depend on scale -> re-bake on next drawCones
   drawBG();
 }
 function camCenter(snap){
@@ -8564,6 +8639,7 @@ function drawBG(){
       bg.save(); bg.filter="blur(8px) brightness(0.45)"; bg.drawImage(trackImg,cX,cY,IW*cS,IH*cS); bg.restore();
     }
     bg.drawImage(trackImg,offX,offY,IW*scale,IH*scale);
+    if(propBakeValid()){ bg.save(); bg.setTransform(1,0,0,1,0,0); bg.drawImage(propBake.cv,0,0); bg.restore(); }   // static trees/props
   }
 }
 /* ===== ŽIVALSKI VRT v sredini dirkališča ===== */
