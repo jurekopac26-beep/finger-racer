@@ -117,4 +117,21 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
     expect(hardData.estTime / hardData.wr).toBeLessThan(1.05);
     expect(hardData.leadRacerSpeed).toBeGreaterThan(easyData.leadRacerSpeed);
   });
+
+  test('Career follows the difficulty: Hard runs the record, Easy keeps the level ramp', async ({ page }) => {
+    const data = await page.evaluate(() => {
+      window.isFreemiumActive = () => false;
+      save.diffMode = 'easy'; save.diff = 0;
+      startCareer(5);
+      const easy = { speed: racers[0].v, wrCar: racers[0].wrCar };
+      save.diffMode = 'hard'; save.diff = 1;
+      startCareer(5);
+      return { easy, hard: { speed: racers[0].v, wrCar: racers[0].wrCar, ratio: aiLeadTimeEst(aiParams.SKILLS[0], 6) / wrTime(curTrack + 1) } };
+    });
+    expect(data.easy.wrCar).toBe(false);
+    expect(data.hard.wrCar).toBe(true);
+    expect(data.hard.ratio).toBeGreaterThan(0.95);
+    expect(data.hard.ratio).toBeLessThan(1.05);
+    expect(data.hard.speed).toBeGreaterThan(data.easy.speed * 1.5);
+  });
 });
