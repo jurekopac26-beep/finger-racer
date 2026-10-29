@@ -112,4 +112,74 @@ test.describe('Multiplayer lobby: rooms + racers + chat dock (no tabs)', () => {
     await expect(page.locator('#mpQJSub')).toContainText('Speed Thunder');
     await expect(page.locator('#btnMpQJAction')).toBeVisible();
   });
+
+  test('Multiplayer finish signaling: timer chip count, 2nd finisher announcement, and gap clearing', async ({ page }) => {
+    await openLobby(page, { width: 800, height: 600 }, 'Racer_Me');
+    await page.evaluate(() => {
+      mpCreateRoom({ isPublic: true, track: 0, laps: 3, nai: 0, mode: 'single', voice: false });
+      mpOnData({ t: 'join', sender: 'peer-1', name: 'TurboMax', color: '#ff3366' });
+      mpOnData({ t: 'join', sender: 'peer-2', name: 'ApexKing', color: '#33ccff' });
+      mpStartRace(true);
+      state = 'racing';
+      raceTime = 35.0;
+      mpOnData({ t: 'pos', sender: 'peer-1', x: 200, y: 200, a: 0, p: 2500, s: 400, crossings: 3, dmg: 0 });
+      mpOnData({ t: 'pos', sender: 'peer-2', x: 180, y: 200, a: 0, p: 1800, s: 300, crossings: 2, dmg: 0 });
+      drawMpOpp(document.querySelector('canvas').getContext('2d'));
+    });
+
+    // Initially racing peers produce a non-null gap
+    const initialGap = await page.evaluate(() => mp.gap);
+    expect(initialGap).not.toBeNull();
+
+    // 1st opponent finishes
+    await page.evaluate(() => {
+      mpOnData({ t: 'fin', sender: 'peer-1', time: 33.45 });
+      updateHUD(true);
+    });
+
+    await expect(page.locator('#mpEndTimerChip')).toBeVisible();
+    await expect(page.locator('#mpEndTimerChip')).toContainText('🏁 1/3 in goal');
+    await expect(page.locator('#standings')).toContainText('🏁 #1');
+
+    // 2nd opponent finishes — banner should announce #2 and chip should show 2/3
+    await page.evaluate(() => {
+      mpOnData({ t: 'fin', sender: 'peer-2', time: 36.12 });
+      drawMpOpp(document.querySelector('canvas').getContext('2d'));
+      updateHUD(true);
+    });
+
+    await expect(page.locator('#mpEndTimerChip')).toContainText('🏁 2/3 in goal');
+    await expect(page.locator('#banner')).toContainText('ApexKing finished #2');
+    // Since all opponents have now finished, mp.gap should be cleared to null
+    const gapAfterAllOppsDone = await page.evaluate(() => mp.gap);
+    expect(gapAfterAllOppsDone).toBeNull();
+  });
+
+  test('Waiting for opponents overlay (#mpWaitFinishCard) appears when local player finishes first and hides when all finish', async ({ page }) => {
+    await openLobby(page, { width: 800, height: 600 }, 'SpeedHero');
+    await page.evaluate(() => {
+      mpCreateRoom({ isPublic: true, track: 0, laps: 3, nai: 0, mode: 'single', voice: false });
+      mpOnData({ t: 'join', sender: 'peer-1', name: 'SlowPoke', color: '#ff9900' });
+      mpStartRace(true);
+      state = 'racing';
+      raceTime = 41.25;
+      mpOnData({ t: 'pos', sender: 'peer-1', x: 150, y: 150, a: 0, p: 1200, s: 200, crossings: 2, dmg: 0 });
+      mpFinish();
+    });
+
+    await expect(page.locator('#mpWaitFinishCard')).toBeVisible();
+    await expect(page.locator('#mpWaitFinishCard')).toContainText('YOU FINISHED #1');
+    await expect(page.locator('#mpWaitFinishCard')).toContainText('SlowPoke');
+    await expect(page.locator('#mpWaitFinishCard')).toContainText('Lap 2/3');
+    await expect(page.locator('#hTime')).toContainText('🏁');
+
+    // Now the remaining opponent crosses the finish line
+    await page.evaluate(() => {
+      mpOnData({ t: 'fin', sender: 'peer-1', time: 45.80 });
+    });
+
+    await expect(page.locator('#mpWaitFinishCard')).toBeHidden();
+    await expect(page.locator('#results')).toHaveClass(/on/);
+  });
 });
+

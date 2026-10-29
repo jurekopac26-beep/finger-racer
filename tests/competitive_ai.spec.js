@@ -23,7 +23,7 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
     await page.waitForSelector('#menu.on', { timeout: 10000 });
   });
 
-  test('Settings modal displays Easy (default) and Hard difficulty options and allows toggling', async ({ page }) => {
+  test('Settings modal displays Easy and Hard (default) difficulty options and allows toggling', async ({ page }) => {
     await page.evaluate(() => {
       openSettings();
     });
@@ -31,21 +31,23 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
     const diffOpts = page.locator('#diffOpts .setOpt');
     await expect(diffOpts).toHaveCount(2);
 
-    // Easy option is selected by default
+    // Hard is the default, even over an old saved 'easy' the player never picked
     const easyOpt = diffOpts.first();
     const hardOpt = diffOpts.nth(1);
-    await expect(easyOpt).toHaveClass(/sel/);
-    await expect(easyOpt).toContainText('Easy');
-    await expect(hardOpt).not.toHaveClass(/sel/);
-    await expect(hardOpt).toContainText('Hard');
-
-    // Click Hard option
-    await hardOpt.click();
     await expect(hardOpt).toHaveClass(/sel/);
+    await expect(hardOpt).toContainText('Hard');
     await expect(easyOpt).not.toHaveClass(/sel/);
+    await expect(easyOpt).toContainText('Easy');
 
-    const savedMode = await page.evaluate(() => save.diffMode);
-    expect(savedMode).toBe('hard');
+    // Click Easy option: the choice sticks across a reload
+    await easyOpt.click();
+    await expect(easyOpt).toHaveClass(/sel/);
+    await expect(hardOpt).not.toHaveClass(/sel/);
+    expect(await page.evaluate(() => [save.diffMode, save.diffPicked])).toEqual(['easy', true]);
+
+    await page.reload();
+    await page.waitForSelector('#menu.on', { timeout: 10000 });
+    expect(await page.evaluate(() => save.diffMode)).toBe('easy');
   });
 
   test('Hard mode lead car runs around World Record pace while Easy mode is competitive but beatable', async ({ page }) => {
@@ -102,11 +104,17 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
       startSingle(3);
       return {
         leadSkill: aiParams.SKILLS[0],
-        leadRacerSpeed: racers[0].v
+        leadRacerSpeed: racers[0].v,
+        wrCar: racers[0].wrCar,
+        estTime: aiLeadTimeEst(aiParams.SKILLS[0], 6),
+        wr: wrTime(4)
       };
     });
 
-    expect(hardData.leadSkill).toBeGreaterThan(2.40);
+    // Hard: the leader is tuned to the track's world record (5-lap Single Race) and skips the pit stop
+    expect(hardData.wrCar).toBe(true);
+    expect(hardData.estTime / hardData.wr).toBeGreaterThan(0.95);
+    expect(hardData.estTime / hardData.wr).toBeLessThan(1.05);
     expect(hardData.leadRacerSpeed).toBeGreaterThan(easyData.leadRacerSpeed);
   });
 });
