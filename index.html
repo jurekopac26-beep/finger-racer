@@ -6022,6 +6022,41 @@ function coneHit(rx,ry,ang,isPlayer){
   }
   if(hit && isPlayer){ Snd.rumble(0.5,true); shake=Math.max(shake,.12); }
 }
+/* AI SE IZOGIBA OBJEKTOM OB PROGI: standing trees / tire walls / props sit in a world-space grid; each frame an AI's lane
+   is clamped so its hit circle (same radius as coneHit) passes on the road side of every one of them. World space, so
+   objects belonging to a neighbouring stretch of track (hairpins) count too. */
+const AIO_STRETCH=2.2, AIO_MARGIN=4, AIO_CELL=64;   // stretch = keep-out ellipse along the track: steer away earlier and smoother
+let aiObs=null, aiObsSrc=null, aiObsLen=0, aiObsMaxC=0, aiObsGW=1;
+function aiObsAdd(from){
+  for(let k=from;k<cones.length;k++){ const c=cones[k];
+    if(c.state!=="up"||c.broken) continue;
+    const C=(c.hr?RAD*0.6+c.hr:RAD*0.6+5)+AIO_MARGIN, key=Math.max(0,(c.x/AIO_CELL)|0)+Math.max(0,(c.y/AIO_CELL)|0)*aiObsGW;
+    let cell=aiObs.get(key); if(!cell) aiObs.set(key,cell=[]);
+    cell.push({c,x:c.x,y:c.y,C});
+    if(C>aiObsMaxC) aiObsMaxC=C;
+  }
+  aiObsLen=cones.length;
+}
+function aiObsClamp(rc,lat){
+  if(aiObsSrc!==cones||cones.length<aiObsLen||!aiObs){ aiObsSrc=cones; aiObs=new Map(); aiObsMaxC=0; aiObsGW=Math.ceil(IW/AIO_CELL)+1; aiObsAdd(0); }
+  else if(cones.length>aiObsLen) aiObsAdd(aiObsLen);
+  if(!aiObsMaxC) return lat;
+  const p0=posAt(rc.s,0), p1=posAt(rc.s,1), nx=p1.x-p0.x, ny=p1.y-p0.y, tx=p0.tx, ty=p0.ty;
+  const qx=p0.x+nx*lat*0.5, qy=p0.y+ny*lat*0.5, R=Math.abs(lat)*0.5+aiObsMaxC*AIO_STRETCH+8;   // vse med cesto in ciljnim pasom
+  const cx0=Math.max(0,((qx-R)/AIO_CELL)|0), cx1=Math.max(0,((qx+R)/AIO_CELL)|0), cy0=Math.max(0,((qy-R)/AIO_CELL)|0), cy1=Math.max(0,((qy+R)/AIO_CELL)|0);
+  let lo=-Infinity, hi=Infinity, lo0=-Infinity, hi0=Infinity;   // lo0/hi0: točen krog trka (brez rezerve), za ozke reže
+  for(let cy=cy0;cy<=cy1;cy++) for(let cx=cx0;cx<=cx1;cx++){ const cell=aiObs.get(cx+cy*aiObsGW); if(!cell) continue;
+    for(const o of cell){ const c=o.c;
+      if(c.state!=="up"||c.broken||c.cd>0||c.x!==o.x||c.y!==o.y) continue;   // podrti/razbiti: za te skrbi fallenObs
+      const dx=o.x-p0.x, dy=o.y-p0.y, a=dx*tx+dy*ty, e=a/AIO_STRETCH;
+      if(e*e>=o.C*o.C) continue;
+      const olat=dx*nx+dy*ny, need=Math.sqrt(o.C*o.C-e*e), C0=o.C-AIO_MARGIN, need0=a*a<C0*C0?Math.sqrt(C0*C0-a*a):-1e9;
+      if(olat>=0){ hi=Math.min(hi,olat-need); hi0=Math.min(hi0,olat-need0); } else { lo=Math.max(lo,olat+need); lo0=Math.max(lo0,olat+need0); }
+    }
+  }
+  if(lo>hi){ if(lo0>hi0) return (lo0+hi0)/2; lo=lo0; hi=hi0; }   // ozka reža: dovolj je, da se ravno izogne (sicer sredina)
+  return Math.max(lo,Math.min(hi,lat));
+}
 let critters=[], critterT=8+Math.random()*12, overpasses=[], crowdCheerT=4, mover=null, throwObjs=[], throwT=10, rockT=16, flockT=8, flyT2=6;
 function spawnFireworks(){
   if(!animOn("fireworks")) return;
@@ -7945,6 +7980,7 @@ function update(dt){
             if(found!=null){ lat=lat*0.25+found*0.75; const q2=posAt(rc.s,lat); if(inVis(q2.x,q2.y)) lat=found; }
           } }
       }
+      lat=aiObsClamp(rc,lat);   // ne zapelji v drevo / gume / rekvizit ob progi
       const p=posAt(rc.s,lat);
       rc.px=p.x; rc.py=p.y; rc.ang=Math.atan2(p.ty,p.tx); rc.curLat=lat;
       // AI izven proge: sled koles v pesku + prah
