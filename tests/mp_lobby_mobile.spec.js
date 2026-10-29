@@ -181,5 +181,109 @@ test.describe('Multiplayer lobby: rooms + racers + chat dock (no tabs)', () => {
     await expect(page.locator('#mpWaitFinishCard')).toBeHidden();
     await expect(page.locator('#results')).toHaveClass(/on/);
   });
+
+  test('Multiplayer track picker modal (#mpTrackPickModal) allows touchmove scrolling and scrolls through all tracks on mobile', async ({ page }) => {
+    await openLobby(page, { width: 360, height: 640 }, 'Track_Picker_Tester');
+    await page.evaluate(() => {
+      mpCreateRoom({ isPublic: true, track: 0, laps: 3, nai: 0, mode: 'single', voice: false });
+    });
+    await expect(page.locator('#mpLobby')).toHaveClass(/on/);
+
+    // Click the track button in host settings to open #mpTrackPickModal
+    await page.click('#mpTracks .mpTrackBtn');
+    await expect(page.locator('#mpTrackPickModal')).toBeVisible();
+
+    const scrollCheck = await page.evaluate(() => {
+      const box = document.getElementById('mpTrackPickCards');
+      const style = window.getComputedStyle(box);
+      // Dispatch a cancelable touchmove event inside #mpTrackPickCards and verify it is NOT preventDefault()-ed
+      const ev = new Event('touchmove', { bubbles: true, cancelable: true });
+      const notPrevented = box.dispatchEvent(ev);
+      const canScroll = box.scrollHeight > box.clientHeight;
+      box.scrollTop = 120;
+      return {
+        notPrevented,
+        DefaultPrevented: ev.defaultPrevented,
+        touchAction: style.touchAction,
+        overflowY: style.overflowY,
+        canScroll,
+        scrolledTop: box.scrollTop
+      };
+    });
+
+    expect(scrollCheck.DefaultPrevented).toBe(false);
+    expect(scrollCheck.notPrevented).toBe(true);
+    expect(scrollCheck.touchAction).toContain('pan-y');
+    expect(scrollCheck.overflowY).toBe('auto');
+    expect(scrollCheck.canScroll).toBe(true);
+    expect(scrollCheck.scrolledTop).toBeGreaterThan(0);
+  });
+
+  test('Multiplayer invite link (?room=CODE) connects across PUB/PRIV mismatch, handles retained room_state while host is away, and wakes up on host_here', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(FILE_URL);
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem('prstna-dirka', JSON.stringify({ tutSeen: true, introSeen: true, playerName: 'Invited_Friend', lang: 'en' }));
+    });
+
+    // Navigate with ?room=ABCDE (note: no &pub=1 even though the host's room is PUB-ABCDE)
+    await page.goto(FILE_URL + '?room=ABCDE');
+    await expect(page.locator('#mpLobby')).toHaveClass(/on/, { timeout: 10000 });
+
+    // Verify both PUB-ABCDE and PRIV-ABCDE topics are registered for subscription
+    const topics = await page.evaluate(() => mpRelay.currentRoomTopics);
+    expect(topics).toContain('finger-racer/v2/room/PUB-ABCDE/#');
+    expect(topics).toContain('finger-racer/v2/room/PRIV-ABCDE/#');
+
+    // Simulate retained room_state arriving from PUB-ABCDE while host is still in WhatsApp
+    await page.evaluate(() => {
+      mpHandleMqttMessage('finger-racer/v2/room/PUB-ABCDE/state', {
+        t: 'room_state',
+        sender: 'host-999',
+        roomId: 'PUB-ABCDE',
+        code: 'ABCDE',
+        isPublic: true,
+        name: 'HostMatej',
+        color: '#3dff8e',
+        roomTitle: 'Matej Championship',
+        track: 2,
+        laps: 5,
+        nai: 2,
+        mode: 'single',
+        closed: false,
+        time: Date.now()
+      });
+    });
+
+    await expect(page.locator('#mpRoomHeading')).toContainText('Matej Championship');
+    await expect(page.locator('#mpStatus')).toContainText('HostMatej');
+
+    // Now simulate host returning to the game and sending welcome on PUB-ABCDE
+    await page.evaluate(() => {
+      mpHandleMqttMessage('finger-racer/v2/room/PUB-ABCDE/msg/host-999', {
+        t: 'welcome',
+        sender: 'host-999',
+        to: MP_CLIENT_ID,
+        roomId: 'PUB-ABCDE',
+        isPublic: true,
+        code: 'ABCDE',
+        name: 'HostMatej',
+        color: '#3dff8e',
+        roomTitle: 'Matej Championship',
+        track: 2,
+        laps: 5,
+        nai: 2,
+        ready: true,
+        peers: []
+      });
+    });
+
+    await expect(page.locator('#mpStatus')).toContainText('Connected to room: HostMatej ✅');
+    const hostConnected = await page.evaluate(() => ({ hostId: mp.hostId, roomId: mp.roomId, isPublic: mp.isPublic }));
+    expect(hostConnected.hostId).toBe('host-999');
+    expect(hostConnected.roomId).toBe('PUB-ABCDE');
+    expect(hostConnected.isPublic).toBe(true);
+  });
 });
 
