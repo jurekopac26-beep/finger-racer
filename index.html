@@ -1185,8 +1185,8 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpPlayerAvatar { width:28px; height:28px; border-radius:50%; border:1.5px solid #fff; flex:none; }
 .mpPlayerName { font-size:13px; font-weight:800; color:#fff; }
 .mpPlayerRank { font-size:10px; opacity:.7; margin-top:1px; }
-.mpModal { position:absolute; inset:0; background:rgba(8,11,14,.88); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; padding:14px; }
-.mpModalContent { background:#141920; border:2px solid rgba(255,255,255,.18); border-radius:16px; padding:16px; width:100%; max-width:360px; box-shadow:0 8px 30px rgba(0,0,0,.6); text-align:left; }
+.mpModal { position:absolute; inset:0; background:rgba(8,11,14,.88); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; padding:14px; touch-action:pan-y; }
+.mpModalContent { background:#141920; border:2px solid rgba(255,255,255,.18); border-radius:16px; padding:16px; width:100%; max-width:360px; max-height:90vh; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior:contain; box-shadow:0 8px 30px rgba(0,0,0,.6); text-align:left; }
 .mpModalTitle { font-size:18px; font-weight:900; color:var(--yellow); text-transform:uppercase; font-style:italic; margin-bottom:12px; text-align:center; }
 .mpFormGroup { margin-bottom:10px; }
 .mpFormGroup label { display:block; font-size:11.5px; opacity:.8; font-weight:800; margin-bottom:4px; }
@@ -1238,10 +1238,10 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 .mpTrackBtn .tbName { font-weight:900; font-size:13px; }
 .mpTrackBtn .tbSub { font-size:11px; opacity:.7; }
 .mpTrackBtn .tbArrow { margin-left:auto; opacity:.7; font-size:12px; padding-right:4px; }
-#mpTrackPickModal { position:fixed; z-index:120; }
-#mpTrackPickModal .mpModalContent { max-width:420px; }
-#mpTrackPickCards { max-height:62vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin:8px 0; }
-#mpTrackPickCards .wcCard { cursor:pointer; }
+#mpTrackPickModal { position:fixed; z-index:120; touch-action:pan-y; }
+#mpTrackPickModal .mpModalContent { max-width:420px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; }
+#mpTrackPickCards { max-height:62vh; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior:contain; display:flex; flex-direction:column; gap:8px; margin:8px 0; padding-right:4px; }
+#mpTrackPickCards .wcCard, #mpTrackPickCards .wcCard * { cursor:pointer; touch-action:pan-y; }
 #mpTrackPickCards .wcCard.sel { outline:2px solid var(--green,#3dff8e); background:rgba(61,255,142,.12); }
 #mpCustPreview { position:static; display:block; margin:0 auto 6px; width:120px; height:120px; border-radius:16px; background:radial-gradient(circle at 50% 45%, #3a4150, #1a1e26); }
 .mpRacerAvatar { width:44px; height:44px; border-radius:50%; border:2px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,.6); position:relative; }
@@ -9976,7 +9976,7 @@ function bindInput(){
   };
   window.addEventListener("pointerup",up);
   window.addEventListener("pointercancel",up);
-  document.addEventListener("touchmove",e=>{ if(e.target&&e.target.closest&&e.target.closest(".screen"))return; e.preventDefault(); },{passive:false});
+  document.addEventListener("touchmove",e=>{ if(e.target&&e.target.closest&&e.target.closest(".screen, .mpModal, #mpTrackPickModal, #countryPickerModal, #chModal, #accModal, #buddyModal, #nameOnboardModal"))return; e.preventDefault(); },{passive:false});
   document.addEventListener("gesturestart",e=>e.preventDefault());
 }
 
@@ -14216,11 +14216,22 @@ function mpConnectRelay(callback){
       mpRelay.subTopics.add("finger-racer/v2/lobby/rooms");
       mpRelay.subTopics.add("finger-racer/v2/lobby/chat");
 
-      if(mpRelay.currentRoomTopic){
+      if(mpRelay.currentRoomTopics && mpRelay.currentRoomTopics.length){
+        mpRelay.currentRoomTopics.forEach(t => { try{ client.subscribe(t); mpRelay.subTopics.add(t); }catch(e){} });
+      } else if(mpRelay.currentRoomTopic){
         client.subscribe(mpRelay.currentRoomTopic);
+        mpRelay.subTopics.add(mpRelay.currentRoomTopic);
       }
 
       mpStartPresenceHeartbeat();
+      if(mp){
+        if(mp.isHost && !mp.started){
+          mpPublishRoomState(false);
+          mpSend({ t: "host_here", roomId: mp.roomId, isPublic: !!mp.isPublic, code: mp.code });
+        } else if(!mp.isHost && !mp.hostId && !mp.started){
+          setTimeout(() => { if(mp && !mp.isHost && !mp.hostId && !mp.started) mpSendJoinRequest(); }, 40);
+        }
+      }
       const cbs = mpRelay.pendingCbs || [];
       mpRelay.pendingCbs = [];
       cbs.forEach(cb => { try{ cb(true); }catch(e){ console.warn(e); } });
@@ -14337,10 +14348,17 @@ function mpHandleMqttMessage(topic, data){
     return;
   }
 
-  // 4. Room-specific message
-  if(mp && mp.roomId && topic.startsWith("finger-racer/v2/room/" + mp.roomId)){
-    if(data.sender === MP_CLIENT_ID) return;
-    mpOnData(data);
+  // 4. Room-specific message (matches exact roomId or either PUB-/PRIV- prefix for the same code)
+  if(mp && topic.startsWith("finger-racer/v2/room/")){
+    const matchExact = mp.roomId && topic.startsWith("finger-racer/v2/room/" + mp.roomId + "/");
+    const matchCode = mp.code && (
+      topic.startsWith("finger-racer/v2/room/PUB-" + mp.code + "/") ||
+      topic.startsWith("finger-racer/v2/room/PRIV-" + mp.code + "/")
+    );
+    if(matchExact || matchCode){
+      if(data.sender === MP_CLIENT_ID) return;
+      mpOnData(data, topic);
+    }
   }
 }
 
@@ -15159,6 +15177,9 @@ function openMpTrackPicker(currentIdx, onPick){
     cl.querySelector("span").textContent = isEn ? "Cancel" : "Prekliči";
     cl.onclick = () => { Snd.click && Snd.click(); modal.style.display = "none"; };
   }
+  modal.onclick = (e) => {
+    if(e.target === modal){ Snd.click && Snd.click(); modal.style.display = "none"; }
+  };
   box.innerHTML = "";
   MP_TRACKS.forEach(i => {
     const p = PREVIEWS[i];
@@ -15179,7 +15200,13 @@ function openMpTrackPicker(currentIdx, onPick){
   });
   modal.style.display = "flex";
   const sel = box.querySelector(".sel");
-  if(sel) setTimeout(() => sel.scrollIntoView({ block: "center" }), 0);
+  if(sel){
+    setTimeout(() => {
+      try{
+        box.scrollTop = Math.max(0, sel.offsetTop - (box.clientHeight - sel.offsetHeight) / 2);
+      }catch(e){}
+    }, 0);
+  }
 }
 
 function renderCreatePills(){
@@ -15359,11 +15386,14 @@ function mpCreateRoom(cfgOverride, titleOverride){
   mpRenderHostSettings();
 
   mpRelay.currentRoomTopic = "finger-racer/v2/room/" + roomId + "/#";
+  mpRelay.currentRoomTopics = [mpRelay.currentRoomTopic];
   const subscribeAndAnnounce = () => {
     if(mpRelay.client && mpRelay.connected){
       mpRelay.client.subscribe(mpRelay.currentRoomTopic);
       mpRelay.subTopics.add(mpRelay.currentRoomTopic);
       mpPublishMqtt("finger-racer/v2/lobby/rooms", mpRoomAdvert());
+      mpPublishRoomState(false);
+      mpSend({ t: "host_here", roomId: mp.roomId, isPublic: !!mp.isPublic, code: mp.code });
     }
   };
 
@@ -15371,23 +15401,93 @@ function mpCreateRoom(cfgOverride, titleOverride){
   else mpConnectRelay(() => subscribeAndAnnounce());
 }
 
+let _mpJoinRetryTimer = null;
+function mpClearJoinRetry(){
+  if(_mpJoinRetryTimer){ clearInterval(_mpJoinRetryTimer); _mpJoinRetryTimer = null; }
+}
+
+function mpPublishRoomState(closed = false, roomObj = mp){
+  if(!roomObj || !roomObj.isHost || !roomObj.roomId) return;
+  const topic = "finger-racer/v2/room/" + roomObj.roomId + "/state";
+  if(closed){
+    mpPublishMqtt(topic, {
+      t: "room_state",
+      sender: MP_CLIENT_ID,
+      roomId: roomObj.roomId,
+      code: roomObj.code,
+      closed: true,
+      time: Date.now()
+    }, true);
+    return;
+  }
+  mpPublishMqtt(topic, {
+    t: "room_state",
+    sender: MP_CLIENT_ID,
+    roomId: roomObj.roomId,
+    code: roomObj.code,
+    isPublic: !!roomObj.isPublic,
+    name: roomObj.name,
+    color: roomObj.myColor,
+    title: playerTitle(),
+    roomTitle: roomObj.title,
+    track: roomObj.track,
+    laps: roomObj.laps,
+    nai: roomObj.nai,
+    seed: roomObj.seed,
+    mode: roomObj.mode,
+    wcPreset: roomObj.wcPreset,
+    wcTracks: roomObj.wcTracks,
+    wcIndex: roomObj.wcIndex || 0,
+    voiceEnabled: !!roomObj.voiceEnabled,
+    quick: !!roomObj.quick,
+    look: mpMyLook(),
+    closed: false,
+    started: !!roomObj.started,
+    time: Date.now()
+  }, true);
+}
+
+function mpSendJoinRequest(){
+  if(!mp || mp.isHost || mp.started) return;
+  const payload = {
+    t: "join",
+    sender: MP_CLIENT_ID,
+    name: mp.name,
+    color: mp.myColor,
+    title: playerTitle(),
+    look: mpMyLook(),
+    isSpectator: !!mp.isSpectator,
+    ready: mp.ready
+  };
+  if(mp.code && !mp.roomConfirmed){
+    mpPublishMqtt("finger-racer/v2/room/PUB-" + mp.code + "/msg/" + MP_CLIENT_ID, payload);
+    mpPublishMqtt("finger-racer/v2/room/PRIV-" + mp.code + "/msg/" + MP_CLIENT_ID, payload);
+  } else if(mp.roomId){
+    mpPublishMqtt("finger-racer/v2/room/" + mp.roomId + "/msg/" + MP_CLIENT_ID, payload);
+  }
+}
+
 function mpJoinRoom(roomId, roomCode, roomTitle, isPublic, isSpectator = false){
   const nm = mpGetName();
   save.playerName = nm; persist();
 
   mpReset();
+  const cleanCode = (roomCode || "").trim().toUpperCase();
   mp = {
     isHost: false,
     isSpectator: isSpectator,
     isPublic,
+    roomConfirmed: false,
+    stateSeen: false,
+    joinStartAt: Date.now(),
     name: nm,
     myColor: mpGetColor(),
     oppName: null,
     oppColor: "#3dff8e",
     oppTitle: "Gostitelj",
-    code: roomCode || "",
+    code: cleanCode,
     roomId,
-    title: roomTitle || ("Soba #" + (roomCode || "")),
+    title: roomTitle || ("Soba #" + cleanCode),
     track: 0,
     laps: 3,
     nai: 0,
@@ -15414,33 +15514,48 @@ function mpJoinRoom(roomId, roomCode, roomTitle, isPublic, isSpectator = false){
   mpStatus(isEn ? "Connecting to room…" : "Povezujem s sobo…");
 
   mpRelay.currentRoomTopic = "finger-racer/v2/room/" + roomId + "/#";
-  const doJoin = () => {
-    if(mpRelay.client && mpRelay.connected){
-      mpRelay.client.subscribe(mpRelay.currentRoomTopic);
-      mpRelay.subTopics.add(mpRelay.currentRoomTopic);
-    }
-    const sendJoin = () => mpSend({
-      t: "join",
-      name: mp.name,
-      color: mp.myColor,
-      title: playerTitle(),
-      look: mpMyLook(),
-      isSpectator: !!mp.isSpectator,
-      ready: mp.ready
-    });
-    sendJoin();
-    mpStatus(isEn ? "Connected! Waiting for host confirmation…" : "Povezan! Čakam potrditev gostitelja…");
+  mpRelay.currentRoomTopics = cleanCode
+    ? ["finger-racer/v2/room/PUB-" + cleanCode + "/#", "finger-racer/v2/room/PRIV-" + cleanCode + "/#"]
+    : [mpRelay.currentRoomTopic];
 
-    // QoS 0 messages can get lost — ask again if the host hasn't answered yet
-    setTimeout(() => { if(mp && !mp.hostId && !mp.started) sendJoin(); }, 2500);
-    setTimeout(() => {
-      if(mp && (!mp.peers || mp.peers.size === 0) && !mp.started){
-        // A private room only answers on the right code, so silence there almost always means a wrong code
-        mpStatus(mp.isPublic
-          ? (isEn ? "Host did not respond. Try again." : "Gostitelj se ni odzval. Poskusi znova.")
-          : (isEn ? "Wrong code or the room was closed." : "Napačna koda ali pa je soba zaprta."));
+  const doJoin = () => {
+    if(!mp || mp.isHost) return;
+    if(mpRelay.client && mpRelay.connected){
+      mpRelay.currentRoomTopics.forEach(t => {
+        try{ mpRelay.client.subscribe(t); mpRelay.subTopics.add(t); }catch(e){}
+      });
+    }
+    mpSendJoinRequest();
+    setTimeout(() => { if(mp && !mp.hostId && !mp.started) mpSendJoinRequest(); }, 80);
+    setTimeout(() => { if(mp && !mp.hostId && !mp.started) mpSendJoinRequest(); }, 600);
+    if(!mp.stateSeen && !mp.hostId){
+      mpStatus(isEn ? "Connected! Waiting for host confirmation…" : "Povezan! Čakam potrditev gostitelja…");
+    }
+
+    mpClearJoinRetry();
+    _mpJoinRetryTimer = setInterval(() => {
+      if(!mp || mp.isHost || mp.hostId || mp.started){
+        mpClearJoinRetry();
+        return;
       }
-    }, 6000);
+      const elapsed = Date.now() - (mp.joinStartAt || Date.now());
+      if(!mpRelay.connected && !mpRelay.connecting){
+        mpConnectRelay();
+      } else {
+        mpSendJoinRequest();
+      }
+      if(elapsed >= 7000 && !mp.hostId && !mp.started){
+        if(mp.stateSeen && mp.oppName){
+          mpStatus(isEn
+            ? ("Room found! Waiting for host " + mp.oppName + " to return to the game…")
+            : ("Soba najdena! Čakam, da se gostitelj " + mp.oppName + " vrne v igro…"));
+        } else {
+          mpStatus(isEn
+            ? "Still waiting for host… (if they are sharing the link, keep this screen open)"
+            : "Še vedno čakam gostitelja… (če ravno pošilja vabilo, počakaj tukaj)");
+        }
+      }
+    }, 2000);
   };
 
   if(mpRelay.connected) doJoin();
@@ -15460,7 +15575,12 @@ function mpJoinCode(customCode){
     showBanner(isEn ? "Enter a valid room code." : "Vpiši veljavno kodo sobe.", 2200, true);
     return;
   }
-  mpJoinRoom("PRIV-" + code, code, isEn ? "Private room" : "Zasebna soba", false);
+  const pubRoom = mpLobby.rooms && mpLobby.rooms.find(r => r.code === code || r.id === ("PUB-" + code));
+  if(pubRoom){
+    mpJoinPublicSlot(pubRoom.id, pubRoom.title, false);
+    return;
+  }
+  mpJoinRoom("PRIV-" + code, code, isEn ? ("Room #" + code) : ("Soba #" + code), false);
 }
 
 // Join either public or private room by typed code from lobby input
@@ -15590,30 +15710,45 @@ function mpInviteFriends(){ shareInvite(mpRoomShareCtx()); }
 function mpTakeRoomFromUrl(){
   let code = "", pub = false;
   try{
-    const q = new URLSearchParams(location.search);
+    let q = new URLSearchParams(location.search);
+    let fromHash = false;
+    if(!q.has("room") && location.hash && location.hash.includes("room=")){
+      const hIdx = location.hash.indexOf("?");
+      q = new URLSearchParams(hIdx >= 0 ? location.hash.slice(hIdx + 1) : location.hash.replace(/^#/, ""));
+      fromHash = true;
+    }
     if(!q.has("room")) return false;
     code = (q.get("room") || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
     pub = q.get("pub") === "1";
     q.delete("room"); q.delete("pub");
     const rest = q.toString();
-    try{ history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); }catch(e){}   // a reload must not rejoin
+    try{
+      if(fromHash){
+        history.replaceState(null, "", location.pathname + location.search);
+      } else {
+        history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash);
+      }
+    }catch(e){}   // a reload must not rejoin
   }catch(e){ return false; }
   if(code.length < 4) return false;
 
   const isEn = (save.lang === "en");
-  toMenu();
+  if(!mpRelay.connected && !mpRelay.connecting) mpConnectRelay();
   const go = () => {
     openMP();
-    if(pub) mpJoinPublicSlot("PUB-" + code, isEn ? "Public room" : "Javna soba", false);
-    else mpJoinCode(code);
+    if(pub) mpJoinPublicSlot("PUB-" + code, isEn ? ("Room #" + code) : ("Soba #" + code), false);
+    else mpJoinByCode(code);
   };
   if(hasCustomPlayerName()) go();
-  else showNameOnboarding({
-    icon: "🏁📲",
-    title: isEn ? "JOIN YOUR FRIEND'S RACE!" : "PRIDRUŽI SE DIRKI!",
-    desc: isEn ? ("You've been invited to room " + code + ". Choose your racer name:") : ("Povabljen si v sobo " + code + ". Izberi svoje dirkaško ime:"),
-    saveBtn: isEn ? "JOIN 🏁" : "VSTOPI 🏁"
-  }, go);
+  else {
+    toMenu();
+    showNameOnboarding({
+      icon: "🏁📲",
+      title: isEn ? "JOIN YOUR FRIEND'S RACE!" : "PRIDRUŽI SE DIRKI!",
+      desc: isEn ? ("You've been invited to room " + code + ". Choose your racer name:") : ("Povabljen si v sobo " + code + ". Izberi svoje dirkaško ime:"),
+      saveBtn: isEn ? "JOIN 🏁" : "VSTOPI 🏁"
+    }, go);
+  }
   return true;
 }
 
@@ -15625,9 +15760,58 @@ function mpSend(o){
   mpPublishMqtt(topic, o);
 }
 
-function mpOnData(d){
+function mpOnData(d, topic){
   if(!mp || !d) return;
   const isEn = (save.lang === "en");
+
+  if(d.t === "room_state"){
+    if(mp.isHost) return;
+    if(d.closed){
+      if(!mp.hostId && !mp.started && d.roomId === mp.roomId){
+        mpStatus(isEn ? "This room was closed or wrong code." : "Ta soba je zaprta ali pa je koda napačna.");
+      }
+      return;
+    }
+    // Ignore stale retained state older than 20 minutes
+    if(d.time && (Date.now() - d.time > 20 * 60 * 1000)) return;
+    mp.stateSeen = true;
+    if(d.roomId){
+      mp.roomId = d.roomId;
+      mp.roomConfirmed = true;
+      mpRelay.currentRoomTopic = "finger-racer/v2/room/" + d.roomId + "/#";
+    }
+    if(d.isPublic != null) mp.isPublic = !!d.isPublic;
+    if(d.roomTitle) mp.title = String(d.roomTitle).slice(0, 24);
+    if(d.name && !mp.oppName) mp.oppName = String(d.name).slice(0, 16);
+    if(d.color && !mp.hostId) mp.oppColor = mpSafeColor(d.color, "#3dff8e");
+    if(!mp.hostId){
+      if(d.track != null) mp.track = d.track;
+      if(d.laps != null) mp.laps = d.laps;
+      if(d.nai != null) mp.nai = d.nai;
+      if(d.mode != null) mp.mode = d.mode;
+      if(d.wcPreset != null) mp.wcPreset = d.wcPreset;
+      if(d.wcTracks != null) mp.wcTracks = d.wcTracks;
+      mpUpdateRoomView();
+      mpStatus(isEn
+        ? ("Room found! Connecting with " + (mp.oppName || "host") + "…")
+        : ("Soba najdena! Povezujem z gostiteljem (" + (mp.oppName || "Gostitelj") + ")…"));
+      mpSendJoinRequest();
+    }
+    return;
+  }
+
+  if(d.t === "host_here"){
+    if(!mp.isHost && !mp.started){
+      if(d.roomId){
+        mp.roomId = d.roomId;
+        mp.roomConfirmed = true;
+        mpRelay.currentRoomTopic = "finger-racer/v2/room/" + d.roomId + "/#";
+      }
+      if(d.isPublic != null) mp.isPublic = !!d.isPublic;
+      if(!mp.hostId) mpSendJoinRequest();
+    }
+    return;
+  }
 
   if(d.t === "join" || d.t === "hi"){
     if(mp.isHost){
@@ -15680,6 +15864,9 @@ function mpOnData(d){
       mpSend({
         t: "welcome",
         to: d.sender,
+        roomId: mp.roomId,
+        isPublic: !!mp.isPublic,
+        code: mp.code,
         name: mp.name,
         color: mp.myColor,
         title: playerTitle(),
@@ -15698,6 +15885,7 @@ function mpOnData(d){
         look: mpMyLook(),
         peers: peerList
       });
+      mpPublishRoomState(false);
 
       if(isNew) mpSend({
         t: "peer_joined",
@@ -15716,8 +15904,15 @@ function mpOnData(d){
     }
   } else if(d.t === "welcome"){
     if(!mp.isHost && (!d.to || d.to === MP_CLIENT_ID)){
+      mpClearJoinRetry();
       if(!mp.peers) mp.peers = new Map();
       mp.hostId = d.sender;
+      if(d.roomId){
+        mp.roomId = d.roomId;
+        mp.roomConfirmed = true;
+        mpRelay.currentRoomTopic = "finger-racer/v2/room/" + d.roomId + "/#";
+      }
+      if(d.isPublic != null) mp.isPublic = !!d.isPublic;
       const hostObj = {
         id: d.sender,
         name: String(d.name || "Gostitelj").slice(0, 16),
@@ -16261,6 +16456,7 @@ function mpBroadcastCfg(){
       mode: mp.mode,
       wcTracks: mp.wcTracks
     });
+    mpPublishRoomState(false);
   }
 }
 
@@ -16286,6 +16482,7 @@ function mpHostStart(){
   mp.weather = mpPickWeather();
   if(mp.isHost){
     mpPublishMqtt("finger-racer/v2/lobby/rooms", { id: mpAdvertId(), closed: true });
+    mpPublishRoomState(true);
   }
   if(mp.mode === "wc" && mp.wcTracks && mp.wcTracks.length > 0){
     mp.wcIndex = 0;
@@ -16308,6 +16505,7 @@ function mpHostStart(){
 
 function mpStartRace(isHost){
   mpClearAutoTimer();
+  mpClearJoinRetry();
   if($("mpVoteBox")) $("mpVoteBox").style.display = "none";
   if($("mpWCStandBox")) $("mpWCStandBox").style.display = "none";
   mpStopRaceEndTimer();
@@ -17204,26 +17402,57 @@ function mpReset(){
   mpStopRaceEndTimer();
   mpHideWaitFinishUI();
   mpClearAutoTimer();
+  mpClearJoinRetry();
   if(typeof mpVoice !== "undefined" && mpVoice.cleanup){
     mpVoice.cleanup();
   }
   if(mp && mp.roomId){
     if(mp.isHost){
       mpPublishMqtt("finger-racer/v2/lobby/rooms", { id: mpAdvertId(), closed: true });
+      mpPublishRoomState(true);
     }
     mpSend({ t: "bye" });
-    if(mpRelay.currentRoomTopic && mpRelay.client && mpRelay.connected){
-      try{ mpRelay.client.unsubscribe(mpRelay.currentRoomTopic); }catch(_){}
-      mpRelay.subTopics.delete(mpRelay.currentRoomTopic);
+    if(mpRelay.client && mpRelay.connected){
+      const topics = (mpRelay.currentRoomTopics && mpRelay.currentRoomTopics.length)
+        ? mpRelay.currentRoomTopics
+        : (mpRelay.currentRoomTopic ? [mpRelay.currentRoomTopic] : []);
+      topics.forEach(t => {
+        try{ mpRelay.client.unsubscribe(t); }catch(_){}
+        mpRelay.subTopics.delete(t);
+      });
     }
   }
   mpRelay.currentRoomTopic = null;
+  mpRelay.currentRoomTopics = null;
   mp = null;
   const log = $("mpChatLog");
   if(log){ log.innerHTML = ""; log.style.display = "none"; }
   // fresh room chat for the next room
   const rcb = $("mpRoomChatMessages");
   if(rcb) rcb.innerHTML = '<div class="mpChatEmpty" id="mpRoomChatEmpty">' + ((save.lang === "en") ? "💬 Room chat is open. Talk with racers!" : "💬 Klepet v sobi je odprt. Klepetaj z dirkači!") + '</div>';
+}
+
+function mpOnForeground(){
+  if(!mp && !($("mpHome") && $("mpHome").classList.contains("on"))) return;
+  if(!mpRelay.connected && !mpRelay.connecting){
+    mpConnectRelay();
+    return;
+  }
+  if(mp && mpRelay.connected && mpRelay.client){
+    const topics = (mpRelay.currentRoomTopics && mpRelay.currentRoomTopics.length)
+      ? mpRelay.currentRoomTopics
+      : (mpRelay.currentRoomTopic ? [mpRelay.currentRoomTopic] : []);
+    topics.forEach(t => {
+      try{ mpRelay.client.subscribe(t); mpRelay.subTopics.add(t); }catch(e){}
+    });
+    if(mp.isHost && !mp.started){
+      mpPublishMqtt("finger-racer/v2/lobby/rooms", mpRoomAdvert());
+      mpPublishRoomState(false);
+      mpSend({ t: "host_here", roomId: mp.roomId, isPublic: !!mp.isPublic, code: mp.code });
+    } else if(!mp.isHost && !mp.hostId && !mp.started){
+      mpSendJoinRequest();
+    }
+  }
 }
 
 
@@ -17924,8 +18153,17 @@ function bindUI(){
   window.addEventListener("resize",layout);
   window.addEventListener("orientationchange",()=>setTimeout(layout,300));
   document.addEventListener("visibilitychange",()=>{
-    if(document.hidden&&(state==="racing"||state==="crashed"||state==="countdown"||state==="rejoin")) pauseGame();
+    if(document.hidden){
+      if(!mpMode && (state==="racing"||state==="crashed"||state==="countdown"||state==="rejoin")) pauseGame();
+    } else {
+      try{ mpOnForeground(); }catch(e){}
+    }
   });
+  window.addEventListener("focus", ()=>{ try{ mpOnForeground(); }catch(e){} });
+  window.addEventListener("pageshow", ()=>{ try{ mpOnForeground(); }catch(e){} });
+  const checkUrlInvite = ()=>{ try{ mpTakeRoomFromUrl() || buddyTakeFromUrl() || chTakeFromUrl(); }catch(e){} };
+  window.addEventListener("popstate", checkUrlInvite);
+  window.addEventListener("hashchange", checkUrlInvite);
 }
 
 /* ================= BOOT ================= */
@@ -17938,8 +18176,12 @@ function boot(){
   }catch(_){}
   ensureRookieTrack();
   applyLang(save.lang || "en");
-  if(!save.tutSeen){
-    setScreen("loading");      // prvi zagon: po nalaganju gre igralec naravnost na Rookie Ring (firstRunStart)
+  const hasInviteInUrl = /[?&#](room|buddy|ch)=/i.test((location.search || "") + (location.hash || ""));
+  if(/[?&#]room=/i.test((location.search || "") + (location.hash || ""))){
+    try{ mpConnectRelay(); }catch(e){}
+  }
+  if(!save.tutSeen || hasInviteInUrl){
+    setScreen("loading");      // prvi zagon ali povabilo prek povezave: ne utripni glavnega menija med nalaganjem
   } else {
     toMenu();
   }
