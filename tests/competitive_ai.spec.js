@@ -86,7 +86,7 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
 
   test('Starting a race applies competitive skills to racers based on current mode', async ({ page }) => {
     const easyData = await page.evaluate(() => {
-      save.diffMode = 'easy';
+      save.diffMode = 'easy'; save.diff = 0;   // both, like the Settings screen (diff === 1 also means Hard)
       startSingle(3);
       return {
         leadSkill: aiParams.SKILLS[0],
@@ -100,7 +100,7 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
     expect(easyData.leadRacerSpeed).toBeGreaterThan(1500);
 
     const hardData = await page.evaluate(() => {
-      save.diffMode = 'hard';
+      save.diffMode = 'hard'; save.diff = 1;
       startSingle(3);
       return {
         leadSkill: aiParams.SKILLS[0],
@@ -134,17 +134,18 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
     expect(data.hard.ratio).toBeLessThan(1.05);
     expect(data.hard.speed).toBeGreaterThan(data.easy.speed * 1.5);
   });
-  test('Hard cars race like a player: they wear, pit once and repair', async ({ page }) => {
+  test('Hard cars race like a player: they wear, repair, and nobody beats the record by much', async ({ page }) => {
     const r = await page.evaluate(async () => {
       save.diffMode = 'hard'; save.diff = 1;
       startSingle(0); await new Promise(res => setTimeout(res, 400));
       if (state !== 'racing') beginRace(); window.__noLoop = true;
       for (let i = 0; i < 90 * 60 && !racers.every(rc => rc.finished); i++) update(1 / 60);
-      return { wr: wrTime(1), lead: racers[0].finishTime, pits: racers.map(rc => rc.pits || 0), rep: racers.map(rc => (rc.repPit || 0) + (rc.repDraft || 0)) };
+      return { wr: wrTime(1), lead: racers[0].finishTime, best: Math.min(...racers.map(rc => rc.finishTime)), pits: racers.map(rc => rc.pits || 0), rep: racers.map(rc => (rc.repPit || 0) + (rc.repDraft || 0)) };
     });
-    expect(r.pits.filter(p => p >= 1).length).toBeGreaterThanOrEqual(3);   // most of the field services
+    expect(r.pits[0]).toBeGreaterThanOrEqual(1);                            // the leader has nobody to slipstream: it must service
     expect(r.rep.every(x => x > 0)).toBe(true);                             // every car repairs (pit or slipstream)
     expect(r.lead / r.wr).toBeGreaterThan(0.9);
     expect(r.lead / r.wr).toBeLessThan(1.1);
+    expect(r.best / r.wr).toBeGreaterThan(0.95);                            // skipping a stop does not beat the record by much
   });
 });
