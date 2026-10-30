@@ -106,12 +106,12 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
         leadSkill: aiParams.SKILLS[0],
         leadRacerSpeed: racers[0].v,
         wrCar: racers[0].wrCar,
-        estTime: aiLeadTimeEst(aiParams.SKILLS[0], 6),
+        estTime: aiLeadTimeEst(aiParams.SKILLS[0], 6, true),
         wr: wrTime(4)
       };
     });
 
-    // Hard: the leader is tuned to the track's world record (5-lap Single Race) and skips the pit stop
+    // Hard: the leader is tuned to the track's world record (5-lap Single Race), its service stop included
     expect(hardData.wrCar).toBe(true);
     expect(hardData.estTime / hardData.wr).toBeGreaterThan(0.95);
     expect(hardData.estTime / hardData.wr).toBeLessThan(1.05);
@@ -126,12 +126,25 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
       const easy = { speed: racers[0].v, wrCar: racers[0].wrCar };
       save.diffMode = 'hard'; save.diff = 1;
       startCareer(5);
-      return { easy, hard: { speed: racers[0].v, wrCar: racers[0].wrCar, ratio: aiLeadTimeEst(aiParams.SKILLS[0], 6) / wrTime(curTrack + 1) } };
+      return { easy, hard: { speed: racers[0].v, wrCar: racers[0].wrCar, ratio: aiLeadTimeEst(aiParams.SKILLS[0], 6, true) / wrTime(curTrack + 1) } };
     });
     expect(data.easy.wrCar).toBe(false);
     expect(data.hard.wrCar).toBe(true);
     expect(data.hard.ratio).toBeGreaterThan(0.95);
     expect(data.hard.ratio).toBeLessThan(1.05);
     expect(data.hard.speed).toBeGreaterThan(data.easy.speed * 1.5);
+  });
+  test('Hard cars race like a player: they wear, pit once and repair', async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      save.diffMode = 'hard'; save.diff = 1;
+      startSingle(0); await new Promise(res => setTimeout(res, 400));
+      if (state !== 'racing') beginRace(); window.__noLoop = true;
+      for (let i = 0; i < 90 * 60 && !racers.every(rc => rc.finished); i++) update(1 / 60);
+      return { wr: wrTime(1), lead: racers[0].finishTime, pits: racers.map(rc => rc.pits || 0), rep: racers.map(rc => (rc.repPit || 0) + (rc.repDraft || 0)) };
+    });
+    expect(r.pits.filter(p => p >= 1).length).toBeGreaterThanOrEqual(3);   // most of the field services
+    expect(r.rep.every(x => x > 0)).toBe(true);                             // every car repairs (pit or slipstream)
+    expect(r.lead / r.wr).toBeGreaterThan(0.9);
+    expect(r.lead / r.wr).toBeLessThan(1.1);
   });
 });
