@@ -2813,7 +2813,7 @@ function prepTrack(t){
   t.N=n; t.L=n*sp; t.TXa=TX; t.TYa=TY; t.NXa=NXo; t.NYa=NYo; t.FAC=FA; t.MEANFAC=mf; t.BASE1=t.L/((t.pace||8.6)*mf);
 }
 function loadTrack(idx){
-  if(idx>=8 && idx<=11 && typeof ensureExtraTracks==="function") ensureExtraTracks(idx);
+  if(idx>=8 && idx<=10 && typeof ensureExtraTracks==="function") ensureExtraTracks(idx);
   if(typeof ROOKIE !== "undefined" && idx===ROOKIE && !TRACKS[ROOKIE]) ensureRookieTrack();
   const t=TRACKS[idx];
   IW=t.iw; IH=t.ih; SP=t.sp; PX=t.px; PY=t.py; HW=t.hw; TRACK_IMG=t.img; MASK_IMG=t.mask; OFF_CRASH=!(idx===0||idx>=5);
@@ -2881,7 +2881,8 @@ function posAt(s,lat){
 function nearestIdx(x,y,hint){
   let best=-1,bd=Infinity;
   if(hint>=0){
-    const win=(curTrack===9)?64:48, lim=(curTrack===9)?(260*260):(190*190);
+    const isFig8=!!(TRACKS[curTrack]&&TRACKS[curTrack].isFigure8);
+    const win=isFig8?96:48, lim=isFig8?(380*380):(190*190);
     for(let d=-win;d<=win;d++){ const i=(hint+d+N)%N, dx=PX[i]-x, dy=PY[i]-y, dd=dx*dx+dy*dy;
       if(dd<bd){bd=dd;best=i;} }
     if(bd<lim) return best;
@@ -5891,7 +5892,7 @@ function gridSlot(k){
 }
 /* HARD = WORLD RECORD PACE: the hard leader is sped up until its 5-lap Single Race time matches the track's #1 on the
    global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). The leader (wrCar) skips the pit stop, like record runs do. */
-const WR_SEED={1:14.316,2:15.747,3:32.577,4:21.89,5:24.686,6:10.62,7:11.685,8:23.386,9:12.8,10:13.9,11:12.6,12:13.2};   // leaderboard #1, Oct 2026
+const WR_SEED={1:14.316,2:15.747,3:32.577,4:21.89,5:24.686,6:10.62,7:11.685,8:23.386,9:13.9,10:12.6,11:13.2};   // leaderboard #1, Oct 2026
 const AI_WR_OVERHEAD=1.0;   // real race time / estimate (drafting, mistakes, pits) — calibrated by measurement
 function wrTime(trackNum){ const v=(save.wrCache&&save.wrCache[trackNum])||WR_SEED[trackNum]; return v>0?v:null; }
 let wrFetched=false;
@@ -5997,12 +5998,17 @@ function isFoliage(r,g,b){
 function genCones(){
   cones=[];
   if(coneHunt){
+    const spz=TRACKS[curTrack]&&TRACKS[curTrack].splitZone;
     for(let i=0;i<N;i+=3){ const hw=HW[i]||40, s=i*SP;
-      for(const lat of [-(hw-8),-(hw*0.35),(hw*0.35),(hw-8)]){ const p=posAt(s,lat);
+      const inSp=spz&&i>=spz.i0&&i<=spz.i1;
+      const bell=inSp?Math.pow(Math.sin(Math.PI*(i-spz.i0)/(spz.i1-spz.i0)),2):0;
+      const lats=inSp&&bell>0.18?[-spz.dist*bell-45,-spz.dist*bell+45,spz.dist*bell-45,spz.dist*bell+45]:[-(hw-8),-(hw*0.35),(hw*0.35),(hw-8)];
+      for(const lat of lats){ const p=posAt(s,lat); if(!onTrack(p.x,p.y)) continue;
         cones.push({x:p.x,y:p.y,state:"up",tree:false,sz:1,vx:0,vy:0,spin:Math.random()*6.28,ang:Math.random()*6.28,cd:0}); }
     }
     return;
   }
+  if(curTrack>=8) return;
   if(!coneHunt && !animOn("trees") && !animOn("barrels")) return;
   if(!ensureSample()) return;   // brez slike ni dreves
   // DREVESA samo tam, kjer so na sliki (vzorči barvo listja iz slike)
@@ -7258,7 +7264,15 @@ function generateWorldRecordGhost(trackIdx, crossNeed){
       const targetV = maxV * (0.78 + 0.22 * cFac);
       if(curV < targetV) curV = Math.min(targetV, curV + accel * dt);
       else curV = Math.max(targetV, curV - accel * 1.5 * dt);
-      const p = posAt(s, 0);
+      let p = posAt(s, 0);
+      if(TRACKS[trackIdx] && TRACKS[trackIdx].splitZone){
+        const spz = TRACKS[trackIdx].splitZone;
+        if(i >= spz.i0 && i <= spz.i1){
+          const uSp = (i - spz.i0) / (spz.i1 - spz.i0);
+          const bell = Math.pow(Math.sin(Math.PI * uSp), 2);
+          p = posAt(s, -spz.dist * bell);
+        }
+      }
       const ang = Math.atan2(TYa[i], TXa[i]);
       const prog = crossings * L + s;
       pts.push({ t: Math.round(t * 1000) / 1000, x: p.x, y: p.y, a: ang, p: prog });
@@ -7304,7 +7318,7 @@ function startRace(){
   try{ genProps(); }catch(e){}
   // SVET PROGE (gledalci, pašnik, nadvozi, živali, ovire) — tudi za dirke brez kvalifikacij (kariera/single/trening)
   critters=[]; critterT=6+Math.random()*8; genSpectators(); specCross=6+Math.random()*8; specDmgCd=0; radioTipT=16+Math.random()*10; mover=null; throwObjs=[]; throwT=10+Math.random()*8; rockT=16+Math.random()*12; genPasture();
-  { overpasses=[]; const nOv=(!animOn("bridge")&&!(typeof mpMode!=="undefined"&&mpMode))?0:(L>4200?2:1);
+  { overpasses=[]; const nOv=(curTrack>=8||(!animOn("bridge")&&!(typeof mpMode!=="undefined"&&mpMode)))?0:(L>4200?2:1);
     for(let k=0;k<nOv;k++){ const s=((k+0.6)/nOv)*L; const i=idxOf(s);
       overpasses.push({s, i, ang:Math.atan2(TYa[i],TXa[i]), collapsed:false, hit:0}); } }
   { const wm=save.weatherMode||"clear";
@@ -8032,6 +8046,14 @@ function update(dt){
           } }
       }
       lat=aiObsClamp(rc,lat);   // ne zapelji v drevo / gume / rekvizit ob progi
+      if(TRACKS[curTrack] && TRACKS[curTrack].splitZone){
+        const spz = TRACKS[curTrack].splitZone;
+        if(rc.idx >= spz.i0 && rc.idx <= spz.i1){
+          const uSp = (rc.idx - spz.i0) / (spz.i1 - spz.i0);
+          const bell = Math.pow(Math.sin(Math.PI * uSp), 2);
+          lat = lat * 0.4 + ((rc.num % 2 === 0) ? -1 : 1) * spz.dist * bell;
+        }
+      }
       const p=posAt(rc.s,lat);
       rc.px=p.x; rc.py=p.y; rc.ang=Math.atan2(p.ty,p.tx); rc.curLat=lat;
       // AI izven proge: sled koles v pesku + prah
@@ -8129,7 +8151,19 @@ function update(dt){
       let minSd=Math.min(sd0,sdAt(nx,ny));
       const dmv=Math.hypot(nx-player.x,ny-player.y), steps=Math.min(20,Math.ceil(dmv/6));
       for(let k=1;k<steps;k++){ const t=k/steps, sv=sdAt(player.x+(nx-player.x)*t,player.y+(ny-player.y)*t); if(sv<minSd)minSd=sv; }
-      if(!drawMode && (OFF_CRASH ? (minSd<=-OFF_MAX) : (nx<6||ny<6||nx>IW-6||ny>IH-6))){ crash(nx,ny,OFF_CRASH?"Predalec s proge! Prst nazaj na krog.":"Zapustil si območje! Prst nazaj na krog.",true); }
+      const islHit = (typeof hitsSplitIsland === "function") ? hitsSplitIsland(player.x, player.y, nx, ny) : null;
+      if(islHit){
+        const isEn = (save.lang === "en");
+        if(TRACKS[curTrack] && TRACKS[curTrack].splitZone){
+          const spz = TRACKS[curTrack].splitZone;
+          const iMid = Math.round((spz.i0 + spz.i1) * 0.5);
+          const safeLat = (player.x < spz.cx) ? -spz.dist : spz.dist;
+          const safeP = posAt(S_OF_IDX[iMid] || 0, safeLat);
+          lastOn = { x: safeP.x, y: safeP.y, s: S_OF_IDX[iMid] || 0, idx: iMid };
+        }
+        crash(islHit.x, islHit.y, isEn ? "Crashed into the split island! Take the left or right lane." : "Trčil si v oviro na razcepu! Izberi levo ali desno pot.", true);
+      }
+      else if(!drawMode && (OFF_CRASH ? (minSd<=-OFF_MAX) : (nx<6||ny<6||nx>IW-6||ny>IH-6))){ crash(nx,ny,OFF_CRASH?"Predalec s proge! Prst nazaj na krog.":"Zapustil si območje! Prst nazaj na krog.",true); }
       else{
         if(drawMode) player.spd=player.v;
         else player.spd=player.spd*.85+(Math.hypot(nx-player.x,ny-player.y)/Math.max(dt,.001))*.15;
@@ -11172,7 +11206,9 @@ function drawFigure8Bridge(c, u){
   const tr = TRACKS[curTrack];
   if(!tr || !tr.bridgeDeck) return;
   const bd = tr.bridgeDeck;
-  // 1) Draw the elevated bridge deck over any lower-pass vehicles
+  // Never hide starting grid slots, countdown circles, or lift/rejoin markers
+  if(state === "prestart" || state === "countdown" || state === "rejoin" || liftRing) return;
+  // 1) Draw the elevated bridge deck over lower-pass vehicles
   c.save();
   c.translate(bd.x, bd.y);
   c.rotate(bd.ang);
@@ -11228,8 +11264,23 @@ function drawFigure8Bridge(c, u){
   }
 }
 
+function hitsSplitIsland(x0, y0, x1, y1){
+  const tr = TRACKS[curTrack];
+  if(!tr || !tr.splitIsland) return null;
+  const isl = tr.splitIsland;
+  const steps = 14;
+  for(let k=0; k<=steps; k++){
+    const t = k / steps;
+    const x = x0 + (x1 - x0)*t, y = y0 + (y1 - y0)*t;
+    const dx = (x - isl.cx) / isl.rx, dy = (y - isl.cy) / isl.ry;
+    if(dx*dx + dy*dy <= 1.0){
+      return { x, y };
+    }
+  }
+  return null;
+}
+
 function sampleCatmullRomLoop(ctrlPts, sp){
-  // Generates a dense closed loop and resamples at uniform spacing sp
   const denseX = [], denseY = [];
   const M = ctrlPts.length, SUB = 40;
   for(let i=0; i<M; i++){
@@ -11280,56 +11331,112 @@ function buildSingleExtraTrack(cfg){
   const { px, py, N } = sampleCatmullRomLoop(cfg.ctrl, sp);
   const hw = new Array(N).fill(hwVal);
 
+  // If a symmetrical Y-split configuration is provided, replace px, py in the split range with the Left Branch
+  // and compute the Right Branch points so both branches fork cleanly around the central island.
+  let splitBranchR = null;
+  let splitZoneInfo = null;
+  let splitIsland = null;
+  if(cfg.splitCfg){
+    const sc = cfg.splitCfg;
+    let closestI = 0, minDist = 1e9;
+    for(let i=0; i<N; i++){
+      const d = Math.hypot(px[i] - sc.cx, py[i] - sc.cy);
+      if(d < minDist){ minDist = d; closestI = i; }
+    }
+    const i0 = Math.max(0, closestI - sc.halfSpan);
+    const i1 = Math.min(N - 1, closestI + sc.halfSpan);
+    const count = i1 - i0;
+    const rx = [], ry = [];
+    const hwFork = sc.hwFork || Math.round(hwVal * 0.76);
+    for(let k=0; k<=count; k++){
+      const idx = i0 + k;
+      const u = k / count;
+      const bell = Math.pow(Math.sin(Math.PI * u), 2);
+      const prevI = (idx - 1 + N) % N, nextI = (idx + 1) % N;
+      const tx = px[nextI] - px[prevI], ty = py[nextI] - py[prevI];
+      const tLen = Math.hypot(tx, ty) || 1;
+      const nx = -ty / tLen, ny = tx / tLen;
+
+      // Left branch replaces the centerline in [i0..i1]
+      const origX = px[idx], origY = py[idx];
+      px[idx] = origX - nx * sc.dist * bell;
+      py[idx] = origY - ny * sc.dist * bell;
+      hw[idx] = Math.round(hwVal * (1 - 0.24 * bell));
+
+      // Right branch points
+      rx.push(origX + nx * sc.dist * bell);
+      ry.push(origY + ny * sc.dist * bell);
+    }
+    splitBranchR = { x: rx, y: ry, hw: hwFork };
+    splitZoneInfo = { i0, i1, dist: sc.dist, hwFork, cx: sc.cx, cy: sc.cy };
+    splitIsland = { cx: sc.cx, cy: sc.cy, rx: sc.islRx || 44, ry: sc.islRy || 220 };
+  }
+
   const cv = document.createElement("canvas"); cv.width = IW; cv.height = IH;
   const g = cv.getContext("2d");
 
   // 1) Background terrain
   cfg.drawBg(g, IW, IH);
 
-  // Helper to draw a wide road with curbs & asphalt
-  const paintRoad = (ptsX, ptsY, rHw, closed, curbColA, curbColB, asphaltCol) => {
+  // 2) Layer-by-layer road painting so bifurcating branches merge seamlessly without curbs cutting across asphalt
+  const roadPaths = [{ x: px, y: py, hw: hwVal, closed: true }];
+  if(splitBranchR){
+    roadPaths.push({ x: splitBranchR.x, y: splitBranchR.y, hw: splitBranchR.hw, closed: false });
+  }
+
+  const paintRoadPaths = (paths, curbColA, curbColB, asphaltCol) => {
     g.save();
     g.lineCap = "round"; g.lineJoin = "round";
-    // Outer shadow / verge
+    // Layer 1: Outer shadow / verge
     g.strokeStyle = "rgba(0,0,0,0.28)";
-    g.lineWidth = (rHw + 16) * 2;
-    strokePolyPath(g, ptsX, ptsY, closed);
-    // Curb base
+    for(const p of paths){
+      g.lineWidth = (p.hw + 16) * 2;
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
+    // Layer 2: Curb base A
     g.strokeStyle = curbColA || "#d62828";
-    g.lineWidth = (rHw + 11) * 2;
-    strokePolyPath(g, ptsX, ptsY, closed);
+    for(const p of paths){
+      g.lineWidth = (p.hw + 11) * 2;
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
+    // Layer 3: Curb stripes B
     g.strokeStyle = curbColB || "#f8f9fa";
-    g.lineWidth = (rHw + 11) * 2;
     g.setLineDash([26, 26]);
-    strokePolyPath(g, ptsX, ptsY, closed);
+    for(const p of paths){
+      g.lineWidth = (p.hw + 11) * 2;
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
     g.setLineDash([]);
-    // Asphalt
+    // Layer 4: Asphalt core
     g.strokeStyle = asphaltCol || "#373b42";
-    g.lineWidth = rHw * 2;
-    strokePolyPath(g, ptsX, ptsY, closed);
-    // Center lane dashes
+    for(const p of paths){
+      g.lineWidth = p.hw * 2;
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
+    // Layer 5: Center lane dashes
     g.strokeStyle = "rgba(255,255,255,0.26)";
     g.lineWidth = 3;
     g.setLineDash([22, 24]);
-    strokePolyPath(g, ptsX, ptsY, closed);
+    for(const p of paths){
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
     g.setLineDash([]);
-    // Edge white lines
+    // Layer 6: Edge white lines
     g.strokeStyle = "rgba(255,255,255,0.35)";
-    g.lineWidth = (rHw - 4) * 2;
-    strokePolyPath(g, ptsX, ptsY, closed);
+    for(const p of paths){
+      g.lineWidth = (p.hw - 4) * 2;
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
     g.strokeStyle = asphaltCol || "#373b42";
-    g.lineWidth = (rHw - 7) * 2;
-    strokePolyPath(g, ptsX, ptsY, closed);
+    for(const p of paths){
+      g.lineWidth = (p.hw - 7) * 2;
+      strokePolyPath(g, p.x, p.y, p.closed);
+    }
     g.restore();
   };
+  paintRoadPaths(roadPaths, cfg.curbA, cfg.curbB, cfg.asphalt);
 
-  // 2) Draw main road & optional split fork branch
-  paintRoad(px, py, hwVal, true, cfg.curbA, cfg.curbB, cfg.asphalt);
-  if(cfg.splitPts){
-    paintRoad(cfg.splitPts.x, cfg.splitPts.y, cfg.splitPts.hw || (hwVal * 0.88), false, cfg.curbA, cfg.curbB, cfg.asphalt);
-  }
-
-  // 3) Track-specific details (islands, water splash zones, bridges, container stacks)
+  // 3) Track-specific details (split islands, boardwalks, piers, water splash zones)
   if(cfg.drawDetails) cfg.drawDetails(g, IW, IH, px, py, hwVal);
 
   // 4) Start/Finish line at index 0
@@ -11349,16 +11456,20 @@ function buildSingleExtraTrack(cfg){
     g.restore();
   }
 
-  // 5) Build collision mask canvas (both main loop AND split fork are valid road!)
+  // 5) Build collision mask canvas (both split branches are valid road, central island is punched out as #000)
   const mc = document.createElement("canvas"); mc.width = IW; mc.height = IH;
   const mg = mc.getContext("2d", {willReadFrequently: true});
   mg.fillStyle = "#000"; mg.fillRect(0, 0, IW, IH);
   mg.strokeStyle = "#fff"; mg.lineCap = "round"; mg.lineJoin = "round";
-  mg.lineWidth = hwVal * 2;
-  strokePolyPath(mg, px, py, true);
-  if(cfg.splitPts){
-    mg.lineWidth = (cfg.splitPts.hw || (hwVal * 0.88)) * 2;
-    strokePolyPath(mg, cfg.splitPts.x, cfg.splitPts.y, false);
+  for(const p of roadPaths){
+    mg.lineWidth = p.hw * 2;
+    strokePolyPath(mg, p.x, p.y, p.closed);
+  }
+  if(splitIsland){
+    mg.fillStyle = "#000";
+    mg.beginPath();
+    mg.ellipse(splitIsland.cx, splitIsland.cy, splitIsland.rx, splitIsland.ry, 0, 0, Math.PI*2);
+    mg.fill();
   }
 
   // 6) Preview thumbnail
@@ -11369,91 +11480,61 @@ function buildSingleExtraTrack(cfg){
   const cps = [Math.round(N*0.25), Math.round(N*0.50), Math.round(N*0.75)];
   const trk = {
     iw: IW, ih: IH, sp, pace: cfg.pace || 8.4,
-    pitA: -440, pitB: -90,
+    pitA: cfg.pitA != null ? cfg.pitA : -440,
+    pitB: cfg.pitB != null ? cfg.pitB : -90,
+    gridGap: cfg.gridGap || null,
+    isFigure8: !!cfg.isFigure8,
     cps, px, py, hw,
     img: prevUrl, mask: prevUrl,
     imgEl: cv, _maskCv: mc, _procedural: true,
     waterZones: cfg.waterZones || null,
     bridgeDeck: cfg.bridgeDeck || null,
-    splitFork: cfg.splitPts || null
+    splitBranchR,
+    splitZone: splitZoneInfo,
+    splitIsland
   };
   prepTrack(trk);
-  if(trk.bridgeDeck && trk.bridgeDeck.passFrac != null){
+
+  // Exact bridge crossing distance and angle for Figure-8
+  if(cfg.isFigure8 && trk.bridgeDeck){
+    const bd = trk.bridgeDeck;
+    let closestI = 0, minDist = 1e9;
+    const searchStart = Math.round(N * 0.70);
+    for(let i=searchStart; i<N; i++){
+      const d = Math.hypot(px[i] - bd.x, py[i] - bd.y);
+      if(d < minDist){ minDist = d; closestI = i; }
+    }
+    bd.bridgeS = S_OF_IDX[closestI] || (trk.L * 0.875);
+    const prevI = (closestI - 2 + N) % N, nextI = (closestI + 2) % N;
+    bd.ang = Math.atan2(py[nextI] - py[prevI], px[nextI] - px[prevI]);
+  } else if(trk.bridgeDeck && trk.bridgeDeck.passFrac != null){
     trk.bridgeDeck.bridgeS = trk.L * trk.bridgeDeck.passFrac;
   }
   return { trk, preview: { name: cfg.nameSl, desc: cfg.descSl, img: prevUrl } };
 }
 
 function buildExtraTracksList(){
-  // Track 9 (idx 8): Stadium Split (Stadionski razcep) — Wide stadium circuit with a Joker Split Route + water splash
+  // Track 9 (idx 8): Figure-8 Overpass (Osmica z nadvozom)
+  // Finish line & grid slots [0..5] on Northern Loop (x=195, y=560) > 450px from central bridge crossover (470, 836)
   const t9 = buildSingleExtraTrack({
-    hw: 116, pace: 8.3,
-    nameSl: "Proga 9 · Stadionski razcep",
-    descSl: "Široka stadionska arena z razcepom (dve vzporedni poti okoli otoka), plitvo vodno lužo in stožci za podiranje.",
-    curbA: "#e63946", curbB: "#f8fafc", asphalt: "#363a42",
-    ctrl: [
-      [755, 836], [755, 420], [640, 215], [440, 195], [220, 255],
-      [165, 520], [165, 836], [165, 1150], [220, 1415], [440, 1475],
-      [640, 1455], [755, 1250]
-    ],
-    splitPts: {
-      hw: 102,
-      x: [185, 255, 395, 425, 395, 255, 185],
-      y: [430, 540, 680, 836, 992, 1132, 1242]
-    },
-    waterZones: [
-      { x: 418, y: 836, rx: 88, ry: 125, ang: 0 },
-      { x: 450, y: 205, rx: 110, ry: 72, ang: 0 }
-    ],
-    bridgeDeck: { x: 755, y: 580, len: 92, hw: 124, ang: Math.PI/2, asphalt: "#2b303a", truss: "#ffbe0b" },
-    drawBg(g, IW, IH){
-      for(let y=0; y<IH; y+=48){
-        g.fillStyle = ((y/48)%2===0) ? "#2d6a3e" : "#347847";
-        g.fillRect(0, y, IW, 48);
-      }
-      // Stadium outer concourse frame
-      g.strokeStyle = "rgba(255,255,255,0.12)";
-      g.lineWidth = 18;
-      g.strokeRect(24, 24, IW-48, IH-48);
-    },
-    drawDetails(g, IW, IH){
-      // Central split island highlight with red/white kerbing
-      g.save();
-      g.fillStyle = "#265934";
-      g.strokeStyle = "#f8fafc";
-      g.lineWidth = 6;
-      g.beginPath();
-      g.ellipse(285, 836, 48, 220, 0, 0, Math.PI*2);
-      g.fill(); g.stroke();
-      // Split direction arrows painted on asphalt at fork entry (bottom-left going up? Wait: main loop goes UP on right, DOWN on left!)
-      g.fillStyle = "rgba(255,230,109,0.78)";
-      g.font = "900 26px sans-serif";
-      g.textAlign = "center";
-      g.fillText("↙ SPLIT ↘", 255, 490);
-      g.restore();
-    }
-  });
-
-  // Track 10 (idx 9): Figure-8 Overpass (Osmica z nadvozom) — Wide Figure-8 with central viaduct bridge + water splash
-  const t10 = buildSingleExtraTrack({
     hw: 112, pace: 8.5,
-    nameSl: "Proga 10 · Osmica z nadvozom",
-    descSl: "Tekoča široka osmica z osrednjim betonskim nadvozom, podvozem, vodno plitvino in lomljivimi ovirami ob progi.",
+    nameSl: "Proga 9 · Osmica z nadvozom",
+    descSl: "Široka osmica z osrednjim betonskim nadvozom, podvozem, vodno plitvino in startno ciljno ravnino na severni zanki.",
     curbA: "#2563eb", curbB: "#f8fafc", asphalt: "#383d47",
+    gridGap: 145, pitA: -330, pitB: -65, isFigure8: true,
     ctrl: [
-      [740, 460], [670, 210], [450, 185], [220, 240], [185, 480],
-      [310, 690], [470, 836], [630, 982], [755, 1190], [720, 1430],
-      [490, 1485], [270, 1460], [195, 1210], [310, 982], [470, 836],
-      [630, 690]
+      [195, 560], [220, 310], [440, 190], [670, 210], [740, 460],
+      [630, 690], [470, 836], [310, 982], [195, 1210], [270, 1460],
+      [490, 1485], [720, 1430], [755, 1190], [630, 982], [470, 836],
+      [310, 690]
     ],
     waterZones: [
-      { x: 480, y: 1475, rx: 125, ry: 82, ang: 0 },
-      { x: 200, y: 460, rx: 82, ry: 115, ang: 0 }
+      { x: 490, y: 1475, rx: 125, ry: 82, ang: 0 },
+      { x: 440, y: 195, rx: 90, ry: 110, ang: 0 }
     ],
     bridgeDeck: {
       x: 470, y: 836, len: 290, hw: 114,
-      ang: Math.atan2(-292, 320),
-      passFrac: 14 / 16, spanS: 350,
+      ang: -0.74, spanS: 350,
       asphalt: "#414754", truss: "#38bdf8"
     },
     drawBg(g, IW, IH){
@@ -11463,7 +11544,6 @@ function buildExtraTracksList(){
       gr.addColorStop(1, "#2a522c");
       g.fillStyle = gr;
       g.fillRect(0, 0, IW, IH);
-      // Subtle alpine contour rings
       g.strokeStyle = "rgba(255,255,255,0.06)";
       g.lineWidth = 4;
       for(let r=180; r<900; r+=140){
@@ -11471,121 +11551,128 @@ function buildExtraTracksList(){
       }
     },
     drawDetails(g, IW, IH){
-      // Draw static bridge piers at (470, 836)
       g.save();
       g.translate(470, 836);
-      g.rotate(Math.atan2(-292, 320));
+      g.rotate(-0.74);
       g.fillStyle = "rgba(0,0,0,0.35)";
       g.fillRect(-145, -126, 290, 252);
       g.restore();
     }
   });
 
-  // Track 11 (idx 10): Tropical Lagoon (Tropska laguna) — Extra-wide 240px beach & boardwalk circuit with split island + 3 water splash zones
-  const t11 = buildSingleExtraTrack({
-    hw: 120, pace: 8.2,
-    nameSl: "Proga 11 · Tropska laguna",
-    descSl: "Izjemno široka obalna proga (240 px) z lesenim pomolom, razcepom okoli palmovega otoka in tremi plitvimi lagunami.",
+  // Track 10 (idx 9): Tropical Lagoon (Tropska laguna)
+  // Western boardwalk straight (x=185) + Eastern symmetrical Y-split around palm island (cx=695, cy=836)
+  const t10 = buildSingleExtraTrack({
+    hw: 118, pace: 8.2,
+    nameSl: "Proga 10 · Tropska laguna",
+    descSl: "Izjemno široka obalna proga z lesenim pomolom, simetričnim razcepom okoli palmovega otoka in plitvimi lagunami.",
     curbA: "#0ea5e9", curbB: "#fef08a", asphalt: "#46423d",
     ctrl: [
-      [190, 836], [195, 440], [285, 220], [490, 190], [705, 250],
-      [765, 510], [765, 836], [765, 1160], [705, 1420], [490, 1480],
-      [285, 1450], [195, 1230]
+      [185, 836], [185, 460], [270, 220], [480, 190], [700, 240],
+      [760, 500], [760, 836], [760, 1170], [700, 1430], [480, 1480],
+      [270, 1450], [185, 1210]
     ],
-    splitPts: {
-      hw: 105,
-      x: [745, 675, 545, 520, 545, 675, 745],
-      y: [430, 545, 685, 836, 987, 1127, 1242]
+    splitCfg: {
+      cx: 695, cy: 836, halfSpan: 46, dist: 122, hwFork: 78,
+      islRx: 44, islRy: 220
     },
     waterZones: [
-      { x: 525, y: 836, rx: 95, ry: 140, ang: 0 },
-      { x: 490, y: 195, rx: 135, ry: 85, ang: 0 },
-      { x: 490, y: 1475, rx: 135, ry: 85, ang: 0 }
+      { x: 575, y: 836, rx: 78, ry: 135, ang: 0 },
+      { x: 480, y: 195, rx: 130, ry: 80, ang: 0 },
+      { x: 480, y: 1475, rx: 130, ry: 80, ang: 0 }
     ],
     drawBg(g, IW, IH){
-      // Warm tropical sand base
       const gr = g.createLinearGradient(0, 0, IW, IH);
       gr.addColorStop(0, "#e6c98a");
       gr.addColorStop(0.5, "#deb871");
       gr.addColorStop(1, "#d1a75c");
       g.fillStyle = gr;
       g.fillRect(0, 0, IW, IH);
-      // Central turquoise lagoon lake
-      const lg = g.createRadialGradient(380, 836, 30, 380, 836, 260);
+      const lg = g.createRadialGradient(420, 836, 30, 420, 836, 260);
       lg.addColorStop(0, "#38e4ae");
       lg.addColorStop(0.65, "#06b6d4");
       lg.addColorStop(1, "rgba(6, 182, 212, 0)");
       g.fillStyle = lg;
-      g.beginPath(); g.ellipse(370, 836, 140, 390, 0, 0, Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(420, 836, 130, 390, 0, 0, Math.PI*2); g.fill();
     },
     drawDetails(g, IW, IH){
-      // Wooden boardwalk planks on the left straight (x=190, y=520..1150)
+      // Wooden boardwalk planks on the left straight
       g.save();
       g.fillStyle = "rgba(139, 90, 43, 0.55)";
-      g.fillRect(190 - 114, 520, 228, 630);
+      g.fillRect(185 - 114, 520, 228, 630);
       g.strokeStyle = "rgba(74, 44, 17, 0.45)";
       g.lineWidth = 3;
       for(let y=526; y<1150; y+=16){
-        g.beginPath(); g.moveTo(190 - 112, y); g.lineTo(190 + 112, y); g.stroke();
+        g.beginPath(); g.moveTo(185 - 112, y); g.lineTo(185 + 112, y); g.stroke();
       }
+      // Central palm island highlight with sand dunes and curb border
+      g.fillStyle = "#deb871";
+      g.strokeStyle = "#fef08a";
+      g.lineWidth = 5;
+      g.beginPath();
+      g.ellipse(695, 836, 44, 220, 0, 0, Math.PI*2);
+      g.fill(); g.stroke();
       g.restore();
     }
   });
 
-  // Track 12 (idx 11): Neon Harbour (Pristaniški dok) — Wide container dockyard circuit with split container alley, gantry bridge & dock puddles
-  const t12 = buildSingleExtraTrack({
+  // Track 11 (idx 10): Neon Harbour (Pristaniški dok)
+  // Eastern dock straight (x=755) with gantry bridge + Western symmetrical Y-split around container pier (cx=245, cy=836)
+  const t11 = buildSingleExtraTrack({
     hw: 114, pace: 8.35,
-    nameSl: "Proga 12 · Pristaniški dok",
-    descSl: "Široka pristaniška proga med ladijskimi zabojniki z dvojno potjo, pristaniškim žerjavnim nadvozom in lužami.",
+    nameSl: "Proga 11 · Pristaniški dok",
+    descSl: "Široka pristaniška proga med ladijskimi zabojniki s simetričnim razcepom, žerjavnim nadvozom in lužami.",
     curbA: "#f59e0b", curbB: "#1e293b", asphalt: "#2e3440",
     ctrl: [
-      [755, 836], [755, 430], [665, 210], [450, 195], [235, 235],
-      [170, 490], [170, 836], [170, 1180], [235, 1435], [450, 1475],
+      [755, 836], [755, 430], [665, 210], [450, 195], [245, 235],
+      [180, 490], [180, 836], [180, 1180], [245, 1435], [450, 1475],
       [665, 1460], [755, 1240]
     ],
-    splitPts: {
-      hw: 100,
-      x: [190, 260, 390, 415, 390, 260, 190],
-      y: [435, 550, 690, 836, 982, 1122, 1237]
+    splitCfg: {
+      cx: 245, cy: 836, halfSpan: 46, dist: 122, hwFork: 78,
+      islRx: 44, islRy: 220
     },
     waterZones: [
-      { x: 410, y: 836, rx: 88, ry: 125, ang: 0 },
+      { x: 365, y: 836, rx: 78, ry: 130, ang: 0 },
       { x: 450, y: 1472, rx: 120, ry: 78, ang: 0 }
     ],
     bridgeDeck: { x: 755, y: 1110, len: 105, hw: 122, ang: Math.PI/2, asphalt: "#334155", truss: "#f97316" },
     drawBg(g, IW, IH){
-      // Concrete dockyard base
       g.fillStyle = "#475569";
       g.fillRect(0, 0, IW, IH);
-      // Grid expansion joints
       g.strokeStyle = "rgba(15, 23, 42, 0.28)";
       g.lineWidth = 2;
       for(let x=0; x<IW; x+=64){ g.beginPath(); g.moveTo(x, 0); g.lineTo(x, IH); g.stroke(); }
       for(let y=0; y<IH; y+=64){ g.beginPath(); g.moveTo(0, y); g.lineTo(IW, y); g.stroke(); }
-      // Deep harbour water basin in center-right infield
       g.fillStyle = "#0f3c5c";
       g.strokeStyle = "#fbbf24";
       g.lineWidth = 6;
-      g.fillRect(495, 430, 125, 810);
-      g.strokeRect(495, 430, 125, 810);
+      g.fillRect(485, 430, 135, 810);
+      g.strokeRect(485, 430, 135, 810);
     },
     drawDetails(g, IW, IH){
-      // Painted colorful shipping containers on the split island (x=285, y=640..1030)
-      const cols = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+      // Central container pier island with curbs and stacked containers strictly inside island
       g.save();
+      g.fillStyle = "#334155";
+      g.strokeStyle = "#f59e0b";
+      g.lineWidth = 5;
+      g.beginPath();
+      g.ellipse(245, 836, 44, 220, 0, 0, Math.PI*2);
+      g.fill(); g.stroke();
+      const cols = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
       for(let k=0; k<5; k++){
-        const cy = 665 + k*78;
+        const cy = 680 + k*74;
         g.fillStyle = cols[k % cols.length];
-        g.fillRect(262, cy, 44, 64);
-        g.strokeStyle = "rgba(0,0,0,0.45)";
-        g.lineWidth = 3;
-        g.strokeRect(262, cy, 44, 64);
+        g.fillRect(227, cy, 36, 56);
+        g.strokeStyle = "rgba(0,0,0,0.5)";
+        g.lineWidth = 2.5;
+        g.strokeRect(227, cy, 36, 56);
       }
       g.restore();
     }
   });
 
-  return [t9, t10, t11, t12];
+  return [t9, t10, t11];
 }
 
 function ensureExtraTracks(needSdIdx){
@@ -12111,10 +12198,9 @@ const PREVIEWS_TRANSLATIONS = {
     { name: "Track 6 · Sand Dunes", desc: "Wide desert track with pit lane — palms, cacti, rocks, tires and trackside buildings (all destructible)." },
     { name: "Track 7 · Snow Circuit", desc: "Winter kart circuit: perimeter tires, sponsor boards, tents, fir trees and lamps — all destructible." },
     { name: "Track 8 · Temple Ring", desc: "Chinese temple track: pagodas, cherry trees, bridge, rocks and dragon by the track with safety tires. All destructible." },
-    { name: "Track 9 · Stadium Split", desc: "Wide stadium arena with a Joker split route (two parallel paths around the island), shallow water splash zone and smashable cones." },
-    { name: "Track 10 · Figure-8 Overpass", desc: "Wide Figure-8 circuit with a central viaduct overpass (drive over and under the bridge!), water splash zone and smashable props." },
-    { name: "Track 11 · Tropical Lagoon", desc: "Extra-wide coastal beach & wooden boardwalk circuit with a split palm-island route and three shallow turquoise water splash zones." },
-    { name: "Track 12 · Neon Harbour", desc: "Wide container port circuit with a split container-alley route, steel gantry bridge overpass, water puddles and smashable crates." }
+    { name: "Track 9 · Figure-8 Overpass", desc: "Wide Figure-8 circuit with a central viaduct overpass (drive over and under the bridge!), water splash zone and smashable props." },
+    { name: "Track 10 · Tropical Lagoon", desc: "Extra-wide coastal beach & wooden boardwalk circuit with a symmetrical split palm-island route and three shallow water splash zones." },
+    { name: "Track 11 · Neon Harbour", desc: "Wide container port circuit with a symmetrical split container-pier route, steel gantry bridge overpass and water puddles." }
   ]
 };
 function getPreview(idx){
@@ -12126,7 +12212,7 @@ function getPreview(idx){
 }
 
 /* ================= ROOKIE RING — O-proga z vadnico in parkiriščem (peskovnik) ================= */
-const ROOKIE=12, N_REAL_TRACKS=12;
+const ROOKIE=11, N_REAL_TRACKS=11;
 const RK={IW:941,IH:1672,CX:470,CY:836,HW:74,W:270,Hh:694,Rc:153,A:541,B:117,LOT:23,LW:140,LH:564,INF:55,CONN:[650,1020],CONNW:84};
 // širina slike sledi razmerju zaslona (da proga sega proti robovom); proga = zaobljen pravokotnik z ravnima zgoraj in spodaj
 function rkSetup(){
@@ -13798,29 +13884,26 @@ const STADIUM9_FIXED=[
   ["rbarrel",470,580,1.1,0],["rbarrel",470,1010,1.1,0],["crate",445,780,1,0.2],["crate",495,780,1,-0.2],["hay",470,850,1,0],
   ["rcone",210,450,1,0],["rcone",730,450,1,0],["rcone",220,1180,1,0],["rcone",720,1180,1,0],
   ["lamp",140,350,1,0],["lamp",800,350,1,0],["lamp",140,1250,1,0],["lamp",800,1250,1,0]];
-const FIG10_FIXED=[
+const FIG9_FIXED=[
   ["banner",260,175,1,0,"OVERPASS"],["banner",680,175,1,0,"BRIDGESTONE"],
   ["rcone",370,740,1,0],["rcone",570,740,1,0],["rcone",370,960,1,0],["rcone",570,960,1,0],
   ["rbarrel",340,850,1,0],["rbarrel",600,850,1,0],["crate",220,380,1,0.15],["crate",720,380,1,-0.15],
   ["hay",210,1320,1,0.1],["hay",730,1320,1,-0.1],["rcone",470,295,1,0],["rcone",470,1410,1,0]];
-const LAGOON11_FIXED=[
-  ["palm",470,700,1.25,0],["palm",455,810,1.1,1.2],["palm",485,900,1.2,2.4],["umbrella",470,755,1.1,0.5],["umbrella",470,855,1.1,2.1],
+const LAGOON10_FIXED=[
+  ["palm",695,720,1.25,0],["palm",680,820,1.1,1.2],["palm",710,910,1.2,2.4],["umbrella",695,770,1.1,0.5],["umbrella",695,870,1.1,2.1],
   ["banner",230,165,1,0,"LAGOON"],["banner",710,165,1,0,"TROPIC"],
-  ["rcone",335,660,1,0],["rcone",605,660,1,0],["rcone",335,960,1,0],["rcone",605,960,1,0],
-  ["crate",470,610,1,0],["crate",470,1010,1,0],["hay",240,420,1,0],["hay",700,420,1,0],["rbarrel",240,1240,1,0],["rbarrel",700,1240,1,0]];
-const HARBOUR12_FIXED=[
+  ["crate",695,640,1,0],["crate",695,1030,1,0],["hay",240,420,1,0],["hay",700,420,1,0],["rbarrel",240,1240,1,0],["rbarrel",700,1240,1,0]];
+const HARBOUR11_FIXED=[
   ["banner",235,175,1,0,"HARBOUR"],["banner",705,175,1,0,"CARGO DOCK"],
-  ["rbarrel",470,620,1.1,0],["rbarrel",470,1040,1.1,0],["crate",460,740,1.05,0.1],["crate",480,820,1.05,-0.15],["crate",465,900,1.05,0.2],
-  ["rcone",340,680,1,0],["rcone",600,680,1,0],["rcone",340,980,1,0],["rcone",600,980,1,0],
-  ["barrel",220,480,1,0],["barrel",720,480,1,0],["crate",220,1180,1,0],["crate",720,1180,1,0],
+  ["rbarrel",245,630,1.1,0],["rbarrel",245,1040,1.1,0],["crate",235,740,1.05,0.1],["crate",255,820,1.05,-0.15],["crate",240,900,1.05,0.2],
+  ["barrel",720,480,1,0],["crate",720,1180,1,0],
   ["lamp",150,400,1,0],["lamp",790,400,1,0],["lamp",150,1260,1,0],["lamp",790,1260,1,0]];
 const PROP_SETS={0:{fixed:MIVKA_FIXED,kinds:["palm","palm","palm","bush","bush","cactus","cactus","stump","rock","rockpile","crate","hay","sign","barrel","tires","flag","car","umbrella"],n:130,seed:5151},
   1:{fixed:null,kinds:["cactus","cactus","cactus","barrel","barrel","rock","rock","tires","fence","barrels","bush","stump","crate","hay","sign","rockpile","wagon","well"],n:96,seed:4242},
   6:{fixed:SNOW_FIXED,kinds:["pine","pine","pine","pine","rbarrel","crate","rcone","rcone","lamp","tires","wtent","chevron"],n:70,seed:6161},
-  8:{fixed:STADIUM9_FIXED,kinds:["rcone","rcone","rcone","rbarrel","crate","hay","tires","flag","lamp","chevron","wtent"],n:85,seed:8909},
-  9:{fixed:FIG10_FIXED,kinds:["rcone","rcone","rbarrel","crate","hay","tires","pine","bush","lamp","chevron","rock"],n:80,seed:9010},
-  10:{fixed:LAGOON11_FIXED,kinds:["palm","palm","palm","umbrella","rcone","rcone","crate","hay","barrel","tires","bush","flag"],n:95,seed:9111},
-  11:{fixed:HARBOUR12_FIXED,kinds:["crate","crate","rbarrel","barrel","rcone","rcone","tires","lamp","chevron","barrels","flag"],n:90,seed:9212}};
+  8:{fixed:FIG9_FIXED,kinds:["rcone","rcone","rbarrel","crate","hay","tires","pine","bush","lamp","chevron","rock"],n:80,seed:9010},
+  9:{fixed:LAGOON10_FIXED,kinds:["palm","palm","palm","umbrella","rcone","rcone","crate","hay","barrel","tires","bush","flag"],n:95,seed:9111},
+  10:{fixed:HARBOUR11_FIXED,kinds:["crate","crate","rbarrel","barrel","rcone","rcone","tires","lamp","chevron","barrels","flag"],n:90,seed:9212}};
 // ali objekt (s polmerom cr) leži na cesti (da ga ne postavimo tja)
 function propOnRoad(x,y,cr){ if(onTrack(x,y)) return true; for(let q=0;q<10;q++){ const a=q/10*6.28; if(onTrack(x+Math.cos(a)*cr,y+Math.sin(a)*cr)) return true; } return false; }
 // ZID IZ GUM okoli vseh novih prog (odmaknjen od robnika) + kamniti zid ob notranjih otokih Mivke + GOSTO ZELENJE
@@ -13996,7 +14079,7 @@ function genPhotoTires(){   // varnostne gume ob progi za fotoproge (1-4)
   }
 }
 function genWallsAndGreen(r){ if((curTrack>=1&&curTrack<=4)||curTrack===7){ try{ genPhotoTires(); if(curTrack===7) genTemple7(); }catch(e){} return; }
-  if(!(curTrack===0||curTrack===5||curTrack===6||(curTrack>=8&&curTrack<=11))) return;
+  if(!(curTrack===0||curTrack===5||curTrack===6||(curTrack>=8&&curTrack<=10))) return;
   const free=(x,y,dd)=>{ for(const c of cones){ if(c.prop){ const d=(c.x-x)**2+(c.y-y)**2; if(d<dd*dd) return false; } } return true; };
   const inImg=(x,y,m)=>x>m&&y>m&&x<IW-m&&y<IH-m;
   const poly=[]; for(let q=0;q<N;q+=3) poly.push([PX[q],PY[q]]);
@@ -14004,9 +14087,11 @@ function genWallsAndGreen(r){ if((curTrack>=1&&curTrack<=4)||curTrack===7){ try{
   const s0=L*0.05, i0=idxOf(s0), p0=posAt(s0,(HW[i0]||40)+25); const inner=inPolyC(p0.x,p0.y)?1:-1;
   const GAP=27;   // odmik od roba ceste (robnik ~12px ostane viden)
   const freeW=(x,y,dd)=>{ for(const c of cones){ if(c.prop&&(c.kind==="tirewall"||c.kind==="stonewall")){ const d=(c.x-x)**2+(c.y-y)**2; if(d<dd*dd) return false; } } return true; };
+  const trk = TRACKS[curTrack];
   for(let s=0;s<L;s+=34){ const i=idxOf(s), hw=HW[i]||40, ang=Math.atan2(TYa[i],TXa[i]);
     const i2=idxOf(s+18); let da=Math.atan2(TYa[i2],TXa[i2])-ang; while(da>3.14)da-=6.28; while(da<-3.14)da+=6.28;
     const corner=Math.abs(da)>0.15;   // ovinek
+    if(trk && trk.bridgeDeck && Math.hypot(PX[i]-trk.bridgeDeck.x, PY[i]-trk.bridgeDeck.y) < trk.bridgeDeck.len*0.6) continue;
     for(const side of [-1,1]){ let p=null; for(let k=0;k<5;k++){ const q=posAt(s,side*(hw+GAP+k*8)); if(sdAt(q.x,q.y)<=-14){ p=q; break; } } if(!p) continue;
       if(!inImg(p.x,p.y,10)||propOnRoad(p.x,p.y,8)||!freeW(p.x,p.y,24)) continue;
       const kind=(curTrack===5&&side===inner)?"stonewall":"tirewall";
@@ -14019,12 +14104,12 @@ function genWallsAndGreen(r){ if((curTrack>=1&&curTrack<=4)||curTrack===7){ try{
       cones.push({x:pT.x,y:pT.y,state:"up",prop:true,kind:"tires",hr:PROP_SPEC.tires.hr,sz:0.9,ang,vx:0,vy:0,spin:0,cd:0,tree:false}); } }
   }
 }
-function genGreenery(r){ if(!(curTrack===0||curTrack===5||curTrack===6||(curTrack>=8&&curTrack<=11))) return;
+function genGreenery(r){ if(!(curTrack===0||curTrack===5||curTrack===6||(curTrack>=8&&curTrack<=10))) return;
   const free=(x,y,dd)=>{ for(const c of cones){ if(c.prop){ const d=(c.x-x)**2+(c.y-y)**2; if(d<dd*dd) return false; } } return true; };
   const GAP=27;
   // GOSTO ZELENJE po vsem terenu izven proge (za zidom iz gum)
-  const GREEN={0:["tree","tree","tree","bush","bush","pine"],5:["cactus","cactus","cactus","palm","bush","rockpile","rock"],6:["snowpine","snowpine","snowpine","snowtree","snowbush"],8:["tree","bush","bush","pine"],9:["tree","tree","pine","bush","rock"],10:["palm","palm","palm","bush","bush","rock"],11:["bush","rock","rockpile","barrel"]}[curTrack];
-  let placed=0, tries=0, maxN=(curTrack>=8&&curTrack<=11)?Math.min(280, Math.round((IW*IH)/5200)):Math.min(1500, Math.round((IW*IH)/1050));
+  const GREEN={0:["tree","tree","tree","bush","bush","pine"],5:["cactus","cactus","cactus","palm","bush","rockpile","rock"],6:["snowpine","snowpine","snowpine","snowtree","snowbush"],8:["tree","tree","pine","bush","rock"],9:["palm","palm","palm","bush","bush","rock"],10:["bush","rock","rockpile","barrel"]}[curTrack];
+  let placed=0, tries=0, maxN=(curTrack>=8&&curTrack<=10)?Math.min(280, Math.round((IW*IH)/5200)):Math.min(1500, Math.round((IW*IH)/1050));
   while(placed<maxN && tries<26000){ tries++;
     const x=12+r()*(IW-24), y=12+r()*(IH-24);
     const sd=sdAt(x,y); if(sd>-(GAP+18)) continue;        // vsaj za zidom iz gum
