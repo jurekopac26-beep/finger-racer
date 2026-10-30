@@ -994,6 +994,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
   padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;overflow-y:auto;
   background:transparent;pointer-events:auto;z-index:1}
 #menuWrap>*{position:relative;z-index:1}
+#menu #appVer{position:absolute;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:4;font-size:10px;letter-spacing:.4px;color:rgba(255,255,255,.6);text-shadow:0 1px 2px rgba(0,0,0,.6);pointer-events:none;white-space:nowrap}   /* version · date of last change: bump on every change */
 #menu .gearBtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:5;
   width:34px;height:34px;background:none;border:none;border-radius:0;box-shadow:none;
   color:#fff;font-size:22px;line-height:1;pointer-events:auto;cursor:pointer;
@@ -1674,6 +1675,7 @@ h1 span{color:var(--red);-webkit-text-stroke:1px rgba(0,0,0,.25)}
 
   <div id="menu" class="screen on">
     <div id="menuWrap">
+      <div id="appVer">v1.35 · 30.10.2026</div>
       <button id="btnLeaderboard" class="lbBtn" aria-label="Leaderboard">🏆</button>
       <button id="btnMenuLang" class="langMenuBtn" aria-label="Change Language" title="Language / Država"><span id="menuCurFlag">🇬🇧</span></button>
       <button id="btnMenuModeToggle" class="modeToggleBtn" aria-label="Toggle Free/Paid Mode" title="Freemium / Full Mode"><span class="modeToggleBtnInner" id="menuModeToggleIcon">💎</span></button>
@@ -5891,10 +5893,11 @@ function gridSlot(k){
   return {s,x:p.x,y:p.y,lat,i,ang:Math.atan2(p.ty,p.tx)};
 }
 /* HARD = WORLD RECORD PACE: the hard leader is sped up until its 5-lap Single Race time matches the track's #1 on the
-   global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). On Hard the whole field (wrCar) races like a player: player wear (~20%/lap), one service stop at the player's crew rate,
-   repairing only what it needs to finish. The leader's pace is calibrated with that stop included. */
+   global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). Every AI car services like a human: player wear (~20%/lap) and fuel (a tank lasts 3.5 laps), it pits in its own box
+   only when it would not finish, waits for its crew, gets a full repair, then a full refuel. The Hard leader's pace is calibrated with that stop included. */
 const WR_SEED={1:14.316,2:15.747,3:32.577,4:21.89,5:24.686,6:10.62,7:11.685,8:23.386,9:13.9,10:12.6,11:13.2};   // leaderboard #1, Oct 2026
-const AI_WR_OVERHEAD=1.03;   // real race time / estimate (mistake damage lengthens the stop) — calibrated by measurement
+const AI_WR_OVERHEAD=1.01;   // real race time / estimate (mistake damage lengthens the stop) — calibrated by measurement
+const AI_EASY_TGT=1.12;      // Easy: the leader's target is the record + 12% (competitive but beatable)
 function wrTime(trackNum){ const v=(save.wrCache&&save.wrCache[trackNum])||WR_SEED[trackNum]; return v>0?v:null; }
 let wrFetched=false;
 function wrRefresh(){
@@ -5909,19 +5912,22 @@ function wrRefresh(){
 const AI_PRO_REP=PIT_RATE/(R_MAX-R0);   // Hard drivers: the player's crew repair rate (energy/s)
 const AI_PRO_END=.9;   // Hard drivers aim to cross the line with at most this much damage
 function aiLapsLeft(crossNeed, cr, s){ return Math.max(0,crossNeed-cr-s/L); }
-function aiProPitTarget(crossNeed, cr, s){ return Math.max(.01,AI_PRO_END-.15-aiLapsLeft(crossNeed,cr,s)*LAP_WEAR); }   // repair only what is needed to finish (+ margin for a mistake)
-function aiLeadTimeEst(skill, crossNeed, pit){   // same s-advance as the AI loop (FAC + corner braking), no noise/mistakes, from pole; pit: Hard wear + its service stop
-  const v=BASE1*skill, dt=1/30; let s=gridSlot(0).s, cr=0, t=0, dmg=0, ph=0, thr=.64, tgt=0, pw=0; const sPit=(PIT_A+PIT_LEN/2)%L;
+const AI_FUEL_LAP=1/3.5, AI_REFUEL=0.55, AI_CREW_T=0.45;   // the player's tank (per lap) and refuel rate; crew run-out time (estimate)
+function aiNeedsPit(crossNeed, cr, s, dmg, fuel, thr){ const left=aiLapsLeft(crossNeed,cr,s);   // like a player: pit only when the car would not finish
+  return (dmg>=thr&&dmg+left*LAP_WEAR>AI_PRO_END) || (fuel<.35&&fuel-left*AI_FUEL_LAP<.03); }
+function aiAtBox(s, sPit){ return ((s-sPit+L)%L)<50; }   // reached its own box (works across the start line)
+function aiLeadTimeEst(skill, crossNeed, pit){   // same s-advance as the AI loop (FAC + corner braking), no noise/mistakes, from pole; pit: wear, fuel and a full human-style service
+  const v=BASE1*skill, dt=1/30; let s=gridSlot(0).s, cr=0, t=0, dmg=0, fuel=1, ph=0, thr=.64, pw=0, wait=0; const sPit=(PIT_A+PIT_LEN/2)%L;
   while(cr<crossNeed&&t<900){ const i=idxOf(s), la=idxOf((s+90)%L), cv=1-(TXa[i]*TXa[la]+TYa[i]*TYa[la]);
     let mul=1;
     if(pit&&PIT_LEN>0){
-      if(ph===0&&dmg>=thr&&dmg+aiLapsLeft(crossNeed,cr,s)*LAP_WEAR>AI_PRO_END&&((s-PIT_A+L)%L)<=PIT_LEN&&((sPit-s+L)%L)<PIT_LEN) ph=1;
-      if(ph===1){ mul=.45; if(s>=sPit){ ph=2; tgt=aiProPitTarget(crossNeed,cr,s); } }
-      else if(ph===2){ mul=0; dmg=Math.max(0,dmg-AI_PRO_REP*dt); if(dmg<=tgt){ ph=3; pw=1; thr=.97; } }
-      else if(ph===3){ mul=.7; pw-=dt*2; if(pw<=0) ph=4; }
+      if(ph===0&&aiNeedsPit(crossNeed,cr,s,dmg,fuel,thr)&&((s-PIT_A+L)%L)<=PIT_LEN&&((sPit-s+L)%L)<PIT_LEN) ph=1;
+      if(ph===1){ mul=.45; if(aiAtBox(s,sPit)){ ph=2; wait=0; } }
+      else if(ph===2){ mul=0; wait+=dt; if(wait>=AI_CREW_T){ if(dmg>0) dmg=Math.max(0,dmg-AI_PRO_REP*dt); else fuel=Math.min(1,fuel+AI_REFUEL*dt); } if(dmg<=0&&fuel>=1){ ph=3; pw=1; } }
+      else if(ph===3){ mul=.7; pw-=dt*2; if(pw<=0) ph=0; }
     }
     const adv=v*FAC[i]*(1-Math.min(0.45,cv*0.9))*dt*mul; s+=adv; t+=dt;
-    if(pit) dmg=Math.min(.99,dmg+LAP_WEAR*adv/L);
+    if(pit){ dmg=Math.min(.99,dmg+LAP_WEAR*adv/L); fuel=Math.max(0,fuel-AI_FUEL_LAP*adv/L); }
     if(s>=L){ s-=L; cr++; } }
   return t;
 }
@@ -5939,14 +5945,15 @@ function getCompetitiveSkills(trackIdx, numRacers, diffOverride){
 
   const baseArr = isHard ? hardBase : easyBase;
   try{ wrRefresh(); }catch(e){}
-  // Hard: scale the whole field so the leader runs the world record (track must be loaded; records are 5 laps = 6 crossings)
+  // Scale the whole field so the leader's time hits a target: Hard = the world record, Easy = 12% slower
+  // (track must be loaded; records are 5 laps = 6 crossings)
   let wrK = 1, wrOn = false;
-  if(isHard && L && FAC && curTrack === ti && ti !== ROOKIE){
+  if(L && FAC && curTrack === ti && ti !== ROOKIE){
     const wr = wrTime(ti + 1);
-    if(wr){ wrOn = true;   // pace so the leader's time WITH its service stop is the record (stop time is fixed, so iterate)
-      const b0 = baseArr[0] - ease; let k = aiLeadTimeEst(b0, 6, true) / wr;
-      for(let it = 0; it < 3; it++) k *= aiLeadTimeEst(b0 * k, 6, true) / wr;
-      wrK = Math.max(easyBase[0] / hardBase[0] * 1.05, Math.min(2.6, k * AI_WR_OVERHEAD)); }   // floor: Hard is always >=5% faster than Easy, even on a weak record
+    if(wr){ wrOn = true;   // the leader's time WITH its full service stop is the target (stop time is fixed, so iterate)
+      const fit = (b0, tgt) => { let k = aiLeadTimeEst(b0, 6, true) / tgt; for(let it = 0; it < 3; it++) k *= aiLeadTimeEst(b0 * k, 6, true) / tgt; return Math.max(0.85, Math.min(2.6, k * AI_WR_OVERHEAD)); };
+      const kE = fit(easyBase[0] - ease, wr * AI_EASY_TGT);
+      wrK = isHard ? Math.max(kE * (easyBase[0] - ease) / (hardBase[0] - ease) * 1.05, fit(hardBase[0] - ease, wr)) : kE; }   // Hard is always >=5% faster than Easy, even on a weak record
   }
   const result = [];
   for(let k = 0; k < numRacers; k++){
@@ -5956,7 +5963,7 @@ function getCompetitiveSkills(trackIdx, numRacers, diffOverride){
     const jitter = (Math.random() - 0.5) * 0.05;
     result.push(Math.round((nominal + jitter) * 1000) / 1000);
   }
-  result.wr = wrOn;   // the leader drives the record: no pit stop (record holders do not pit)
+  result.wr = wrOn; result.hard = isHard; result.tgt = isHard ? 1 : AI_EASY_TGT;   // wr: calibrated field that races like humans (see wrCar)
   return result;
 }
 function startLevel(lv){ training=0; careerOff();
@@ -6379,7 +6386,7 @@ function pitOwnerInfo(owner){
   }
   const rc=racers[owner];
   if(!rc) return null;
-  return {x:rc.px,y:rc.py,inP:(rc.px!=null)&&inPitZone(rc.px,rc.py,rc.s),dmg:rc.dmg||0,fuel:(rc.dmg<=0)?0.5:1};
+  return {x:rc.px,y:rc.py,inP:(rc.px!=null)&&inPitZone(rc.px,rc.py,rc.s),dmg:rc.dmg||0,fuel:(rc.fuel!=null?rc.fuel:1)};
 }
 function genPitCrew(){
   pitCrew=[]; crewReady=false; fuelRescue=null; mechAvail=4; deathMarks=[];
@@ -6395,6 +6402,7 @@ function genPitCrew(){
   const nComp=comps.length;
   comps.forEach((cp,ci)=>{
     const ms=wrapS(PIT_A+PIT_LEN*((ci+0.5)/nComp));   // svoje mesto vzdolž boksov
+    if(typeof cp.owner==="number"&&racers[cp.owner]) racers[cp.owner].sPit=ms;   // AI ustavi v SVOJEM boksu, pri svoji ekipi
     // stran boksov (za progo 6 poseben pas, sicer PIT_SIDE)
     const side=(pitLaneSide!=null)?pitLaneSide:((typeof PIT_SIDE!=="undefined"&&PIT_SIDE)?PIT_SIDE:1);
     for(let k=0;k<4;k++){ const sO=wrapS(ms+(k-1.5)*5), i=idxOf(sO), hw=HW[i]||40;
@@ -6406,7 +6414,7 @@ function genPitCrew(){
 }
 function updatePitCrew(dt){
   if(state!=="racing"&&state!=="crashed") return;
-  let repAll=true, fuelerWork=false, pActive=false;
+  let repAll=true, fuelerWork=false, pActive=false; const aiRep={}, aiFuel={}, aiHas={};
   for(const m of pitCrew){
     const oi=pitOwnerInfo(m.owner);
     if(!oi){ m.run=false; m.working=false; m.fueling=false; continue; }
@@ -6419,9 +6427,11 @@ function updatePitCrew(dt){
       if(m.owner==="player"){ pActive=true; if(m.slot===3&&!m.run)fuelerWork=true; }
     } else { const dx=m.hx-m.x, dy=m.hy-m.y, d=Math.hypot(dx,dy); m.working=false;
       if(d>1){ const step=Math.min(d,120*dt); m.x+=dx/d*step; m.y+=dy/d*step; m.run=true; } else m.run=false; }
+    if(typeof m.owner==="number"){ aiHas[m.owner]=true; if(inP){ if(m.slot<3){ if(aiRep[m.owner]==null) aiRep[m.owner]=true; if(m.run) aiRep[m.owner]=false; } else if(!m.run) aiFuel[m.owner]=true; } }
     // 4. mehanik: tanka gorivo (pretok le, ko je avto popravljen in gorivo ni polno)
-    m.fueling = (m.slot===3 && m.working) && ((m.owner==="player") ? (player.dmg<=0 && (player.fuel==null||player.fuel<1)) : true);
+    m.fueling = (m.slot===3 && m.working) && ((m.owner==="player") ? (player.dmg<=0 && (player.fuel==null||player.fuel<1)) : (()=>{ const r=racers[m.owner]; return !!r&&r.dmg<=0&&(r.fuel==null||r.fuel<1); })());
   }
+  racers.forEach((rc,ri)=>{ rc.hasCrew=!!aiHas[ri]; rc.crewRep=aiRep[ri]===true; rc.crewFuel=!!aiFuel[ri]; });   // AI: servis šele, ko ekipa priteče
   repairReady = pActive ? repAll : false;        // 3 mehaniki (mesta 0-2) ob vozilu -> popravilo
   fuelerReady = pActive ? fuelerWork : false;    // 4. mehanik (mesto 3) ob vozilu -> tankanje
   crewReady = repairReady && fuelerReady;
@@ -7376,7 +7386,7 @@ function startRace(){
       mkBase,mkVar,mT:mkBase*(.5+Math.random()*.8),mkT:0,mkDur:.6,mkSide:1,
       pitPlan:false,pitPh:0,pitW:0,
       sPit:(PIT_A+40+Math.random()*Math.max(1,PIT_LEN-80))%L,
-      pitThresh:SKILLS.wr?.58+Math.random()*.12:.52+Math.random()*.25,noPit:false,wrCar:!!SKILLS.wr,wrT:SKILLS.wr?(wrTime(curTrack+1)||0)*LAPS/5:0,dodgeT:0,wreckLat:1});
+      pitThresh:SKILLS.wr?.58+Math.random()*.12:.52+Math.random()*.25,noPit:false,fuel:1,wrCar:!!SKILLS.wr,wrT:SKILLS.wr?(wrTime(curTrack+1)||0)*LAPS/5*(SKILLS.tgt||1):0,dodgeT:0,wreckLat:1});
   }
   // (odstranjeno) nasprotnikom motor ne poči več
 
@@ -7957,14 +7967,16 @@ function update(dt){
       const f=FAC[rc.idx]*(1+.025*Math.sin(raceTime*rc.nzW+rc.nzP));
       let mul=1;
       if(!rc.finished){
-        if(rc.dmg>=rc.pitThresh&&!rc.noPit&&(!rc.wrCar||rc.dmg+aiLapsLeft(CROSS_NEED,rc.crossings,rc.s)*LAP_WEAR>AI_PRO_END)) rc.pitPlan=true;   // Hard: pit only if it cannot finish otherwise
+        { const fu=(rc.fuel!=null?rc.fuel:1);   // Hard: pit only when it would not finish; others also when the damage gets high
+          if(!rc.noPit&&!rc.pitPlan&&(rc.wrCar?aiNeedsPit(CROSS_NEED,rc.crossings,rc.s,rc.dmg,fu,rc.pitThresh):(rc.dmg>=rc.pitThresh||aiNeedsPit(CROSS_NEED,rc.crossings,rc.s,0,fu,1)))) rc.pitPlan=true; }
         if(rc.pitPh===0&&rc.pitPlan&&((rc.s-PIT_A+L)%L)<=PIT_LEN&&((rc.sPit-rc.s+L)%L)<PIT_LEN) rc.pitPh=1;
         if(rc.pitPh===1){ mul=.45; rc.pitW=Math.min(1,rc.pitW+dt*2.4);
-          if(rc.s>=rc.sPit){ rc.pitPh=2; rc.pits=(rc.pits||0)+1; if(rc.wrCar) rc.pitTgt=aiProPitTarget(CROSS_NEED,rc.crossings,rc.s); } }
-        else if(rc.pitPh===2){ mul=0; rc.pitW=1;
-          { const d=Math.min(rc.dmg,(rc.wrCar?AI_PRO_REP:PIT_RATE*1.3/(R_MAX-R0))*dt); rc.dmg-=d; rc.repPit=(rc.repPit||0)+d; }   // servisne ekipe
-          if(Math.random()<dt*7) spawnFix(rc.px,rc.py,RAD);
-          if(rc.dmg<=(rc.wrCar?rc.pitTgt:.01)){ rc.pitPh=3; rc.pitPlan=false; rc.pitThresh=rc.wrCar?.97:.52+Math.random()*.25; } }   // Hard: like a player, repair just enough to finish
+          if(aiAtBox(rc.s,rc.sPit)){ rc.pitPh=2; rc.pits=(rc.pits||0)+1; rc.pitWait=0; } }
+        else if(rc.pitPh===2){ mul=0; rc.pitW=1; rc.pitWait=(rc.pitWait||0)+dt;   // like a human: wait for the crew, full repair, then full refuel
+          const late=rc.pitWait>=(rc.hasCrew?2.5:AI_CREW_T),   /* crew never arrives (box at the very end of the lane): serve anyway */ rep=rc.crewRep||late, fue=rc.crewFuel||late;
+          if(rep&&rc.dmg>0){ const d=Math.min(rc.dmg,AI_PRO_REP*dt); rc.dmg-=d; rc.repPit=(rc.repPit||0)+d; if(Math.random()<dt*7) spawnFix(rc.px,rc.py,RAD); }   // 3 mehaniki: popravilo do 100 %
+          else if(fue&&rc.dmg<=0&&rc.fuel<1) rc.fuel=Math.min(1,rc.fuel+AI_REFUEL*dt);   // 4. mehanik: tankanje šele po popravilu
+          if((rc.dmg<=0&&(rc.fuel==null||rc.fuel>=1))||rc.pitWait>25){ rc.pitPh=3; rc.pitPlan=false; rc.pitThresh=rc.wrCar?.58+Math.random()*.12:.52+Math.random()*.25; } }
         else if(rc.pitPh===3){ mul=.7; rc.pitW=Math.max(0,rc.pitW-dt*2);
           if(rc.pitW===0) rc.pitPh=0; }
         if(rc.pitPh===0){                       // občasne napake ob robniku
@@ -7998,17 +8010,23 @@ function update(dt){
       // (1) kazen za AI: odsluži z upočasnitvijo
       let scHold=1;
       if(safetyCar){ const g2=wrapS(safetyCar.s-rc.s); if(g2<30||g2>L*0.9) scHold=0; }   // AI ne prehitijo varnostnega avta
-      if(rc.finished&&mpMode){ rc.finSlow=Math.max(0,(rc.finSlow==null?1:rc.finSlow)-dt*0.7); mul*=rc.finSlow; }   // multiplayer: AI rolls to a stop after the flag instead of lapping forever
-      if(rc.drafting&&!rc.finished&&!rc.wrCar) mul*=AI_DRAFT_SPD;
-      // Hard: a car with no stop left to make (done, or skipped thanks to slipstream repairs) may not beat the record — it lifts while its projected finish is under the record
-      if(rc.wrCar&&rc.wrT>0&&!rc.finished&&!rc.pitPlan&&rc.pitPh===0&&raceTime>2&&rc.dist>0&&((rc.pits||0)>0||rc.dmg+aiLapsLeft(CROSS_NEED,rc.crossings,rc.s)*LAP_WEAR<=AI_PRO_END)){
-        const left=(CROSS_NEED-rc.crossings-1)*L+(L-rc.s); if(raceTime+left/(rc.dist/raceTime)<rc.wrT) mul*=0.9; }   // Hard: like the player, the slipstream repairs but gives no extra speed   // zavetrje: AI se lahko približa in prehiti
+      if(rc.finished){ rc.finSlow=Math.max(0,(rc.finSlow==null?1:rc.finSlow)-dt*3/(1+0.6*Math.floor((rc.finPos||0)/3))); mul*=rc.finSlow; }   // after the flag the AI stops just past the line and waits there
+      if(rc.drafting&&!rc.finished&&!rc.wrCar) mul*=AI_DRAFT_SPD;   // zavetrje: AI se lahko približa in prehiti (Hard: like the player, it repairs but gives no extra speed)
+      if(rc.fuel!=null&&rc.fuel<=0&&!rc.finished&&rc.pitPh===0) mul*=0.5;   // prazen tank: le še šepa do boksov
+      // No car may beat its target (Hard: the record) by a short stop or by skipping one: it lifts while its projected finish,
+      // including the stop it still has to make, is under the target
+      if(rc.wrCar&&rc.wrT>0&&!rc.finished&&rc.pitPh===0&&raceTime>2&&rc.dist>0){
+        const fu=(rc.fuel!=null?rc.fuel:1), lapsL=aiLapsLeft(CROSS_NEED,rc.crossings,rc.s), left=(CROSS_NEED-rc.crossings-1)*L+(L-rc.s);
+        const needStop=rc.pitPlan||rc.dmg+lapsL*LAP_WEAR>AI_PRO_END||fu-lapsL*AI_FUEL_LAP<.03;
+        const stopT=needStop?AI_CREW_T+rc.dmg/AI_PRO_REP+(1-Math.max(0,fu-1.5*AI_FUEL_LAP))/AI_REFUEL+1:0;   // crew + full repair + refuel + pit-lane crawl
+        if(raceTime+left/(rc.dist/raceTime)+stopT<rc.wrT) mul*=0.9; }
       const adv=rc.v*f*dt*mul*cornerFac*scHold*(yellowFlagT>0?0.5:1);
       rc.s+=adv; rc.dist+=adv;
       if(dt>0.0005) rc.curV=(rc.curV==null?adv/dt:rc.curV*0.85+(adv/dt)*0.15);   // trenutna hitrost (za moč zavetrja)
       if(rc.pushS){ const p=rc.pushS*dt; rc.s+=p; rc.dist+=p; rc.pushS*=Math.max(0,1-dt*5); if(Math.abs(rc.pushS)<3)rc.pushS=0; }  // odriv naprej po trku
       if(!rc.finished){
-        { const wf=1+1.2*Math.min(1,(rc.crossings)/Math.max(1,CROSS_NEED-1)); const g=Math.min(1-rc.dmg,LAP_WEAR*adv/L*(rc.noPit?2.4:1)*(rc.wrCar?1:wf)); rc.dmg+=g; rc.dmgTaken=(rc.dmgTaken||0)+g; }  // obraba proti koncu hitreje (Hard: enakomerno kot igralec)
+        { const g=Math.min(1-rc.dmg,LAP_WEAR*adv/L*(rc.noPit?2.4:1)); rc.dmg+=g; rc.dmgTaken=(rc.dmgTaken||0)+g; }   /* obraba enakomerna, kot pri igralcu */
+        if(!rc.noPit&&rc.fuel!=null){ rc.fuel=Math.max(0,rc.fuel-AI_FUEL_LAP*adv/L); if(rc.fuel<.05&&rc.pitPh===0) rc.pitPlan=true; }   // gorivo kot igralec
         if(rc.dmg>0.99){ rc.dmg=0.99; }   // nasprotnikom motor ne eksplodira
         if(rc.dmg>=.96&&!rc.noPit) rc.pitPlan=true;
       }
@@ -8025,6 +8043,7 @@ function update(dt){
       const blend=Math.min(1,rc.dist/300);
       const raceLat=rc.isCoach ? rc.gridLat : (rc.gridLat*(1-blend)+HW[rc.idx]*rc.latAmp*Math.sin(rc.s*6.283/rc.latPer+rc.latPh)*blend);
       let lat=raceLat;
+      if(rc.finished){ const k=1-(rc.finSlow!=null?rc.finSlow:1); lat=lat*(1-k)+HW[rc.idx]*(((rc.finPos||0)%3)-1)*0.6*k; }   // parked after the line: side by side, not stacked
       // BRANJENJE POZICIJE: če je igralec tik zadaj, se AI premakne na njegovo stran
       if(!rc.finished&&!rc.inPit&&state==="racing"){
         let pd=rc.s-player.s; if(pd<-L/2)pd+=L; else if(pd>L/2)pd-=L;
@@ -14416,7 +14435,7 @@ function startCareer(lv){
   LAPS=cfg.laps; NRACERS=cfg.nai+1; CROSS_NEED=LAPS+1;
   const ALLSK=[1.12,1.05,0.98,0.92,0.86]; let SKILLS=ALLSK.slice(0,cfg.nai);
   let base=BASE1*cfg.aiMul*AI_BOOST;
-  { const hs=getCompetitiveSkills(cfg.track,cfg.nai); if(hs.wr){ SKILLS=hs; base=BASE1; } }   // Hard: career leader on WR pace too; Easy keeps the level ramp
+  { const hs=getCompetitiveSkills(cfg.track,cfg.nai); if(hs.wr&&hs.hard){ SKILLS=hs; base=BASE1; } }   // Hard: career leader on WR pace too; Easy keeps the level ramp
   aiParams={SKILLS,base,NAI:cfg.nai}; vRef=Math.max(60,base*SKILLS[0]*MEANFAC);
   levelAnim=levelAnims(lv); raceRules=cfg.rules; decorTrack=-1;
   const kn=cfg.knobs; pastureMul=kn.pastureMul||1; animalRate=kn.animalRate||1; spectMul=kn.spectMul||1; specCrossRate=kn.specCrossRate||1; rockRate=kn.rockRate||1; herdMul=kn.herdMul||1; tower=null; careerEvDone={};
