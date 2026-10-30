@@ -7,5 +7,6 @@ module.exports = defineConfig({
   use: {
     channel: 'msedge',
     headless: true,
+    launchOptions: { args: ['--mute-audio'] },   // headless browsers still play game sound on Windows
   },
 });

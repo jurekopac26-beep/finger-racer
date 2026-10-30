@@ -5946,7 +5946,7 @@ function getCompetitiveSkills(trackIdx, numRacers, diffOverride){
     if(wr){ wrOn = true;   // pace so the leader's time WITH its service stop is the record (stop time is fixed, so iterate)
       const b0 = baseArr[0] - ease; let k = aiLeadTimeEst(b0, 6, true) / wr;
       for(let it = 0; it < 3; it++) k *= aiLeadTimeEst(b0 * k, 6, true) / wr;
-      wrK = Math.max(0.85, Math.min(2.6, k * AI_WR_OVERHEAD)); }   // 0.85: a weak record cannot make hard easy
+      wrK = Math.max(easyBase[0] / hardBase[0] * 1.05, Math.min(2.6, k * AI_WR_OVERHEAD)); }   // floor: Hard is always >=5% faster than Easy, even on a weak record
   }
   const result = [];
   for(let k = 0; k < numRacers; k++){
@@ -7376,7 +7376,7 @@ function startRace(){
       mkBase,mkVar,mT:mkBase*(.5+Math.random()*.8),mkT:0,mkDur:.6,mkSide:1,
       pitPlan:false,pitPh:0,pitW:0,
       sPit:(PIT_A+40+Math.random()*Math.max(1,PIT_LEN-80))%L,
-      pitThresh:SKILLS.wr?.58+Math.random()*.12:.52+Math.random()*.25,noPit:false,wrCar:!!SKILLS.wr,dodgeT:0,wreckLat:1});
+      pitThresh:SKILLS.wr?.58+Math.random()*.12:.52+Math.random()*.25,noPit:false,wrCar:!!SKILLS.wr,wrT:SKILLS.wr?(wrTime(curTrack+1)||0)*LAPS/5:0,dodgeT:0,wreckLat:1});
   }
   // (odstranjeno) nasprotnikom motor ne poči več
 
@@ -7999,7 +7999,10 @@ function update(dt){
       let scHold=1;
       if(safetyCar){ const g2=wrapS(safetyCar.s-rc.s); if(g2<30||g2>L*0.9) scHold=0; }   // AI ne prehitijo varnostnega avta
       if(rc.finished&&mpMode){ rc.finSlow=Math.max(0,(rc.finSlow==null?1:rc.finSlow)-dt*0.7); mul*=rc.finSlow; }   // multiplayer: AI rolls to a stop after the flag instead of lapping forever
-      if(rc.drafting&&!rc.finished&&!rc.wrCar) mul*=AI_DRAFT_SPD;   // Hard: like the player, the slipstream repairs but gives no extra speed   // zavetrje: AI se lahko približa in prehiti
+      if(rc.drafting&&!rc.finished&&!rc.wrCar) mul*=AI_DRAFT_SPD;
+      // Hard: a car with no stop left to make (done, or skipped thanks to slipstream repairs) may not beat the record — it lifts while its projected finish is under the record
+      if(rc.wrCar&&rc.wrT>0&&!rc.finished&&!rc.pitPlan&&rc.pitPh===0&&raceTime>2&&rc.dist>0&&((rc.pits||0)>0||rc.dmg+aiLapsLeft(CROSS_NEED,rc.crossings,rc.s)*LAP_WEAR<=AI_PRO_END)){
+        const left=(CROSS_NEED-rc.crossings-1)*L+(L-rc.s); if(raceTime+left/(rc.dist/raceTime)<rc.wrT) mul*=0.9; }   // Hard: like the player, the slipstream repairs but gives no extra speed   // zavetrje: AI se lahko približa in prehiti
       const adv=rc.v*f*dt*mul*cornerFac*scHold*(yellowFlagT>0?0.5:1);
       rc.s+=adv; rc.dist+=adv;
       if(dt>0.0005) rc.curV=(rc.curV==null?adv/dt:rc.curV*0.85+(adv/dt)*0.15);   // trenutna hitrost (za moč zavetrja)
