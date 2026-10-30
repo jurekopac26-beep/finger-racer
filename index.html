@@ -8175,8 +8175,9 @@ function update(dt){
           const spz = TRACKS[curTrack].splitZone;
           const iMid = Math.round((spz.i0 + spz.i1) * 0.5);
           const safeLat = (player.x < spz.cx) ? -spz.dist : spz.dist;
-          const safeP = posAt(S_OF_IDX[iMid] || 0, safeLat);
-          lastOn = { x: safeP.x, y: safeP.y, s: S_OF_IDX[iMid] || 0, idx: iMid };
+          const midS = iMid * SP;
+          const safeP = posAt(midS, safeLat);
+          lastOn = { x: safeP.x, y: safeP.y, s: midS, idx: iMid };
         }
         crash(islHit.x, islHit.y, isEn ? "Crashed into the split island! Take the left or right lane." : "Trčil si v oviro na razcepu! Izberi levo ali desno pot.", true);
       }
@@ -11521,7 +11522,7 @@ function buildSingleExtraTrack(cfg){
       const d = Math.hypot(px[i] - bd.x, py[i] - bd.y);
       if(d < minDist){ minDist = d; closestI = i; }
     }
-    bd.bridgeS = S_OF_IDX[closestI] || (trk.L * 0.875);
+    bd.bridgeS = closestI * sp;
     const prevI = (closestI - 2 + N) % N, nextI = (closestI + 2) % N;
     bd.ang = Math.atan2(py[nextI] - py[prevI], px[nextI] - px[prevI]);
   } else if(trk.bridgeDeck && trk.bridgeDeck.passFrac != null){
