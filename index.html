@@ -5891,9 +5891,10 @@ function gridSlot(k){
   return {s,x:p.x,y:p.y,lat,i,ang:Math.atan2(p.ty,p.tx)};
 }
 /* HARD = WORLD RECORD PACE: the hard leader is sped up until its 5-lap Single Race time matches the track's #1 on the
-   global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). On Hard the whole field (wrCar) skips the pit stop, like record runs do, so it stays near the record. */
+   global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). On Hard the whole field (wrCar) races like a player: player wear (~20%/lap), one service stop at the player's crew rate,
+   repairing only what it needs to finish. The leader's pace is calibrated with that stop included. */
 const WR_SEED={1:14.316,2:15.747,3:32.577,4:21.89,5:24.686,6:10.62,7:11.685,8:23.386,9:13.9,10:12.6,11:13.2};   // leaderboard #1, Oct 2026
-const AI_WR_OVERHEAD=1.0;   // real race time / estimate (drafting, mistakes, pits) — calibrated by measurement
+const AI_WR_OVERHEAD=1.03;   // real race time / estimate (mistake damage lengthens the stop) — calibrated by measurement
 function wrTime(trackNum){ const v=(save.wrCache&&save.wrCache[trackNum])||WR_SEED[trackNum]; return v>0?v:null; }
 let wrFetched=false;
 function wrRefresh(){
@@ -5905,10 +5906,23 @@ function wrRefresh(){
     }).catch(()=>{});
   }
 }
-function aiLeadTimeEst(skill, crossNeed){   // same s-advance as the AI loop (FAC + corner braking), no noise/mistakes/pits, from pole
-  const v=BASE1*skill, dt=1/30; let s=gridSlot(0).s, cr=0, t=0;
+const AI_PRO_REP=PIT_RATE/(R_MAX-R0);   // Hard drivers: the player's crew repair rate (energy/s)
+const AI_PRO_END=.9;   // Hard drivers aim to cross the line with at most this much damage
+function aiLapsLeft(crossNeed, cr, s){ return Math.max(0,crossNeed-cr-s/L); }
+function aiProPitTarget(crossNeed, cr, s){ return Math.max(.01,AI_PRO_END-.15-aiLapsLeft(crossNeed,cr,s)*LAP_WEAR); }   // repair only what is needed to finish (+ margin for a mistake)
+function aiLeadTimeEst(skill, crossNeed, pit){   // same s-advance as the AI loop (FAC + corner braking), no noise/mistakes, from pole; pit: Hard wear + its service stop
+  const v=BASE1*skill, dt=1/30; let s=gridSlot(0).s, cr=0, t=0, dmg=0, ph=0, thr=.64, tgt=0, pw=0; const sPit=(PIT_A+PIT_LEN/2)%L;
   while(cr<crossNeed&&t<900){ const i=idxOf(s), la=idxOf((s+90)%L), cv=1-(TXa[i]*TXa[la]+TYa[i]*TYa[la]);
-    s+=v*FAC[i]*(1-Math.min(0.45,cv*0.9))*dt; t+=dt; if(s>=L){ s-=L; cr++; } }
+    let mul=1;
+    if(pit&&PIT_LEN>0){
+      if(ph===0&&dmg>=thr&&dmg+aiLapsLeft(crossNeed,cr,s)*LAP_WEAR>AI_PRO_END&&((s-PIT_A+L)%L)<=PIT_LEN&&((sPit-s+L)%L)<PIT_LEN) ph=1;
+      if(ph===1){ mul=.45; if(s>=sPit){ ph=2; tgt=aiProPitTarget(crossNeed,cr,s); } }
+      else if(ph===2){ mul=0; dmg=Math.max(0,dmg-AI_PRO_REP*dt); if(dmg<=tgt){ ph=3; pw=1; thr=.97; } }
+      else if(ph===3){ mul=.7; pw-=dt*2; if(pw<=0) ph=4; }
+    }
+    const adv=v*FAC[i]*(1-Math.min(0.45,cv*0.9))*dt*mul; s+=adv; t+=dt;
+    if(pit) dmg=Math.min(.99,dmg+LAP_WEAR*adv/L);
+    if(s>=L){ s-=L; cr++; } }
   return t;
 }
 function getCompetitiveSkills(trackIdx, numRacers, diffOverride){
@@ -5929,7 +5943,10 @@ function getCompetitiveSkills(trackIdx, numRacers, diffOverride){
   let wrK = 1, wrOn = false;
   if(isHard && L && FAC && curTrack === ti && ti !== ROOKIE){
     const wr = wrTime(ti + 1);
-    if(wr){ wrOn = true; wrK = Math.max(0.85, Math.min(2.6, aiLeadTimeEst(baseArr[0] - ease, 6) * AI_WR_OVERHEAD / wr)); }   // 0.85: a weak record cannot make hard easy
+    if(wr){ wrOn = true;   // pace so the leader's time WITH its service stop is the record (stop time is fixed, so iterate)
+      const b0 = baseArr[0] - ease; let k = aiLeadTimeEst(b0, 6, true) / wr;
+      for(let it = 0; it < 3; it++) k *= aiLeadTimeEst(b0 * k, 6, true) / wr;
+      wrK = Math.max(0.85, Math.min(2.6, k * AI_WR_OVERHEAD)); }   // 0.85: a weak record cannot make hard easy
   }
   const result = [];
   for(let k = 0; k < numRacers; k++){
@@ -7359,7 +7376,7 @@ function startRace(){
       mkBase,mkVar,mT:mkBase*(.5+Math.random()*.8),mkT:0,mkDur:.6,mkSide:1,
       pitPlan:false,pitPh:0,pitW:0,
       sPit:(PIT_A+40+Math.random()*Math.max(1,PIT_LEN-80))%L,
-      pitThresh:.52+Math.random()*.25,noPit:false,wrCar:!!SKILLS.wr,dodgeT:0,wreckLat:1});
+      pitThresh:SKILLS.wr?.58+Math.random()*.12:.52+Math.random()*.25,noPit:false,wrCar:!!SKILLS.wr,dodgeT:0,wreckLat:1});
   }
   // (odstranjeno) nasprotnikom motor ne poči več
 
@@ -7940,14 +7957,14 @@ function update(dt){
       const f=FAC[rc.idx]*(1+.025*Math.sin(raceTime*rc.nzW+rc.nzP));
       let mul=1;
       if(!rc.finished){
-        if(rc.dmg>=rc.pitThresh&&!rc.noPit&&!rc.wrCar) rc.pitPlan=true;
+        if(rc.dmg>=rc.pitThresh&&!rc.noPit&&(!rc.wrCar||rc.dmg+aiLapsLeft(CROSS_NEED,rc.crossings,rc.s)*LAP_WEAR>AI_PRO_END)) rc.pitPlan=true;   // Hard: pit only if it cannot finish otherwise
         if(rc.pitPh===0&&rc.pitPlan&&((rc.s-PIT_A+L)%L)<=PIT_LEN&&((rc.sPit-rc.s+L)%L)<PIT_LEN) rc.pitPh=1;
         if(rc.pitPh===1){ mul=.45; rc.pitW=Math.min(1,rc.pitW+dt*2.4);
-          if(rc.s>=rc.sPit){ rc.pitPh=2; rc.pits=(rc.pits||0)+1; } }
+          if(rc.s>=rc.sPit){ rc.pitPh=2; rc.pits=(rc.pits||0)+1; if(rc.wrCar) rc.pitTgt=aiProPitTarget(CROSS_NEED,rc.crossings,rc.s); } }
         else if(rc.pitPh===2){ mul=0; rc.pitW=1;
-          { const d=Math.min(rc.dmg,(PIT_RATE*1.3/(R_MAX-R0))*dt); rc.dmg-=d; rc.repPit=(rc.repPit||0)+d; }   // servisne ekipe
+          { const d=Math.min(rc.dmg,(rc.wrCar?AI_PRO_REP:PIT_RATE*1.3/(R_MAX-R0))*dt); rc.dmg-=d; rc.repPit=(rc.repPit||0)+d; }   // servisne ekipe
           if(Math.random()<dt*7) spawnFix(rc.px,rc.py,RAD);
-          if(rc.dmg<=.01){ rc.pitPh=3; rc.pitPlan=false; rc.pitThresh=.52+Math.random()*.25; } }
+          if(rc.dmg<=(rc.wrCar?rc.pitTgt:.01)){ rc.pitPh=3; rc.pitPlan=false; rc.pitThresh=rc.wrCar?.97:.52+Math.random()*.25; } }   // Hard: like a player, repair just enough to finish
         else if(rc.pitPh===3){ mul=.7; rc.pitW=Math.max(0,rc.pitW-dt*2);
           if(rc.pitW===0) rc.pitPh=0; }
         if(rc.pitPh===0){                       // občasne napake ob robniku
@@ -7982,15 +7999,15 @@ function update(dt){
       let scHold=1;
       if(safetyCar){ const g2=wrapS(safetyCar.s-rc.s); if(g2<30||g2>L*0.9) scHold=0; }   // AI ne prehitijo varnostnega avta
       if(rc.finished&&mpMode){ rc.finSlow=Math.max(0,(rc.finSlow==null?1:rc.finSlow)-dt*0.7); mul*=rc.finSlow; }   // multiplayer: AI rolls to a stop after the flag instead of lapping forever
-      if(rc.drafting&&!rc.finished) mul*=AI_DRAFT_SPD;   // zavetrje: AI se lahko približa in prehiti
+      if(rc.drafting&&!rc.finished&&!rc.wrCar) mul*=AI_DRAFT_SPD;   // Hard: like the player, the slipstream repairs but gives no extra speed   // zavetrje: AI se lahko približa in prehiti
       const adv=rc.v*f*dt*mul*cornerFac*scHold*(yellowFlagT>0?0.5:1);
       rc.s+=adv; rc.dist+=adv;
       if(dt>0.0005) rc.curV=(rc.curV==null?adv/dt:rc.curV*0.85+(adv/dt)*0.15);   // trenutna hitrost (za moč zavetrja)
       if(rc.pushS){ const p=rc.pushS*dt; rc.s+=p; rc.dist+=p; rc.pushS*=Math.max(0,1-dt*5); if(Math.abs(rc.pushS)<3)rc.pushS=0; }  // odriv naprej po trku
       if(!rc.finished){
-        { const wf=1+1.2*Math.min(1,(rc.crossings)/Math.max(1,CROSS_NEED-1)); const g=Math.min(1-rc.dmg,LAP_WEAR*adv/L*(rc.noPit?2.4:(rc.wrCar?0.35:1))*wf); rc.dmg+=g; rc.dmgTaken=(rc.dmgTaken||0)+g; }  // obraba proti koncu hitreje
+        { const wf=1+1.2*Math.min(1,(rc.crossings)/Math.max(1,CROSS_NEED-1)); const g=Math.min(1-rc.dmg,LAP_WEAR*adv/L*(rc.noPit?2.4:1)*(rc.wrCar?1:wf)); rc.dmg+=g; rc.dmgTaken=(rc.dmgTaken||0)+g; }  // obraba proti koncu hitreje (Hard: enakomerno kot igralec)
         if(rc.dmg>0.99){ rc.dmg=0.99; }   // nasprotnikom motor ne eksplodira
-        if(rc.dmg>=.96&&!rc.noPit&&!rc.wrCar) rc.pitPlan=true;   // wrCar: hard leader on WR pace, rekorderji ne servisirajo
+        if(rc.dmg>=.96&&!rc.noPit) rc.pitPlan=true;
       }
       if(rc.s>=L){ rc.s-=L; rc.crossings++;
         if(rc.crossings>=2){ const lt=raceTime-(rc.lastCross||0); if(lt>0.5&&lt<fastestLap.time) fastestLap={name:shortName(rc.name),time:lt,me:false}; }
