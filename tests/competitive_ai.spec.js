@@ -134,18 +134,28 @@ test.describe('Competitive AI, Easy/Hard Modes & Track Progression', () => {
     expect(data.hard.ratio).toBeLessThan(1.05);
     expect(data.hard.speed).toBeGreaterThan(data.easy.speed * 1.5);
   });
-  test('Hard cars race like a player: they wear, repair, and nobody beats the record by much', async ({ page }) => {
+  test('Hard cars race like a player: they wear, service like a human, and park after the finish', async ({ page }) => {
     const r = await page.evaluate(async () => {
       save.diffMode = 'hard'; save.diff = 1;
       startSingle(0); await new Promise(res => setTimeout(res, 400));
       if (state !== 'racing') beginRace(); window.__noLoop = true;
-      for (let i = 0; i < 90 * 60 && !racers.every(rc => rc.finished); i++) update(1 / 60);
-      return { wr: wrTime(1), lead: racers[0].finishTime, best: Math.min(...racers.map(rc => rc.finishTime)), pits: racers.map(rc => rc.pits || 0), rep: racers.map(rc => (rc.repPit || 0) + (rc.repDraft || 0)) };
+      let doneT = null;
+      for (let i = 0; i < 120 * 60; i++) {
+        update(1 / 60);
+        if (doneT == null && racers.every(rc => rc.finished)) doneT = raceTime;
+        if (doneT != null && raceTime > doneT + 3) break;
+      }
+      return { wr: wrTime(1), lead: racers[0].finishTime, best: Math.min(...racers.map(rc => rc.finishTime)),
+        pits: racers.map(rc => rc.pits || 0), rep: racers.map(rc => (rc.repPit || 0) + (rc.repDraft || 0)),
+        fuel: racers.map(rc => rc.fuel), speed: racers.map(rc => rc.curV || 0), past: racers.map(rc => rc.s) };
     });
     expect(r.pits[0]).toBeGreaterThanOrEqual(1);                            // the leader has nobody to slipstream: it must service
     expect(r.rep.every(x => x > 0)).toBe(true);                             // every car repairs (pit or slipstream)
+    r.pits.forEach((p, k) => { if (p > 0) expect(r.fuel[k]).toBeGreaterThan(0.25); });   // a stop refuels to full, so the tank lasts to the flag
     expect(r.lead / r.wr).toBeGreaterThan(0.9);
     expect(r.lead / r.wr).toBeLessThan(1.1);
-    expect(r.best / r.wr).toBeGreaterThan(0.95);                            // skipping a stop does not beat the record by much
+    expect(r.best / r.wr).toBeGreaterThan(0.93);                            // a short early stop can't beat the record by much
+    expect(r.speed.every(v => v < 5)).toBe(true);                           // finished cars stand still after the line...
+    expect(r.past.every(s => s < 900)).toBe(true);                          // ...just past it, instead of lapping on
   });
 });
