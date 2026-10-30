@@ -5891,7 +5891,7 @@ function gridSlot(k){
   return {s,x:p.x,y:p.y,lat,i,ang:Math.atan2(p.ty,p.tx)};
 }
 /* HARD = WORLD RECORD PACE: the hard leader is sped up until its 5-lap Single Race time matches the track's #1 on the
-   global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). The leader (wrCar) skips the pit stop, like record runs do. */
+   global leaderboard (fetched once per session, cached in save.wrCache; WR_SEED until the first fetch). On Hard the whole field (wrCar) skips the pit stop, like record runs do, so it stays near the record. */
 const WR_SEED={1:14.316,2:15.747,3:32.577,4:21.89,5:24.686,6:10.62,7:11.685,8:23.386,9:13.9,10:12.6,11:13.2};   // leaderboard #1, Oct 2026
 const AI_WR_OVERHEAD=1.0;   // real race time / estimate (drafting, mistakes, pits) — calibrated by measurement
 function wrTime(trackNum){ const v=(save.wrCache&&save.wrCache[trackNum])||WR_SEED[trackNum]; return v>0?v:null; }
@@ -7359,7 +7359,7 @@ function startRace(){
       mkBase,mkVar,mT:mkBase*(.5+Math.random()*.8),mkT:0,mkDur:.6,mkSide:1,
       pitPlan:false,pitPh:0,pitW:0,
       sPit:(PIT_A+40+Math.random()*Math.max(1,PIT_LEN-80))%L,
-      pitThresh:.52+Math.random()*.25,noPit:false,wrCar:!!(k===0&&SKILLS.wr),dodgeT:0,wreckLat:1});
+      pitThresh:.52+Math.random()*.25,noPit:false,wrCar:!!SKILLS.wr,dodgeT:0,wreckLat:1});
   }
   // (odstranjeno) nasprotnikom motor ne poči več
 
@@ -14393,8 +14393,9 @@ function startCareer(lv){
   training=0; singleMode=false; timeTrial=false; coneHunt=false; wc=null; finishOrder=[]; particles=[];
   careerLv=lv; level=cfg.track+1; loadTrack(cfg.track); eventsReset();
   LAPS=cfg.laps; NRACERS=cfg.nai+1; CROSS_NEED=LAPS+1;
-  const ALLSK=[1.12,1.05,0.98,0.92,0.86]; const SKILLS=ALLSK.slice(0,cfg.nai);
-  const base=BASE1*cfg.aiMul*AI_BOOST;
+  const ALLSK=[1.12,1.05,0.98,0.92,0.86]; let SKILLS=ALLSK.slice(0,cfg.nai);
+  let base=BASE1*cfg.aiMul*AI_BOOST;
+  { const hs=getCompetitiveSkills(cfg.track,cfg.nai); if(hs.wr){ SKILLS=hs; base=BASE1; } }   // Hard: career leader on WR pace too; Easy keeps the level ramp
   aiParams={SKILLS,base,NAI:cfg.nai}; vRef=Math.max(60,base*SKILLS[0]*MEANFAC);
   levelAnim=levelAnims(lv); raceRules=cfg.rules; decorTrack=-1;
   const kn=cfg.knobs; pastureMul=kn.pastureMul||1; animalRate=kn.animalRate||1; spectMul=kn.spectMul||1; specCrossRate=kn.specCrossRate||1; rockRate=kn.rockRate||1; herdMul=kn.herdMul||1; tower=null; careerEvDone={};
